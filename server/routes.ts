@@ -117,6 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const {
         bbox, // "lat1,lng1,lat2,lng2"
+        lat,
+        lng,
+        radius = 5,
         cats = [],
         regionId,
         types = [],
@@ -129,17 +132,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let results = [];
 
+      const catArray = Array.isArray(cats) ? cats.filter((c): c is string => typeof c === 'string') : (cats ? [cats as string] : []);
+      const typeArray = Array.isArray(types) ? types.filter((t): t is string => typeof t === 'string') : (types ? [types as string] : []);
+
       if (q && typeof q === 'string') {
         // Text search
         results = await searchService.searchBenefits(q, {
-          categories: Array.isArray(cats) ? cats : [cats].filter(Boolean),
+          categories: catArray,
           regionId: regionId as string,
-          types: Array.isArray(types) ? types : [types].filter(Boolean),
+          types: typeArray,
+          nowOpen: nowOpen === 'true',
+          sort: sort as any,
+        });
+      } else if (lat && lng) {
+        // Geographic search with lat/lng/radius
+        results = await storage.getBenefitsNearby(Number(lat), Number(lng), Number(radius), {
+          categories: catArray,
+          regionId: regionId as string,
+          types: typeArray,
           nowOpen: nowOpen === 'true',
           sort: sort as any,
         });
       } else if (bbox && typeof bbox === 'string') {
-        // Geographic search
+        // Geographic search with bbox
         const [lat1, lng1, lat2, lng2] = bbox.split(',').map(Number);
         const centerLat = (lat1 + lat2) / 2;
         const centerLng = (lng1 + lng2) / 2;
@@ -149,9 +164,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ) / 2;
 
         results = await storage.getBenefitsNearby(centerLat, centerLng, radiusKm, {
-          categories: Array.isArray(cats) ? cats : [cats].filter(Boolean),
+          categories: catArray,
           regionId: regionId as string,
-          types: Array.isArray(types) ? types : [types].filter(Boolean),
+          types: typeArray,
           nowOpen: nowOpen === 'true',
           sort: sort as any,
         });

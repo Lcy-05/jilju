@@ -445,11 +445,11 @@ export class DatabaseStorage implements IStorage {
 
   // Region and Category operations
   async getRegions(level?: number): Promise<Region[]> {
-    let query = db.select().from(regions);
+    const conditions = level !== undefined ? [eq(regions.level, level)] : [];
     
-    if (level !== undefined) {
-      query = query.where(eq(regions.level, level));
-    }
+    const query = conditions.length > 0
+      ? db.select().from(regions).where(and(...conditions))
+      : db.select().from(regions);
     
     const results = await query.orderBy(asc(regions.name));
     return results;

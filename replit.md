@@ -46,5 +46,97 @@ The application is built with a React 18 + Vite frontend and a Node.js + Express
 - **ORM:** Drizzle ORM
 - **Authentication:** JWT (JSON Web Tokens), bcrypt
 - **UI Frameworks/Libraries:** React, Vite, wouter, @tanstack/react-query, Tailwind CSS, shadcn/ui, Radix UI, Lucide React, react-hook-form, zod.
-- **Geospatial:** Naver Maps API (planned integration, credentials needed)
+- **Geospatial:** Naver Maps API (NCP Maps API - active integration)
 - **Testing:** Playwright (for end-to-end testing)
+
+## Naver Maps Integration
+
+**Current Status (October 4, 2025):**
+The application uses Naver Maps JavaScript API v3 for interactive mapping and Naver Cloud Platform (NCP) APIs for geospatial services.
+
+**API Configuration:**
+- **Frontend:** Uses `ncpKeyId` parameter for Naver Maps JavaScript API v3
+- **Backend:** Uses `X-NCP-APIGW-API-KEY-ID` and `X-NCP-APIGW-API-KEY` headers for server-side API calls
+- **Environment Variables:** `VITE_NAVER_MAPS_CLIENT_ID` (frontend), `NAVER_MAPS_CLIENT_ID`, `NAVER_MAPS_CLIENT_SECRET` (backend)
+- **Web Service URL:** Configured in NCP console (domain only, no trailing slash)
+
+**Implemented Features:**
+
+1. **Interactive Map (client/src/hooks/use-naver-maps.ts):**
+   - ✅ Map initialization with custom center and zoom
+   - ✅ Marker management (add, remove, clustering)
+   - ✅ Map controls (zoom in/out, current location)
+   - ✅ Pan to location
+   - ✅ Bounds retrieval
+   - ✅ Event handling (click, bounds_changed)
+
+2. **Geocoding Services (server/services/naver-maps.ts):**
+   - ✅ Forward geocoding: Address → Coordinates
+   - ✅ Reverse geocoding: Coordinates → Address
+   - ✅ Distance calculation (Haversine formula)
+   - ✅ Distance formatting (m/km)
+   - ✅ Static Map URL generation
+   - ✅ Directions deep link generation (Naver Map app)
+
+3. **Location Services (client/src/hooks/use-location.ts):**
+   - ✅ Browser geolocation API integration
+   - ✅ Reverse geocoding for current location
+   - ✅ Location caching in localStorage
+
+4. **Map Page (client/src/pages/map.tsx):**
+   - ✅ Interactive map with benefit markers
+   - ✅ Bottom sheet for benefit list
+   - ✅ Location-based search (bbox and lat/lng/radius)
+   - ✅ Map controls (zoom, current location)
+
+**Implemented But Not Yet Used:**
+- Static Map URL generation (for thumbnails, previews)
+- Directions deep link (for navigation to merchant)
+
+**Technical Improvements Needed:**
+
+1. **Location Data Format:**
+   - Current: `merchant.location` stored as `"lat,lng"` string in database
+   - Needed: Parse to `{lat: number, lng: number}` object for frontend use
+   - Impact: Currently handled in frontend parsing, but should be normalized
+
+2. **Geospatial Queries:**
+   - Current: `getBenefitsNearby` returns all ACTIVE benefits (no true filtering)
+   - Needed: PostGIS extension for efficient spatial queries
+   - Features: Distance-based filtering, radius search, bbox queries, spatial indexing
+
+3. **Map Markers:**
+   - Current: Infrastructure ready (marker clustering, custom icons)
+   - Needed: Parse merchant location strings and display markers on map
+   - Status: Location data now available through API with merchant info
+
+**Planned Enhancements:**
+
+1. **Advanced Map Features:**
+   - Heat maps for benefit density
+   - Drawing tools for custom search areas
+   - Route optimization for multiple merchants
+   - Real-time traffic integration
+
+2. **Static Map Usage:**
+   - Benefit card thumbnails
+   - Share previews (Open Graph images)
+   - Email notifications with map snapshots
+
+3. **Navigation Features:**
+   - In-app directions to merchant
+   - Walking/driving time estimates
+   - Public transit integration (if available from Naver)
+
+4. **Performance Optimizations:**
+   - Marker viewport culling
+   - Lazy loading for distant markers
+   - Debounced bounds change events
+   - Progressive marker loading
+
+**Recent Changes (October 4, 2025):**
+- Fixed header UX: Removed from map/saved/profile pages, made compact on home/discover
+- Connected map zoom controls to Naver Maps API
+- Implemented database seeding with test merchants and benefits in Seoul
+- Enhanced `getBenefitsNearby` to join merchant location data
+- Added lat/lng/radius parameter support to `/api/benefits/search`
