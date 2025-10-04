@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NaverMap } from '@/components/map/naver-map';
 import { BottomSheet } from '@/components/map/bottom-sheet';
@@ -10,6 +10,9 @@ import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
 import { Benefit, MapMarker, Coupon } from '@/types';
 import { API_ENDPOINTS, MAP_CONFIG } from '@/lib/constants';
+import { findJejuRegion, JejuRegion } from '@/lib/jeju-regions';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 
 export default function Map() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
@@ -19,6 +22,7 @@ export default function Map() {
   const [currentBounds, setCurrentBounds] = useState<any>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [visibleBenefits, setVisibleBenefits] = useState<Benefit[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<JejuRegion | null>(null);
 
   const { location, getCurrentLocation } = useLocation();
   const { user } = useAuth();
@@ -51,29 +55,73 @@ export default function Map() {
     staleTime: 30 * 1000, // 30 seconds for map data
   });
 
-  // Update visible benefits when data changes
-  useEffect(() => {
-    if (benefitsData?.benefits) {
-      setVisibleBenefits(benefitsData.benefits);
-    }
+  // Normalize benefits with parsed locations (memoized)
+  const normalizedBenefits = useMemo(() => {
+    if (!benefitsData?.benefits) return [];
+    
+    return benefitsData.benefits.map((benefit: Benefit) => {
+      if (!benefit.merchant?.location) return null;
+      
+      // Parse location (could be string or object)
+      let location = benefit.merchant.location as any;
+      if (typeof location === 'string') {
+        try {
+          location = JSON.parse(location);
+        } catch {
+          return null;
+        }
+      }
+      
+      const lat = location?.lat || 0;
+      const lng = location?.lng || 0;
+      
+      // Validate coordinates
+      if (lat === 0 && lng === 0) return null;
+      
+      // Return benefit with parsed location
+      return {
+        ...benefit,
+        merchant: {
+          ...benefit.merchant,
+          location: { lat, lng } // Replace string with parsed object
+        }
+      };
+    }).filter((b): b is Benefit => b !== null);
   }, [benefitsData]);
 
-  // Convert benefits to map markers
-  const markers: MapMarker[] = visibleBenefits
-    .filter(benefit => benefit.merchant?.location) // Filter out benefits without location
-    .map(benefit => {
-      const location = benefit.merchant.location as any;
-      return {
-        id: benefit.id,
-        position: {
-          lat: typeof location === 'object' ? location.lat : 0,
-          lng: typeof location === 'object' ? location.lng : 0
-        },
-        title: benefit.title,
-        type: 'benefit',
-        data: benefit
-      };
-    });
+  // Filter benefits by selected region
+  useEffect(() => {
+    let filteredBenefits = normalizedBenefits;
+    
+    if (selectedRegion) {
+      filteredBenefits = normalizedBenefits.filter((benefit) => {
+        const location = benefit.merchant?.location as any;
+        if (!location || typeof location !== 'object') return false;
+        
+        const coords = { lat: location.lat, lng: location.lng };
+        const region = findJejuRegion(coords);
+        return region?.id === selectedRegion.id;
+      });
+    }
+    
+    setVisibleBenefits(filteredBenefits);
+  }, [normalizedBenefits, selectedRegion]);
+
+  // Convert normalized benefits to map markers
+  const markers: MapMarker[] = useMemo(() => {
+    return visibleBenefits
+      .filter(benefit => benefit.merchant?.location)
+      .map(benefit => {
+        const location = benefit.merchant.location as any;
+        return {
+          id: benefit.id,
+          position: { lat: location.lat, lng: location.lng },
+          title: benefit.title,
+          type: 'benefit',
+          data: benefit
+        };
+      });
+  }, [visibleBenefits]);
 
   const handleBoundsChanged = (bounds: any) => {
     // Throttle bounds changes to avoid too many API calls
@@ -82,6 +130,18 @@ export default function Map() {
     }, MAP_CONFIG.SEARCH_RADIUS_KM * 100); // 300ms from specification
 
     return () => clearTimeout(timeoutId);
+  };
+
+  const handleMapClick = (e: any) => {
+    // Get clicked coordinates
+    const coords = { lat: e.coord.y, lng: e.coord.x };
+    
+    // Find which region was clicked
+    const region = findJejuRegion(coords);
+    
+    if (region) {
+      setSelectedRegion(region);
+    }
   };
 
   const handleMarkerClick = (marker: MapMarker) => {
@@ -109,11 +169,32 @@ export default function Map() {
   return (
     <div className="min-h-screen bg-background">
       <div className="map-container">
+        {/* Region Filter Badge */}
+        {selectedRegion && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+            <Badge 
+              variant="secondary" 
+              className="px-4 py-2 text-sm font-semibold shadow-lg bg-background/95 backdrop-blur-sm"
+              data-testid="badge-selected-region"
+            >
+              {selectedRegion.name}
+              <button
+                onClick={() => setSelectedRegion(null)}
+                className="ml-2 hover:bg-muted rounded-full p-0.5"
+                data-testid="button-clear-region"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          </div>
+        )}
+
         <NaverMap
           center={mapCenter}
           zoom={MAP_CONFIG.DEFAULT_ZOOM}
           markers={markers}
           onMarkerClick={handleMarkerClick}
+          onMapClick={handleMapClick}
           onBoundsChanged={handleBoundsChanged}
           className="w-full h-full"
         />

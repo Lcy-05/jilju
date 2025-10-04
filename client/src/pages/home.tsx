@@ -93,10 +93,10 @@ export default function Home() {
     window.location.href = `/discover?categories=${category.id}`;
   };
 
-  const displayCategories = categories?.categories?.slice(0, 5) || [];
-  const nearbyBenefits = popularBenefits?.benefits || [];
-  const newItems = newBenefits?.benefits || [];
-  const endingItems = endingSoonBenefits?.benefits || [];
+  const displayCategories = (categories as any)?.categories?.slice(0, 5) || [];
+  const nearbyBenefits = (popularBenefits as any)?.benefits || [];
+  const newItems = (newBenefits as any)?.benefits || [];
+  const endingItems = (endingSoonBenefits as any)?.benefits || [];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -134,7 +134,7 @@ export default function Home() {
         {/* Category Quick Access */}
         <section className="px-4 py-5">
           <div className="grid grid-cols-5 gap-4">
-            {displayCategories.map((category, index) => (
+            {displayCategories.map((category: Category, index: number) => (
               <Button
                 key={category.id}
                 variant="ghost"
@@ -142,18 +142,16 @@ export default function Home() {
                 onClick={() => handleCategoryClick(category)}
                 data-testid={`button-category-${index}`}
               >
-                <div className={cn(
-                  "w-14 h-14 rounded-full flex items-center justify-center",
-                  index === 0 ? "bg-primary/10" : "bg-muted"
-                )}>
-                  <span className="text-2xl">
-                    {CATEGORY_ICONS[category.name] || '📱'}
+                <div className="w-14 h-14 flex items-center justify-center">
+                  <span className="text-3xl">
+                    {(CATEGORY_ICONS as any)[category.name] || '📱'}
                   </span>
                 </div>
                 <span className={cn(
                   "text-xs",
-                  index === 0 ? "text-primary font-medium" : "text-muted-foreground"
-                )}>
+                  index === 0 ? "font-medium" : "text-muted-foreground"
+                )}
+                style={index === 0 ? { color: '#ff3366' } : undefined}>
                   {category.name}
                 </span>
               </Button>

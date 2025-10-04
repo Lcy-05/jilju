@@ -131,14 +131,14 @@ export function BottomSheet({
     >
       {/* Handle */}
       <div 
-        className="flex justify-center py-3 cursor-grab active:cursor-grabbing"
+        className="flex justify-center py-2 cursor-grab active:cursor-grabbing"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         data-testid="bottom-sheet-handle"
       >
-        <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
+        <div className="w-9 h-1 rounded-full" style={{ backgroundColor: '#D9D9D9' }} />
       </div>
 
       {/* Content */}

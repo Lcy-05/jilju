@@ -84,6 +84,71 @@ export const MAP_CONFIG = {
   GEOFENCE_MAX_RADIUS: 1000 // meters
 };
 
+// Jeju Island Region Classification (제주도 지역 분류)
+export const JEJU_REGIONS = {
+  ara: {
+    id: 'ara',
+    name: '아라권',
+    center: { lat: 33.4636, lng: 126.5579 },
+    radius: 3000, // meters
+    areas: ['아라동', '오등동', '영평동', '월평동', '용강동']
+  },
+  samhwa: {
+    id: 'samhwa',
+    name: '삼화권',
+    center: { lat: 33.5246, lng: 126.5650 },
+    radius: 3500,
+    areas: ['화북동', '봉개동', '도련동', '삼양동', '회천동']
+  },
+  city_hall: {
+    id: 'city_hall',
+    name: '시청권',
+    center: { lat: 33.5102, lng: 126.5219 },
+    radius: 2000,
+    areas: ['일도동', '이도동', '삼도동', '건입동', '도남동']
+  },
+  airport_coast: {
+    id: 'airport_coast',
+    name: '공항연안권',
+    center: { lat: 33.5063, lng: 126.4933 },
+    radius: 2500,
+    areas: ['용담동', '이호동', '도두동', '외도동', '내도동']
+  },
+  nohyeong: {
+    id: 'nohyeong',
+    name: '노형권',
+    center: { lat: 33.4897, lng: 126.4787 },
+    radius: 3000,
+    areas: ['오라동', '연동', '노형동', '해안동', '도평동']
+  },
+  east: {
+    id: 'east',
+    name: '동부권',
+    center: { lat: 33.5283, lng: 126.6798 },
+    radius: 8000,
+    areas: ['조천읍', '구좌읍']
+  },
+  west: {
+    id: 'west',
+    name: '서부권',
+    center: { lat: 33.3950, lng: 126.2394 },
+    radius: 10000,
+    areas: ['한림읍', '한경면', '애월읍']
+  },
+  seogwipo: {
+    id: 'seogwipo',
+    name: '서귀포권',
+    center: { lat: 33.2541, lng: 126.5599 },
+    radius: 8000,
+    areas: ['서귀포시']
+  }
+} as const;
+
+export const JEJU_REGION_KEYWORDS = [
+  '아라권', '삼화권', '시청권', '공항연안권', '노형권', '동부권', '서부권', '서귀포권',
+  ...Object.values(JEJU_REGIONS).flatMap(region => region.areas)
+];
+
 // API endpoints
 export const API_ENDPOINTS = {
   AUTH: {
