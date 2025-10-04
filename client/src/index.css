@@ -173,6 +173,15 @@
   transition: all 0.3s ease;
 }
 
+/* Ensure dialogs/modals are always on top */
+[data-radix-dialog-overlay] {
+  z-index: 2000 !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 2001 !important;
+}
+
 /* Hide scrollbars but keep functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;
