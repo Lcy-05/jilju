@@ -344,27 +344,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserCoupons(userId: string, status?: 'active' | 'used' | 'expired'): Promise<Coupon[]> {
-    let query = db.select().from(coupons).where(eq(coupons.userId, userId));
+    let conditions = [eq(coupons.userId, userId)];
 
     if (status === 'active') {
-      query = query.where(
-        and(
-          sql`${coupons.redeemedAt} IS NULL`,
-          gte(coupons.expireAt, new Date())
-        )
-      );
+      conditions.push(sql`${coupons.redeemedAt} IS NULL`);
+      conditions.push(gte(coupons.expireAt, new Date()));
     } else if (status === 'used') {
-      query = query.where(sql`${coupons.redeemedAt} IS NOT NULL`);
+      conditions.push(sql`${coupons.redeemedAt} IS NOT NULL`);
     } else if (status === 'expired') {
-      query = query.where(
-        and(
-          sql`${coupons.redeemedAt} IS NULL`,
-          lte(coupons.expireAt, new Date())
-        )
-      );
+      conditions.push(sql`${coupons.redeemedAt} IS NULL`);
+      conditions.push(lte(coupons.expireAt, new Date()));
     }
 
-    const results = await query.orderBy(desc(coupons.issuedAt));
+    const results = await db
+      .select()
+      .from(coupons)
+      .where(and(...conditions))
+      .orderBy(desc(coupons.issuedAt));
+    
     return results;
   }
 

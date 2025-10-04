@@ -1,15 +1,22 @@
 // Service URLs for Naver Maps API registration
 // 환경별 URL 자동 설정
-const isDevelopment = import.meta.env.DEV;
+const isExplicitProduction = import.meta.env.PROD;
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isProductionDomain = window.location.hostname === 'jilju.co.kr';
+const isDevDomain = window.location.hostname === 'dev.jilju.co.kr';
 
 const getBaseUrl = () => {
-  if (isLocalhost) {
-    return 'http://localhost:5000';
-  } else if (isDevelopment) {
-    return 'https://dev.jilju.co.kr';
-  } else {
+  // If on production domain, use production URL
+  if (isProductionDomain || isExplicitProduction) {
     return 'https://jilju.co.kr';
+  }
+  // If on dev domain, use dev URL
+  else if (isDevDomain) {
+    return 'https://dev.jilju.co.kr';
+  }
+  // For localhost or Replit preview, use current origin (co-hosted API)
+  else {
+    return window.location.origin;
   }
 };
 
