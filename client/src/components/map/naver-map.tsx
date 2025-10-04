@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 interface NaverMapProps {
   onMarkerClick?: (marker: MapMarker) => void;
+  onMapClick?: (e: any) => void;
   onBoundsChanged?: (bounds: any) => void;
   markers?: MapMarker[];
   center?: { lat: number; lng: number };
@@ -17,6 +18,7 @@ interface NaverMapProps {
 
 export function NaverMap({
   onMarkerClick,
+  onMapClick,
   onBoundsChanged,
   markers = [],
   center,
@@ -41,6 +43,7 @@ export function NaverMap({
     center: center || (location ? { lat: location.lat, lng: location.lng } : undefined),
     zoom,
     onMarkerClick,
+    onMapClick,
     onBoundsChanged
   });
 

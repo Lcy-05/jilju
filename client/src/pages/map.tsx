@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { Benefit, MapMarker, Coupon } from '@/types';
 import { API_ENDPOINTS, MAP_CONFIG, JEJU_REGIONS } from '@/lib/constants';
 import { findJejuRegion, JejuRegion } from '@/lib/jeju-regions';
+import { calculateDistance, formatDistance, getBenefitValue } from '@/lib/geo-utils';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 
@@ -66,46 +67,70 @@ export default function Map() {
     staleTime: 30 * 1000, // 30 seconds for map data
   });
 
-  // Normalize benefits with parsed locations (memoized)
+  // Normalize benefits with parsed locations and distance (memoized)
   const normalizedBenefits = useMemo(() => {
     if (!benefitsData?.benefits) return [];
     
-    return benefitsData.benefits.map((benefit: Benefit) => {
+    const currentLat = location?.lat || mapCenter?.lat || 33.5102;
+    const currentLng = location?.lng || mapCenter?.lng || 126.5219;
+    
+    const enrichedBenefits = benefitsData.benefits.map((benefit: Benefit) => {
       if (!benefit.merchant?.location) return null;
       
       // Parse location (could be string or object)
-      let location = benefit.merchant.location as any;
-      if (typeof location === 'string') {
+      let merchantLocation = benefit.merchant.location as any;
+      if (typeof merchantLocation === 'string') {
         try {
-          location = JSON.parse(location);
+          merchantLocation = JSON.parse(merchantLocation);
         } catch {
           return null;
         }
       }
       
-      const lat = location?.lat || 0;
-      const lng = location?.lng || 0;
+      const lat = merchantLocation?.lat || 0;
+      const lng = merchantLocation?.lng || 0;
       
       // Validate coordinates
       if (lat === 0 && lng === 0) return null;
       
-      // Return benefit with parsed location
+      // Calculate distance
+      const distance = calculateDistance(currentLat, currentLng, lat, lng);
+      
+      // Return benefit with parsed location and distance
       return {
         ...benefit,
         merchant: {
           ...benefit.merchant,
-          location: { lat, lng } // Replace string with parsed object
-        }
+          location: { lat, lng }
+        },
+        distance,
+        distanceFormatted: formatDistance(distance)
       };
-    }).filter((b): b is Benefit => b !== null);
-  }, [benefitsData]);
+    }).filter((b: any): b is Benefit & { distance: number; distanceFormatted: string } => b !== null);
+    
+    // Sort by distance first, then by benefit value (percent/amount)
+    enrichedBenefits.sort((a: any, b: any) => {
+      // Primary sort: distance
+      const distanceDiff = a.distance - b.distance;
+      if (Math.abs(distanceDiff) > 100) { // If distance difference > 100m, sort by distance
+        return distanceDiff;
+      }
+      
+      // Secondary sort: benefit value (higher is better)
+      const valueA = getBenefitValue(a);
+      const valueB = getBenefitValue(b);
+      return valueB - valueA;
+    });
+    
+    return enrichedBenefits;
+  }, [benefitsData, location, mapCenter]);
 
   // Filter benefits by selected region
   useEffect(() => {
     let filteredBenefits = normalizedBenefits;
     
     if (selectedRegion) {
-      filteredBenefits = normalizedBenefits.filter((benefit) => {
+      filteredBenefits = normalizedBenefits.filter((benefit: any) => {
         const location = benefit.merchant?.location as any;
         if (!location || typeof location !== 'object') return false;
         
@@ -121,9 +146,9 @@ export default function Map() {
   // Convert normalized benefits to map markers
   const markers: MapMarker[] = useMemo(() => {
     return visibleBenefits
-      .filter(benefit => benefit.merchant?.location)
-      .map(benefit => {
-        const location = benefit.merchant.location as any;
+      .filter((benefit: any) => benefit.merchant?.location)
+      .map((benefit: any) => {
+        const location = benefit.merchant!.location as any;
         return {
           id: benefit.id,
           position: { lat: location.lat, lng: location.lng },

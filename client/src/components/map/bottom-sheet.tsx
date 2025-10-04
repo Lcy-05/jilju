@@ -229,7 +229,7 @@ export function BottomSheet({
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <span>{benefit.distanceFormatted || '거리 정보 없음'}</span>
                       <span>•</span>
-                      <span className="text-green-600">영업중</span>
+                      <span style={{ color: '#00B14F' }}>영업중</span>
                     </div>
                   </div>
                 </div>
