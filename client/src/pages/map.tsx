@@ -122,13 +122,7 @@ export default function Map() {
 
         {/* Bottom Sheet with benefits list */}
         <BottomSheet
-          benefits={visibleBenefits.map(benefit => ({
-            ...benefit,
-            merchant: benefit.merchant ? {
-              name: benefit.merchant.name,
-              address: benefit.merchant.address
-            } : undefined
-          }))}
+          benefits={visibleBenefits}
           onBenefitClick={handleBenefitClick}
           onViewList={handleViewList}
         />

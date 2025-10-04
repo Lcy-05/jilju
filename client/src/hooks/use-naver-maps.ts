@@ -24,9 +24,14 @@ declare global {
       maps: {
         Map: new (element: HTMLElement, options: any) => NaverMapInstance;
         LatLng: new (lat: number, lng: number) => any;
+        LatLngBounds: new (sw: any, ne: any) => any;
+        Point: new (x: number, y: number) => any;
+        Size: new (width: number, height: number) => any;
         Marker: new (options: any) => any;
         InfoWindow: new (options: any) => any;
         MarkerClustering: new (options: any) => any;
+        Position: any;
+        ZoomControlStyle: any;
         Event: {
           addListener: (target: any, type: string, listener: Function) => any;
           removeListener: (listener: any) => void;
