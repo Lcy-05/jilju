@@ -34,7 +34,9 @@ export function NaverMap({
     addMarkers,
     clearMarkers,
     panTo,
-    getBounds
+    getBounds,
+    zoomIn,
+    zoomOut
   } = useNaverMaps(mapId, {
     center: center || (location ? { lat: location.lat, lng: location.lng } : undefined),
     zoom,
@@ -59,13 +61,11 @@ export function NaverMap({
   };
 
   const handleZoomIn = () => {
-    // This would use Naver Maps API to zoom in
-    console.log('Zoom in');
+    zoomIn();
   };
 
   const handleZoomOut = () => {
-    // This would use Naver Maps API to zoom out
-    console.log('Zoom out');
+    zoomOut();
   };
 
   if (error) {

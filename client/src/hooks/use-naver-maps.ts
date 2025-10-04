@@ -13,6 +13,7 @@ interface UseNaverMapsOptions {
 interface NaverMapInstance {
   setCenter: (latlng: any) => void;
   setZoom: (zoom: number) => void;
+  getZoom: () => number;
   getBounds: () => any;
   addListener: (event: string, handler: Function) => void;
   removeListener: (listeners: any) => void;
@@ -271,6 +272,23 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
     return infoWindow;
   }, [map]);
 
+  const zoomIn = useCallback(() => {
+    if (!map) return;
+    const currentZoom = map.getZoom();
+    map.setZoom(currentZoom + 1);
+  }, [map]);
+
+  const zoomOut = useCallback(() => {
+    if (!map) return;
+    const currentZoom = map.getZoom();
+    map.setZoom(currentZoom - 1);
+  }, [map]);
+
+  const getZoom = useCallback(() => {
+    if (!map) return zoom;
+    return map.getZoom();
+  }, [map, zoom]);
+
   // Cleanup
   useEffect(() => {
     return () => {
@@ -291,7 +309,10 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
     panTo,
     getBounds,
     showInfoWindow,
-    clusterer
+    clusterer,
+    zoomIn,
+    zoomOut,
+    getZoom
   };
 }
 

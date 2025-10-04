@@ -85,7 +85,7 @@ export default function Profile() {
     );
   }
 
-  const stats = userStats || { bookmarks: 0, coupons: 0, used: 0 };
+  const stats = (userStats as any) || { bookmarks: 0, coupons: 0, used: 0 };
 
   return (
     <div className="min-h-screen bg-background pb-20">

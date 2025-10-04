@@ -138,7 +138,7 @@ export default function Saved() {
     );
   }
 
-  const bookmarks = bookmarksData?.bookmarks || [];
+  const bookmarks = (bookmarksData as any)?.bookmarks || [];
   const activeCouponList = activeCoupons?.coupons || [];
   const usedCouponList = usedCoupons?.coupons || [];
   const expiredCouponList = expiredCoupons?.coupons || [];
