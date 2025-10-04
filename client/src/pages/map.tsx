@@ -103,13 +103,6 @@ export default function Map() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        onSearchSubmit={(query) => {
-          window.location.href = `/discover?q=${encodeURIComponent(query)}`;
-        }}
-        className="absolute top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur"
-      />
-
       <div className="map-container">
         <NaverMap
           center={mapCenter}

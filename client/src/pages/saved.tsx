@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
@@ -122,7 +121,6 @@ export default function Saved() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="text-6xl mb-4">🔐</div>
@@ -148,8 +146,6 @@ export default function Saved() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Header />
-
       <div className="px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">

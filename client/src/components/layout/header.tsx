@@ -28,36 +28,36 @@ export function Header({ onLocationClick, onSearchChange, onSearchSubmit, classN
 
   return (
     <header className={cn(
-      "sticky top-0 z-50 bg-card px-4 py-3 safe-top shadow-sm",
+      "sticky top-0 z-50 bg-card px-3 py-2 safe-top shadow-sm",
       className
     )}>
-      <div className="flex items-center gap-3">
-        {/* Location Chip */}
+      <div className="flex items-center gap-2">
+        {/* Location Chip - Compact */}
         <Button
           variant="secondary"
           size="sm"
           onClick={onLocationClick}
-          className="flex items-center gap-1.5 bg-muted hover:bg-muted/80 px-3 py-1.5 h-auto rounded-full"
+          className="flex items-center gap-1 bg-muted hover:bg-muted/80 px-2 py-1 h-auto rounded-full shrink-0"
           data-testid="button-location"
         >
-          <MapPin className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium" data-testid="text-location">
-            {location?.region || '위치 선택'}
+          <MapPin className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs font-medium" data-testid="text-location">
+            {location?.region || '위치'}
           </span>
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-3 h-3" />
         </Button>
 
-        {/* Search Bar */}
+        {/* Search Bar - Compact */}
         <form onSubmit={handleSearchSubmit} className="flex-1 relative">
           <Input
             type="text"
-            placeholder="업체, 혜택, 카테고리 검색"
+            placeholder="혜택 검색"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full bg-muted text-sm pl-10 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary border-0"
+            className="w-full bg-muted text-xs pl-8 pr-3 py-1.5 h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-primary border-0"
             data-testid="input-search"
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         </form>
       </div>
     </header>

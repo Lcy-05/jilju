@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -69,7 +68,6 @@ export default function Profile() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="text-6xl mb-4">👋</div>
@@ -91,8 +89,6 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Header />
-
       <main className="px-4 py-6 space-y-6">
         {/* Profile Header */}
         <Card>
