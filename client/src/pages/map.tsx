@@ -123,6 +123,8 @@ export default function Map() {
           benefits={visibleBenefits}
           onBenefitClick={handleBenefitClick}
           onViewList={handleViewList}
+          hasMore={false}
+          isLoading={isLoading}
         />
       </div>
 

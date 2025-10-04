@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { Benefit } from '@/types';
 import { cn } from '@/lib/utils';
@@ -9,119 +10,94 @@ interface BottomSheetProps {
   benefits: (Benefit & { merchant?: { name: string; address: string } })[];
   onBenefitClick?: (benefit: Benefit) => void;
   onViewList?: () => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoading?: boolean;
   className?: string;
 }
 
-type SheetState = 'collapsed' | 'mid' | 'expanded';
+const MIN_HEIGHT = 100; // px
+const MAX_HEIGHT_PERCENT = 85; // % of viewport
+const LOAD_MORE_THRESHOLD = 200; // px from bottom
 
-export function BottomSheet({ benefits, onBenefitClick, onViewList, className }: BottomSheetProps) {
-  const [state, setState] = useState<SheetState>('collapsed');
+export function BottomSheet({ 
+  benefits, 
+  onBenefitClick, 
+  onViewList, 
+  onLoadMore,
+  hasMore = false,
+  isLoading = false,
+  className 
+}: BottomSheetProps) {
+  const [sheetHeight, setSheetHeight] = useState(MIN_HEIGHT);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
-  const [currentY, setCurrentY] = useState(0);
+  const [startHeight, setStartHeight] = useState(0);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isScrollAtTop, setIsScrollAtTop] = useState(true);
 
-  const getTransform = () => {
-    switch (state) {
-      case 'collapsed':
-        return 'translateY(calc(100% - 120px))';
-      case 'mid':
-        return 'translateY(50%)';
-      case 'expanded':
-        return 'translateY(0)';
-      default:
-        return 'translateY(calc(100% - 120px))';
+  const maxHeight = typeof window !== 'undefined' ? window.innerHeight * (MAX_HEIGHT_PERCENT / 100) : 600;
+
+  const handleScroll = () => {
+    if (contentRef.current) {
+      setIsScrollAtTop(contentRef.current.scrollTop === 0);
+      
+      // Infinite scroll: load more when near bottom
+      const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
+      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+      
+      if (distanceFromBottom < LOAD_MORE_THRESHOLD && hasMore && !isLoading && onLoadMore) {
+        onLoadMore();
+      }
     }
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isScrollAtTop && contentRef.current && contentRef.current.scrollTop > 0) {
+      return;
+    }
     setIsDragging(true);
     setStartY(e.touches[0].clientY);
-    setCurrentY(e.touches[0].clientY);
+    setStartHeight(sheetHeight);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
-    e.preventDefault();
-    setCurrentY(e.touches[0].clientY);
+    const currentY = e.touches[0].clientY;
+    const diff = startY - currentY;
+    const newHeight = Math.min(Math.max(startHeight + diff, MIN_HEIGHT), maxHeight);
+    
+    setSheetHeight(newHeight);
   };
 
   const handleTouchEnd = () => {
     if (!isDragging) return;
-    
     setIsDragging(false);
-    const diff = startY - currentY;
-    
-    if (Math.abs(diff) < 10) {
-      // Tap gesture - expand if collapsed
-      if (state === 'collapsed') {
-        setState('mid');
-      }
-      return;
-    }
-
-    // Swipe gestures
-    if (diff > 50) {
-      // Swipe up
-      if (state === 'collapsed') {
-        setState('mid');
-      } else if (state === 'mid') {
-        setState('expanded');
-      }
-    } else if (diff < -50) {
-      // Swipe down
-      if (state === 'expanded') {
-        setState('mid');
-      } else if (state === 'mid') {
-        setState('collapsed');
-      }
-    }
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isScrollAtTop && contentRef.current && contentRef.current.scrollTop > 0) {
+      return;
+    }
     setIsDragging(true);
     setStartY(e.clientY);
-    setCurrentY(e.clientY);
+    setStartHeight(sheetHeight);
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
     
-    e.preventDefault();
-    setCurrentY(e.clientY);
+    const diff = startY - e.clientY;
+    const newHeight = Math.min(Math.max(startHeight + diff, MIN_HEIGHT), maxHeight);
+    
+    setSheetHeight(newHeight);
   };
 
   const handleMouseUp = () => {
     if (!isDragging) return;
-    
     setIsDragging(false);
-    const diff = startY - currentY;
-    
-    if (Math.abs(diff) < 10) {
-      // Click gesture
-      if (state === 'collapsed') {
-        setState('mid');
-      }
-      return;
-    }
-
-    // Drag gestures
-    if (diff > 50) {
-      // Drag up
-      if (state === 'collapsed') {
-        setState('mid');
-      } else if (state === 'mid') {
-        setState('expanded');
-      }
-    } else if (diff < -50) {
-      // Drag down
-      if (state === 'expanded') {
-        setState('mid');
-      } else if (state === 'mid') {
-        setState('collapsed');
-      }
-    }
   };
 
   useEffect(() => {
@@ -137,38 +113,44 @@ export function BottomSheet({ benefits, onBenefitClick, onViewList, className }:
         document.removeEventListener('mouseup', handleMouseUpGlobal);
       };
     }
-  }, [isDragging]);
+  }, [isDragging, startY, startHeight]);
 
   return (
     <div
       ref={sheetRef}
       className={cn(
-        "bottom-sheet",
+        "fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl shadow-2xl",
+        "z-[60]",
         className
       )}
       style={{
-        transform: getTransform(),
-        transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+        height: `${sheetHeight}px`,
+        transition: isDragging ? 'none' : 'height 0.2s ease-out'
       }}
       data-testid="bottom-sheet"
     >
       {/* Handle */}
       <div 
-        className="flex justify-center py-2 cursor-pointer"
+        className="flex justify-center py-3 cursor-grab active:cursor-grabbing"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         data-testid="bottom-sheet-handle"
       >
-        <div className="w-12 h-1 bg-muted rounded-full" />
+        <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-safe overflow-y-auto max-h-[70vh]">
+      <div 
+        ref={contentRef}
+        className="px-4 pb-20 overflow-y-auto"
+        style={{ height: `calc(${sheetHeight}px - 48px)` }}
+        onScroll={handleScroll}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold" data-testid="text-benefits-count">
-            이 지역 혜택 <span className="text-primary">{benefits.length}</span>
+            총 <span className="text-primary">{benefits.length}</span>개의 혜택
           </h3>
           {onViewList && (
             <Button 
@@ -184,12 +166,28 @@ export function BottomSheet({ benefits, onBenefitClick, onViewList, className }:
         </div>
 
         {/* Benefits List */}
-        {benefits.length > 0 ? (
+        {isLoading && benefits.length === 0 ? (
+          <div className="space-y-3 pb-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card border border-border rounded-xl p-3">
+                <div className="flex gap-3">
+                  <Skeleton className="w-20 h-20 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : benefits.length > 0 ? (
           <div className="space-y-3 pb-4">
             {benefits.map((benefit) => (
               <div
                 key={benefit.id}
-                className="bg-background rounded-xl p-3 cursor-pointer hover:shadow-sm transition-shadow"
+                className="bg-card border border-border rounded-xl p-3 cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => onBenefitClick?.(benefit)}
                 data-testid={`card-map-benefit-${benefit.id}`}
               >
@@ -202,22 +200,22 @@ export function BottomSheet({ benefits, onBenefitClick, onViewList, className }:
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       {benefit.type === 'PERCENT' && (
-                        <span className="badge-percent px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
                           {benefit.percent}%
                         </span>
                       )}
                       {benefit.type === 'AMOUNT' && (
-                        <span className="badge-amount px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
                           {benefit.amount?.toLocaleString()}원
                         </span>
                       )}
                       {benefit.type === 'GIFT' && (
-                        <span className="badge-gift px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
                           증정
                         </span>
                       )}
                       {benefit.type === 'MEMBERSHIP' && (
-                        <span className="badge-membership px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
                           멤버십
                         </span>
                       )}
@@ -231,7 +229,7 @@ export function BottomSheet({ benefits, onBenefitClick, onViewList, className }:
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <span>{benefit.distanceFormatted || '거리 정보 없음'}</span>
                       <span>•</span>
-                      <span className="text-primary">영업중</span>
+                      <span className="text-green-600">영업중</span>
                     </div>
                   </div>
                 </div>
@@ -239,10 +237,60 @@ export function BottomSheet({ benefits, onBenefitClick, onViewList, className }:
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <div className="text-4xl mb-4">🔍</div>
-            <p className="text-sm">이 지역에는 혜택이 없습니다</p>
-            <p className="text-xs mt-1">다른 지역을 확인해보세요</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="empty-state">
+            <div className="w-24 h-24 mb-6 flex items-center justify-center">
+              <svg className="w-full h-full text-primary/40" viewBox="0 0 100 100" fill="none">
+                <circle cx="40" cy="40" r="28" stroke="currentColor" strokeWidth="6"/>
+                <path d="M60 60 L80 80" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold mb-2">이 지역에 등록된 혜택이 없습니다</h3>
+            <p className="text-sm text-muted-foreground mb-6">다른 키워드나 필터로 다시 시도해보세요</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="rounded-full"
+                data-testid="button-expand-radius"
+              >
+                범위 넓히기(+2km)
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="rounded-full"
+                data-testid="button-reset-filter"
+              >
+                필터 초기화
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="rounded-full"
+                data-testid="button-view-categories"
+              >
+                카테고리 보기
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Skeleton for Infinite Scroll */}
+        {isLoading && benefits.length > 0 && (
+          <div className="space-y-3 pb-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card border border-border rounded-xl p-3">
+                <div className="flex gap-3">
+                  <Skeleton className="w-20 h-20 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

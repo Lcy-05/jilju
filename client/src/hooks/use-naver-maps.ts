@@ -122,14 +122,16 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
         zoom,
         minZoom: MAP_CONFIG.MIN_ZOOM,
         maxZoom: MAP_CONFIG.MAX_ZOOM,
-        mapTypeControl: true,
+        mapTypeControl: false,
         mapDataControl: false,
         logoControl: true,
         scaleControl: true,
-        zoomControl: true,
-        zoomControlOptions: {
-          style: window.naver.maps.ZoomControlStyle.SMALL,
-          position: window.naver.maps.Position.TOP_RIGHT
+        zoomControl: false,
+        scaleControlOptions: {
+          position: window.naver.maps.Position.BOTTOM_RIGHT
+        },
+        logoControlOptions: {
+          position: window.naver.maps.Position.BOTTOM_LEFT
         }
       });
 
@@ -140,6 +142,12 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
           onBoundsChanged(bounds);
         });
         listenersRef.current.push(boundsListener);
+        
+        // Trigger initial bounds change to load data on mount
+        setTimeout(() => {
+          const bounds = mapInstance.getBounds();
+          onBoundsChanged(bounds);
+        }, 100);
       }
 
       if (onMapClick) {

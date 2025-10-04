@@ -108,13 +108,13 @@ export function NaverMap({
       )}
 
       {/* Map Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+      <div className="absolute bottom-20 right-4 flex flex-col gap-2 z-10">
         <Button
           variant="secondary"
           size="sm"
           onClick={handleCurrentLocation}
           disabled={locationLoading}
-          className="w-10 h-10 p-0 rounded-lg shadow-md"
+          className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
           data-testid="button-current-location"
         >
           <MyLocationTwoTone className="w-5 h-5" />
@@ -124,29 +124,23 @@ export function NaverMap({
           variant="secondary"
           size="sm"
           onClick={handleZoomIn}
-          className="w-10 h-10 p-0 rounded-lg shadow-md"
+          className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
           data-testid="button-zoom-in"
         >
-          <Add className="w-5 h-5" />
+          <Add className="w-6 h-6" />
         </Button>
         
         <Button
           variant="secondary"
           size="sm"
           onClick={handleZoomOut}
-          className="w-10 h-10 p-0 rounded-lg shadow-md"
+          className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
           data-testid="button-zoom-out"
         >
-          <Remove className="w-5 h-5" />
+          <Remove className="w-6 h-6" />
         </Button>
       </div>
 
-      {/* Attribution */}
-      {isLoaded && (
-        <div className="absolute bottom-2 left-2 text-xs text-muted-foreground bg-white/90 px-2 py-1 rounded">
-          © NAVER Corp.
-        </div>
-      )}
     </div>
   );
 }
