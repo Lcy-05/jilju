@@ -116,7 +116,7 @@ export class DatabaseStorage implements IStorage {
       .select({ roleId: userRoles.roleId })
       .from(userRoles)
       .where(eq(userRoles.userId, userId));
-    return roles.map(r => r.roleId);
+    return roles.map(r => r.roleId).filter((id): id is string => id !== null);
   }
 
   async getUserPermissions(userId: string): Promise<string[]> {
@@ -159,16 +159,38 @@ export class DatabaseStorage implements IStorage {
       sort?: 'distance' | 'popular' | 'newest';
     }
   ): Promise<Benefit[]> {
-    // For now, return all active benefits
-    // TODO: Implement PostGIS spatial queries
-    let query = db.select().from(benefits).where(eq(benefits.status, 'ACTIVE'));
+    // For now, return all active benefits with merchant info
+    // TODO: Implement PostGIS spatial queries for actual nearby filtering
+    const conditions = [
+      eq(benefits.status, 'ACTIVE'),
+      eq(merchants.status, 'ACTIVE')
+    ];
     
     if (filters?.types && filters.types.length > 0) {
-      query = query.where(sql`${benefits.type} = ANY(${filters.types})`);
+      conditions.push(sql`${benefits.type} = ANY(${filters.types})`);
     }
     
-    const results = await query.limit(50);
-    return results;
+    const results = await db
+      .select({
+        benefit: benefits,
+        merchant: {
+          id: merchants.id,
+          name: merchants.name,
+          address: merchants.address,
+          location: merchants.location,
+          categoryPath: merchants.categoryPath
+        }
+      })
+      .from(benefits)
+      .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
+      .where(and(...conditions))
+      .limit(50);
+    
+    // Flatten the results
+    return results.map(row => ({
+      ...row.benefit,
+      merchant: row.merchant as any
+    }));
   }
 
   async getPopularBenefits(limit: number = 20): Promise<Benefit[]> {
