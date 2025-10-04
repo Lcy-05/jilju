@@ -1,9 +1,25 @@
 // Service URLs for Naver Maps API registration
+// 환경별 URL 자동 설정
+const isDevelopment = import.meta.env.DEV;
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+const getBaseUrl = () => {
+  if (isLocalhost) {
+    return 'http://localhost:5000';
+  } else if (isDevelopment) {
+    return 'https://dev.jilju.co.kr';
+  } else {
+    return 'https://jilju.co.kr';
+  }
+};
+
+const BASE_URL = getBaseUrl();
+
 export const SERVICE_URLS = {
-  MAIN: 'https://jilju.app',
-  API: 'https://api.jilju.app', 
-  MERCHANT: 'https://merchant.jilju.app',
-  ADMIN: 'https://admin.jilju.app'
+  MAIN: BASE_URL,
+  API: BASE_URL + '/api',
+  MERCHANT: BASE_URL + '/merchant',
+  ADMIN: BASE_URL + '/admin'
 };
 
 // App configuration
