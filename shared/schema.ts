@@ -128,7 +128,7 @@ export const merchants = pgTable("merchants", {
   addressDetail: text("address_detail"),
   phone: text("phone").notNull(),
   regionId: uuid("region_id").references(() => regions.id),
-  location: text("location").notNull(), // PostGIS geography point
+  location: jsonb("location").notNull(), // {lat: number, lng: number}
   website: text("website"),
   socialLinks: jsonb("social_links"), // Instagram, Facebook, etc.
   images: text("images").array(),
@@ -139,7 +139,6 @@ export const merchants = pgTable("merchants", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 }, (table) => ({
-  locationIdx: index("merchants_location_gist_idx").using("gist", table.location),
   nameIdx: index("merchants_name_idx").on(table.name),
   regionIdx: index("merchants_region_idx").on(table.regionId),
   statusIdx: index("merchants_status_idx").on(table.status)

@@ -159,8 +159,6 @@ export class DatabaseStorage implements IStorage {
       sort?: 'distance' | 'popular' | 'newest';
     }
   ): Promise<Benefit[]> {
-    // For now, return all active benefits with merchant info
-    // TODO: Implement PostGIS spatial queries for actual nearby filtering
     const conditions = [
       eq(benefits.status, 'ACTIVE'),
       eq(merchants.status, 'ACTIVE')
@@ -169,6 +167,20 @@ export class DatabaseStorage implements IStorage {
     if (filters?.types && filters.types.length > 0) {
       conditions.push(sql`${benefits.type} = ANY(${filters.types})`);
     }
+    
+    // Distance filter using PostGIS
+    // Convert JSONB location to geography and calculate distance
+    const radiusMeters = radiusKm * 1000;
+    conditions.push(sql`
+      ST_DWithin(
+        ST_MakePoint(
+          CAST(${merchants.location}->>'lng' AS FLOAT),
+          CAST(${merchants.location}->>'lat' AS FLOAT)
+        )::geography,
+        ST_MakePoint(${lng}, ${lat})::geography,
+        ${radiusMeters}
+      )
+    `);
     
     const results = await db
       .select({
@@ -179,17 +191,38 @@ export class DatabaseStorage implements IStorage {
           address: merchants.address,
           location: merchants.location,
           categoryPath: merchants.categoryPath
-        }
+        },
+        distance: sql<number>`
+          ST_Distance(
+            ST_MakePoint(
+              CAST(${merchants.location}->>'lng' AS FLOAT),
+              CAST(${merchants.location}->>'lat' AS FLOAT)
+            )::geography,
+            ST_MakePoint(${lng}, ${lat})::geography
+          )
+        `
       })
       .from(benefits)
       .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
       .where(and(...conditions))
+      .orderBy(sql`
+        ST_Distance(
+          ST_MakePoint(
+            CAST(${merchants.location}->>'lng' AS FLOAT),
+            CAST(${merchants.location}->>'lat' AS FLOAT)
+          )::geography,
+          ST_MakePoint(${lng}, ${lat})::geography
+        ) ASC
+      `)
       .limit(50);
     
-    // Flatten the results
+    // Flatten the results and add distance info
     return results.map(row => ({
       ...row.benefit,
-      merchant: row.merchant as any
+      merchant: {
+        ...row.merchant,
+        distance: row.distance
+      } as any
     }));
   }
 

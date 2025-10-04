@@ -59,16 +59,21 @@ export default function Map() {
   }, [benefitsData]);
 
   // Convert benefits to map markers
-  const markers: MapMarker[] = visibleBenefits.map(benefit => ({
-    id: benefit.id,
-    position: {
-      lat: parseFloat(benefit.merchant?.location?.split(',')[1] || '0'),
-      lng: parseFloat(benefit.merchant?.location?.split(',')[0] || '0')
-    },
-    title: benefit.title,
-    type: 'benefit',
-    data: benefit
-  }));
+  const markers: MapMarker[] = visibleBenefits
+    .filter(benefit => benefit.merchant?.location) // Filter out benefits without location
+    .map(benefit => {
+      const location = benefit.merchant.location as any;
+      return {
+        id: benefit.id,
+        position: {
+          lat: typeof location === 'object' ? location.lat : 0,
+          lng: typeof location === 'object' ? location.lng : 0
+        },
+        title: benefit.title,
+        type: 'benefit',
+        data: benefit
+      };
+    });
 
   const handleBoundsChanged = (bounds: any) => {
     // Throttle bounds changes to avoid too many API calls
