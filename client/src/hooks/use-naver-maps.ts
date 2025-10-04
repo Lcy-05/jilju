@@ -77,10 +77,11 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
           return;
         }
 
-        // Create script element
+        // Create script element for NCP Maps API
         const script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${import.meta.env.VITE_NAVER_MAPS_CLIENT_ID}`;
+        // Use new NCP Maps API URL
+        script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${import.meta.env.VITE_NAVER_MAPS_CLIENT_ID}`;
         
         script.onload = () => {
           setIsLoaded(true);
