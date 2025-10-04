@@ -1,0 +1,397 @@
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useLocation as useRouterLocation } from 'wouter';
+import { Header } from '@/components/layout/header';
+import { BottomNavigation } from '@/components/layout/bottom-navigation';
+import { BenefitCard } from '@/components/benefit/benefit-card';
+import { BenefitModal } from '@/components/benefit/benefit-modal';
+import { CouponModal } from '@/components/coupon/coupon-modal';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
+import { Filter, ChevronDown } from 'lucide-react';
+import { useLocation } from '@/hooks/use-location';
+import { useAuth } from '@/lib/auth';
+import { Benefit, SearchOptions, Category, Region, Coupon } from '@/types';
+import { API_ENDPOINTS, SORT_OPTIONS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+
+export default function Discover() {
+  const [, setLocation] = useRouterLocation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Search and filter state
+  const [searchOptions, setSearchOptions] = useState<SearchOptions>({
+    categories: [],
+    types: [],
+    sort: 'distance',
+    nowOpen: false
+  });
+  
+  const { location } = useLocation();
+  const { user } = useAuth();
+
+  // Parse URL parameters on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const params: SearchOptions = {
+      categories: urlParams.getAll('categories'),
+      types: urlParams.getAll('types'),
+      sort: (urlParams.get('sort') as any) || 'distance',
+      nowOpen: urlParams.get('nowOpen') === 'true'
+    };
+    setSearchOptions(params);
+    setSearchQuery(urlParams.get('q') || '');
+  }, []);
+
+  // Get categories for filtering
+  const { data: categories } = useQuery({
+    queryKey: [API_ENDPOINTS.CATEGORIES],
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // Get regions for filtering
+  const { data: regions } = useQuery({
+    queryKey: [API_ENDPOINTS.GEOGRAPHY.REGIONS, 3], // Level 3 (동/읍/면)
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // Search benefits
+  const { data: searchResults, isLoading } = useQuery({
+    queryKey: [
+      API_ENDPOINTS.BENEFITS.SEARCH,
+      searchQuery,
+      searchOptions,
+      location?.lat,
+      location?.lng
+    ],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (searchQuery) {
+        params.set('q', searchQuery);
+      }
+      
+      if (location?.lat && location?.lng) {
+        params.set('bbox', `${location.lat-0.01},${location.lng-0.01},${location.lat+0.01},${location.lng+0.01}`);
+      }
+
+      searchOptions.categories?.forEach(cat => params.append('cats[]', cat));
+      searchOptions.types?.forEach(type => params.append('types[]', type));
+      
+      if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
+      if (searchOptions.sort) params.set('sort', searchOptions.sort);
+      if (searchOptions.nowOpen) params.set('nowOpen', 'true');
+      
+      params.set('limit', '50');
+
+      const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
+      return response.json();
+    },
+    enabled: !!(location?.lat && location?.lng),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const handleSearchSubmit = (query: string) => {
+    setSearchQuery(query);
+    updateURL();
+  };
+
+  const updateURL = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (searchOptions.sort) params.set('sort', searchOptions.sort);
+    if (searchOptions.nowOpen) params.set('nowOpen', 'true');
+    searchOptions.categories?.forEach(cat => params.append('categories', cat));
+    searchOptions.types?.forEach(type => params.append('types', type));
+    
+    const newUrl = `/discover${params.toString() ? '?' + params.toString() : ''}`;
+    window.history.pushState({}, '', newUrl);
+  };
+
+  const handleCategoryFilter = (categoryId: string, checked: boolean) => {
+    setSearchOptions(prev => ({
+      ...prev,
+      categories: checked 
+        ? [...(prev.categories || []), categoryId]
+        : (prev.categories || []).filter(c => c !== categoryId)
+    }));
+  };
+
+  const handleTypeFilter = (type: string, checked: boolean) => {
+    setSearchOptions(prev => ({
+      ...prev,
+      types: checked 
+        ? [...(prev.types || []), type]
+        : (prev.types || []).filter(t => t !== type)
+    }));
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSearchOptions(prev => ({ ...prev, sort: sort as any }));
+  };
+
+  const handleBenefitClick = (benefit: Benefit) => {
+    setSelectedBenefit(benefit);
+    setIsBenefitModalOpen(true);
+  };
+
+  const handleCouponIssue = (coupon: Coupon) => {
+    setSelectedCoupon(coupon);
+    setIsCouponModalOpen(true);
+  };
+
+  const benefits = searchResults?.benefits || [];
+  const totalCount = searchResults?.total || 0;
+
+  const mainCategories = ['음식', '카페', '쇼핑', '뷰티', '헬스'];
+  const benefitTypes = [
+    { value: 'PERCENT', label: '할인율' },
+    { value: 'AMOUNT', label: '정액할인' },
+    { value: 'GIFT', label: '증정' },
+    { value: 'MEMBERSHIP', label: '멤버십' }
+  ];
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <Header
+        onSearchSubmit={handleSearchSubmit}
+        onSearchChange={setSearchQuery}
+      />
+
+      {/* Filter Bar */}
+      <section className="sticky top-16 z-40 bg-background px-4 py-3 border-b border-border">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {mainCategories.map((category) => {
+            const isSelected = searchOptions.categories?.includes(category);
+            return (
+              <Button
+                key={category}
+                variant={isSelected ? "default" : "secondary"}
+                size="sm"
+                onClick={() => handleCategoryFilter(category, !isSelected)}
+                className="flex-shrink-0 rounded-full"
+                data-testid={`button-category-${category}`}
+              >
+                {category}
+              </Button>
+            );
+          })}
+          
+          <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+            <SheetTrigger asChild>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                className="flex-shrink-0 rounded-full"
+                data-testid="button-open-filters"
+              >
+                <Filter className="w-4 h-4 mr-1" />
+                필터
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[80vh]">
+              <SheetHeader>
+                <SheetTitle>상세 필터</SheetTitle>
+              </SheetHeader>
+              
+              <div className="py-4 space-y-6">
+                {/* Benefit Types */}
+                <div>
+                  <h4 className="font-semibold mb-3">혜택 종류</h4>
+                  <div className="space-y-2">
+                    {benefitTypes.map(({ value, label }) => (
+                      <div key={value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`type-${value}`}
+                          checked={searchOptions.types?.includes(value)}
+                          onCheckedChange={(checked) => handleTypeFilter(value, !!checked)}
+                        />
+                        <label htmlFor={`type-${value}`} className="text-sm">
+                          {label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Now Open */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="now-open"
+                    checked={searchOptions.nowOpen}
+                    onCheckedChange={(checked) => 
+                      setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }))
+                    }
+                  />
+                  <label htmlFor="now-open" className="text-sm">
+                    지금 사용 가능
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    onClick={() => {
+                      updateURL();
+                      setIsFilterOpen(false);
+                    }}
+                  >
+                    필터 적용
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSearchOptions({ sort: 'distance' })}
+                  >
+                    초기화
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+        
+        <div className="flex items-center gap-2 mt-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1"
+                data-testid="button-sort"
+              >
+                <span>{SORT_OPTIONS.find(opt => opt.value === searchOptions.sort)?.label || '거리순'}</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto">
+              <div className="py-4">
+                <h4 className="font-semibold mb-3">정렬</h4>
+                <div className="space-y-2">
+                  {SORT_OPTIONS.map(({ value, label }) => (
+                    <Button
+                      key={value}
+                      variant={searchOptions.sort === value ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleSortChange(value);
+                        updateURL();
+                      }}
+                      data-testid={`button-sort-${value}`}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <div className="flex items-center gap-2 text-sm">
+            <Checkbox
+              id="now-open-quick"
+              checked={searchOptions.nowOpen}
+              onCheckedChange={(checked) => {
+                setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }));
+                updateURL();
+              }}
+            />
+            <label htmlFor="now-open-quick">지금 사용 가능</label>
+          </div>
+        </div>
+      </section>
+
+      {/* Results */}
+      <section className="px-4 py-4">
+        <div className="text-sm text-muted-foreground mb-4" data-testid="text-results-count">
+          총 {totalCount.toLocaleString()}개의 혜택
+        </div>
+        
+        <div className="space-y-3">
+          {isLoading ? (
+            // Skeleton loading
+            Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-xl p-3 shadow-sm">
+                <div className="flex gap-3">
+                  <div className="skeleton w-24 h-24 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-4 w-16 rounded" />
+                    <div className="skeleton h-4 w-full rounded" />
+                    <div className="skeleton h-3 w-32 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : benefits.length > 0 ? (
+            benefits.map((benefit: Benefit) => (
+              <BenefitCard
+                key={benefit.id}
+                benefit={benefit}
+                variant="horizontal"
+                onClick={() => handleBenefitClick(benefit)}
+                showMerchant={true}
+              />
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-lg font-semibold mb-2">검색 결과가 없습니다</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                다른 키워드나 필터로 다시 시도해보세요
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchOptions({ sort: 'distance' });
+                  updateURL();
+                }}
+              >
+                검색 초기화
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Load More */}
+        {benefits.length > 0 && searchResults?.hasMore && (
+          <div className="text-center py-6">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                // Implement pagination
+                console.log('Load more');
+              }}
+              data-testid="button-load-more"
+            >
+              더보기
+            </Button>
+          </div>
+        )}
+      </section>
+
+      <BottomNavigation />
+
+      {/* Modals */}
+      <BenefitModal
+        benefit={selectedBenefit}
+        isOpen={isBenefitModalOpen}
+        onClose={() => setIsBenefitModalOpen(false)}
+        onCouponIssue={handleCouponIssue}
+      />
+
+      <CouponModal
+        coupon={selectedCoupon}
+        isOpen={isCouponModalOpen}
+        onClose={() => setIsCouponModalOpen(false)}
+        onViewInWallet={() => setLocation('/saved?tab=coupons')}
+      />
+    </div>
+  );
+}
