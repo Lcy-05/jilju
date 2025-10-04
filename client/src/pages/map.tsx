@@ -9,7 +9,7 @@ import { Header } from '@/components/layout/header';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
 import { Benefit, MapMarker, Coupon } from '@/types';
-import { API_ENDPOINTS, MAP_CONFIG } from '@/lib/constants';
+import { API_ENDPOINTS, MAP_CONFIG, JEJU_REGIONS } from '@/lib/constants';
 import { findJejuRegion, JejuRegion } from '@/lib/jeju-regions';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
@@ -27,8 +27,19 @@ export default function Map() {
   const { location, getCurrentLocation } = useLocation();
   const { user } = useAuth();
 
-  // Initialize map center
+  // Initialize map center (check URL params for region)
   useEffect(() => {
+    // Check URL params for region parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const regionParam = urlParams.get('region');
+    
+    // If region=jeju, center on Jeju
+    if (regionParam === 'jeju' && !mapCenter) {
+      setMapCenter(JEJU_REGIONS.city_hall.center);
+      return;
+    }
+    
+    // Otherwise use current location
     if (location && !mapCenter) {
       setMapCenter({ lat: location.lat, lng: location.lng });
     }

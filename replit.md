@@ -137,6 +137,19 @@ The application uses Naver Maps JavaScript API v3 for interactive mapping and Na
 **Recent Changes (October 4, 2025):**
 - Fixed header UX: Removed from map/saved/profile pages, made compact on home/discover
 - Connected map zoom controls to Naver Maps API
-- Implemented database seeding with test merchants and benefits in Seoul
+- Implemented database seeding with test merchants and benefits in Seoul and Jeju
 - Enhanced `getBenefitsNearby` to join merchant location data
 - Added lat/lng/radius parameter support to `/api/benefits/search`
+- **Map UX Improvements:**
+  - Enabled map dragging (draggable, pinchZoom, scrollWheel, kinetic pan)
+  - Redesigned bottom sheet drag handle: #D9D9D9 color, 36px × 4px pill shape
+  - Updated home category icons: transparent background, larger size (text-3xl)
+- **Jeju Region System:**
+  - Implemented 8-zone classification (아라권, 삼화권, 시청권, 공항연안권, 노형권, 동부권, 서부권, 서귀포권)
+  - Added region detection using Haversine formula
+  - Map click shows region badge with filter functionality
+  - URL parameter support: `/map?region=jeju` centers on Jeju
+- **Location Data Optimization:**
+  - Fixed critical location parsing bug (prevented {lat:0,lng:0} fallback)
+  - Implemented useMemo for location normalization (parse once, cache results)
+  - Merchant locations now correctly parsed from JSON strings to objects
