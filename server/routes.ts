@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertUserSchema, insertBenefitSchema, insertCouponSchema } from "@shared/schema";
-import { authenticateToken, requireRole } from "./auth";
+import { authenticateToken, requireRole, hashPassword, comparePassword, generateToken } from "./auth";
 import { searchService } from "./services/search";
 import { couponService } from "./services/coupon";
 import { naverMapsService } from "./services/naver-maps";
@@ -20,15 +20,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User already exists" });
       }
 
-      // Hash password here (implement bcrypt)
-      const user = await storage.createUser(userData);
+      // Hash password
+      const hashedPassword = await hashPassword(userData.password);
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
       
       // Assign default USER role
       await storage.assignUserRole(user.id, "USER");
       
-      res.status(201).json({ user: { id: user.id, email: user.email, name: user.name } });
+      // Get user roles
+      const roles = await storage.getUserRoles(user.id);
+      
+      // Generate JWT token
+      const token = generateToken({ id: user.id, email: user.email, name: user.name }, roles);
+      
+      // SECURITY: Never send password field to client
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.status(201).json({ 
+        user: { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name },
+        token
+      });
     } catch (error) {
-      res.status(400).json({ error: "Invalid user data" });
+      console.error("Registration error:", error);
+      res.status(400).json({ error: "Invalid user data", details: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -41,12 +59,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      // Verify password here (implement bcrypt comparison)
-      // Generate JWT token here
+      // Verify password
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
       
-      res.json({ user: { id: user.id, email: user.email, name: user.name }, token: "jwt_token" });
+      // Get user roles
+      const roles = await storage.getUserRoles(user.id);
+      
+      // Generate JWT token
+      const token = generateToken({ id: user.id, email: user.email, name: user.name }, roles);
+      
+      // SECURITY: Never send password field to client
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({ 
+        user: { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name, roles },
+        token 
+      });
     } catch (error) {
-      res.status(500).json({ error: "Login failed" });
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed", details: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req, res) => {
+    try {
+      // req.user is set by authenticateToken middleware
+      const user = await storage.getUserById(req.user!.id);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Get fresh roles
+      const roles = await storage.getUserRoles(user.id);
+      
+      // SECURITY: Never send password field to client
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        id: userWithoutPassword.id,
+        email: userWithoutPassword.email,
+        name: userWithoutPassword.name,
+        roles
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get user info" });
     }
   });
 
