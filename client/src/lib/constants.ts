@@ -34,9 +34,9 @@ export const APP_CONFIG = {
   NAME: '질주',
   VERSION: '1.0.0',
   DEFAULT_LOCATION: {
-    lat: 37.5665,
-    lng: 126.9780,
-    name: '서울시 중구'
+    lat: 33.4996,
+    lng: 126.5312,
+    name: '제주특별자치도'
   },
   SEARCH_DEBOUNCE_MS: 250,
   MAP_THROTTLE_MS: 300,

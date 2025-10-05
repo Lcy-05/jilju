@@ -1,0 +1,95 @@
+🔍 문제 요약
+
+모든 거리 값이 동일하게 “462.9km”로 표시됨
+
+지도 중심이 제주가 아닌 다른 지역(서해 북쪽 바다 근처)으로 틀어져 있음
+
+UI 일부가 겹침 — 지도 컨트롤(3버튼)이 바텀시트 위로 침범 중
+
+① 거리 값이 전부 462.9km로 뜨는 이유
+
+이건 거의 확실하게 거리 계산 기준점(현재 위치 or 지도 중심) 을 잘못 잡은 경우야.
+즉, DistanceMatrix나 geometry.computeDistance 계산 시
+사용자의 현재 좌표(currentPosition)가 null 또는 기본값(서울) 으로 들어가서,
+모든 매장까지의 거리가 동일하게 계산되는 거야.
+
+해결법
+
+navigator.geolocation.getCurrentPosition((pos) => {
+  const userLoc = new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+
+  data.forEach(store => {
+    const dist = naver.maps.geometry.spherical.computeDistanceBetween(
+      userLoc,
+      new naver.maps.LatLng(store.lat, store.lng)
+    );
+    store.distance = (dist / 1000).toFixed(1) + 'km';
+  });
+});
+
+
+userLoc이 없을 때는 map.getCenter()를 fallback으로 사용하도록 해.
+
+API 호출 시 비동기 타이밍을 조정하지 않으면, 초기 렌더링에서 undefined 좌표로 400km대 잘못된 거리가 찍히는 경우가 많아.
+
+② 지도 중심이 제주가 아닌 이유
+
+현재 중심 좌표가 “33.4996, 126.5312”로 설정되지 않았거나,
+데이터 로드 후 fitBounds로 자동 리센터링이 되어 버린 상태야.
+특히 462.9km라는 값으로 보면, 지도 중심이 서울이나 수도권 기준으로 계산되고 있어.
+
+해결법
+
+초기 mapOptions.center를 반드시 제주로 고정:
+
+const map = new naver.maps.Map('map', {
+  center: new naver.maps.LatLng(33.4996, 126.5312),
+  zoom: 11
+});
+
+
+fitBounds() 사용 시 제주도 내 업체만 포함된 좌표 배열로 한정:
+
+const jejuStores = stores.filter(s => s.region === '제주');
+const bounds = new naver.maps.LatLngBounds();
+jejuStores.forEach(s => bounds.extend(new naver.maps.LatLng(s.lat, s.lng)));
+map.fitBounds(bounds);
+
+③ 지도 컨트롤 버튼이 목록 위로 겹치는 이유
+
+이건 z-index 계층이 잘못된 상태야.
+지도 컨트롤(내위치, +, −)이 position: absolute; z-index: 1500 등으로 고정돼 있어서
+바텀시트보다 위로 떠 있다.
+
+해결법
+
+바텀시트는 항상 지도 컨트롤보다 상위 z-index를 가져야 함.
+
+.map-controls { z-index: 1000; }
+.bottom-sheet { z-index: 1200; }
+
+
+또는, 바텀시트가 올라올 때 컨트롤 영역이 자동으로 opacity: 0 되도록 처리:
+
+sheet.addEventListener('transitionstart', () => {
+  document.querySelector('.map-controls').style.opacity = 0;
+});
+sheet.addEventListener('transitionend', () => {
+  if (sheet.state === 'collapsed')
+    document.querySelector('.map-controls').style.opacity = 1;
+});
+
+✅ 정리
+
+이 화면에서 발생한 문제를 한 문장으로 요약하면
+
+“지도 중심과 사용자 좌표가 초기화되지 않아 거리 계산이 전부 서울 기준으로 고정됐고,
+지도 컨트롤이 시각적으로 바텀시트 위에 덮여 있는 상태”
+
+즉, 아래 세 가지를 수정하면 정상 동작한다.
+
+현재 위치를 정확히 받아서 거리 계산 기준을 맞추기
+
+초기 지도 중심을 제주도로 고정하기 (fitBounds도 제주 한정)
+
+z-index 조정으로 지도 컨트롤이 목록 위에 겹치지 않게 하기
