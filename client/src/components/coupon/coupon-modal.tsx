@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Copy } from 'lucide-react';
@@ -116,6 +116,9 @@ export function CouponModal({ coupon, isOpen, onClose, onViewInWallet }: CouponM
                     <DialogTitle className="text-xl font-bold text-white" data-testid="text-coupon-title">
                       {benefitInfo.title}
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                      {benefitInfo.subtitle} 쿠폰 상세 정보 및 사용 방법
+                    </DialogDescription>
                   </DialogHeader>
                   <p className="text-sm opacity-90 mt-1" data-testid="text-coupon-merchant">
                     {benefitInfo.subtitle}

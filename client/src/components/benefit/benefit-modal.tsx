@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -176,6 +176,9 @@ export function BenefitModal({
                   <DialogTitle className="text-2xl font-bold" data-testid="text-benefit-title">
                     {benefit.title}
                   </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    {merchant?.name}에서 제공하는 {benefit.title} 혜택 상세 정보
+                  </DialogDescription>
                 </DialogHeader>
               </div>
               <Button

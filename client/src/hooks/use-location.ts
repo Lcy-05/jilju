@@ -39,52 +39,30 @@ export function useLocation(options: UseLocationOptions = {}) {
   const watchIdRef = useRef<number | null>(null);
 
   // Reverse geocoding query
-  const { data: geocodeData } = useQuery({
+  const { data: geocodeData } = useQuery<{ address: string }>({
     queryKey: [API_ENDPOINTS.GEOGRAPHY.REVERSE_GEOCODE, location?.lat, location?.lng],
-    enabled: !!(location?.lat && location?.lng && !location?.address),
+    enabled: !!(location?.lat && location?.lng && location?.address?.includes(',')),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const handleLocationSuccess = useCallback(async (position: GeolocationPosition) => {
+  const handleLocationSuccess = useCallback((position: GeolocationPosition) => {
     const { latitude: lat, longitude: lng, accuracy } = position.coords;
     
-    try {
-      // Get address from reverse geocoding
-      const response = await apiRequest('GET', `${API_ENDPOINTS.GEOGRAPHY.REVERSE_GEOCODE}?lat=${lat}&lng=${lng}`);
-      const { address } = await response.json();
-      
-      const locationState: LocationState = {
-        lat,
-        lng,
-        address: address || '알 수 없는 지역',
-        region: address || '알 수 없는 지역',
-        accuracy
-      };
+    // Set location without address first - useQuery will fetch address
+    const locationState: LocationState = {
+      lat,
+      lng,
+      address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+      region: '알 수 없는 지역',
+      accuracy
+    };
 
-      setLocation(locationState);
-      setError(null);
-      setIsLoading(false);
+    setLocation(locationState);
+    setError(null);
+    setIsLoading(false);
 
-      if (saveToStorage) {
-        localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(locationState));
-      }
-    } catch (err) {
-      // Fallback without address
-      const locationState: LocationState = {
-        lat,
-        lng,
-        address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-        region: '알 수 없는 지역',
-        accuracy
-      };
-
-      setLocation(locationState);
-      setError(null);
-      setIsLoading(false);
-
-      if (saveToStorage) {
-        localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(locationState));
-      }
+    if (saveToStorage) {
+      localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(locationState));
     }
   }, [saveToStorage]);
 
@@ -198,7 +176,7 @@ export function useLocation(options: UseLocationOptions = {}) {
 
   // Update location with geocoded address when available
   useEffect(() => {
-    if (geocodeData?.address && location && !location.address.includes(',')) {
+    if (geocodeData?.address && location && location.address.includes(',')) {
       const updatedLocation = {
         ...location,
         address: geocodeData.address,
