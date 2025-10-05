@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   // Get current user
-  const { data: user, isLoading: userLoading } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery<User>({
     queryKey: [API_ENDPOINTS.AUTH.ME],
     enabled: !!token,
     staleTime: Infinity,

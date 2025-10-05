@@ -10,6 +10,7 @@ import Discover from "@/pages/discover";
 import Map from "@/pages/map";
 import Saved from "@/pages/saved";
 import Profile from "@/pages/profile";
+import Auth from "@/pages/auth";
 import BenefitDetail from "@/pages/benefit-detail";
 import MerchantWizard from "@/pages/merchant/wizard";
 import AdminConsole from "@/pages/admin/console";
@@ -23,6 +24,8 @@ function Router() {
       <Route path="/map" component={Map} />
       <Route path="/saved" component={Saved} />
       <Route path="/profile" component={Profile} />
+      <Route path="/login" component={Auth} />
+      <Route path="/register" component={Auth} />
       <Route path="/benefits/:id" component={BenefitDetail} />
       <Route path="/merchant/wizard" component={MerchantWizard} />
       <Route path="/admin" component={AdminConsole} />
