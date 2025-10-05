@@ -168,3 +168,4 @@ The application uses Naver Maps JavaScript API v3 for interactive mapping and Na
   - Proper safe-area handling for devices with notches (iPhone, etc.)
 - **Map Drag Functionality:** Verified map dragging works properly without interference from bottom sheet
 - **Bottom Navigation Visibility:** Bottom tab bar always visible and accessible, never covered by map or bottom sheet
+- **Distance Calculation Fix:** Changed DEFAULT_LOCATION from Seoul to Jeju Island (33.4996, 126.5312), ensuring accurate distance calculations when user location is unavailable. Distance now correctly shows 0-50km range for Jeju Island merchants instead of incorrect 462.9km values.
