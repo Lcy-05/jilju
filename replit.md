@@ -153,3 +153,18 @@ The application uses Naver Maps JavaScript API v3 for interactive mapping and Na
   - Fixed critical location parsing bug (prevented {lat:0,lng:0} fallback)
   - Implemented useMemo for location normalization (parse once, cache results)
   - Merchant locations now correctly parsed from JSON strings to objects
+
+**Map Screen Improvements (October 5, 2025):**
+- **Jeju Island Default Center:** Map now initializes centered on Jeju Island (33.4996, 126.5312) with zoom level 11, showing the entire island region by default
+- **Fixed Z-Index Hierarchy:**
+  - Bottom Navigation: z-[1000] (always on top)
+  - Map Controls (zoom, location): z-[950]
+  - Bottom Sheet: z-[900]
+  - Map Container: z-[800]
+- **Layout and Safe-Area Support:**
+  - Map container uses 100vh with padding-bottom: calc(64px + env(safe-area-inset-bottom))
+  - Bottom sheet positioned at calc(64px + env(safe-area-inset-bottom)) from bottom
+  - Both bottom sheet and navigation use max-w-md mx-auto for responsive centering
+  - Proper safe-area handling for devices with notches (iPhone, etc.)
+- **Map Drag Functionality:** Verified map dragging works properly without interference from bottom sheet
+- **Bottom Navigation Visibility:** Bottom tab bar always visible and accessible, never covered by map or bottom sheet
