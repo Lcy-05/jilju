@@ -28,23 +28,13 @@ export default function Map() {
   const { location, getCurrentLocation } = useLocation();
   const { user } = useAuth();
 
-  // Initialize map center (check URL params for region)
+  // Initialize map center to Jeju Island by default
   useEffect(() => {
-    // Check URL params for region parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const regionParam = urlParams.get('region');
-    
-    // If region=jeju, center on Jeju
-    if (regionParam === 'jeju' && !mapCenter) {
-      setMapCenter(JEJU_REGIONS.city_hall.center);
-      return;
+    if (!mapCenter) {
+      // Always center on Jeju Island (33.4996, 126.5312)
+      setMapCenter({ lat: 33.4996, lng: 126.5312 });
     }
-    
-    // Otherwise use current location
-    if (location && !mapCenter) {
-      setMapCenter({ lat: location.lat, lng: location.lng });
-    }
-  }, [location, mapCenter]);
+  }, [mapCenter]);
 
   // Get benefits in current map bounds (BBOX search)
   const { data: benefitsData, isLoading } = useQuery({
@@ -203,8 +193,8 @@ export default function Map() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="map-container">
+    <div className="flex flex-col min-h-screen bg-background">
+      <div className="map-container relative">
         {/* Region Filter Badge */}
         {selectedRegion && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
@@ -227,7 +217,7 @@ export default function Map() {
 
         <NaverMap
           center={mapCenter}
-          zoom={MAP_CONFIG.DEFAULT_ZOOM}
+          zoom={11}
           markers={markers}
           onMarkerClick={handleMarkerClick}
           onMapClick={handleMapClick}

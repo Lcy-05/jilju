@@ -119,11 +119,12 @@ export function BottomSheet({
     <div
       ref={sheetRef}
       className={cn(
-        "fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl shadow-2xl",
-        "z-[60]",
+        "fixed left-0 right-0 max-w-md mx-auto bg-background rounded-t-3xl shadow-2xl",
+        "z-[900]",
         className
       )}
       style={{
+        bottom: 'calc(64px + env(safe-area-inset-bottom))',
         height: `${sheetHeight}px`,
         transition: isDragging ? 'none' : 'height 0.2s ease-out'
       }}
@@ -144,7 +145,7 @@ export function BottomSheet({
       {/* Content */}
       <div 
         ref={contentRef}
-        className="px-4 pb-20 overflow-y-auto"
+        className="px-4 pb-4 overflow-y-auto"
         style={{ height: `calc(${sheetHeight}px - 48px)` }}
         onScroll={handleScroll}
       >

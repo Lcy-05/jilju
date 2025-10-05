@@ -66,8 +66,8 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
   const markersRef = useRef<Map<string, any>>(new Map());
 
   const {
-    center = { lat: 37.5665, lng: 126.9780 },
-    zoom = MAP_CONFIG.DEFAULT_ZOOM,
+    center = { lat: 33.4996, lng: 126.5312 },
+    zoom = 11,
     onMapClick,
     onMarkerClick,
     onBoundsChanged
