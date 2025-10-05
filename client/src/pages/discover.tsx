@@ -94,7 +94,6 @@ export default function Discover() {
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
     },
-    enabled: !!(location?.lat && location?.lng),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

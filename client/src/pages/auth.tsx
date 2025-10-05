@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,11 +31,22 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Auth() {
-  const [, setLocation] = useLocation();
+  const [currentPath, setLocation] = useLocation();
   const { login, register } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(() => 
+    currentPath === '/register' ? 'register' : 'login'
+  );
+
+  // Sync activeTab with current route
+  useEffect(() => {
+    if (currentPath === '/register') {
+      setActiveTab('register');
+    } else {
+      setActiveTab('login');
+    }
+  }, [currentPath]);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

@@ -170,6 +170,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nowOpen: nowOpen === 'true',
           sort: sort as any,
         });
+      } else {
+        // No search parameters - return popular benefits
+        results = await storage.getPopularBenefits(Number(limit));
       }
 
       const paginatedResults = results.slice(Number(offset), Number(offset) + Number(limit));
