@@ -8,9 +8,9 @@ import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Header } from '@/components/layout/header';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
-import { Benefit, MapMarker, Coupon } from '@/types';
-import { API_ENDPOINTS, MAP_CONFIG, JEJU_REGIONS } from '@/lib/constants';
-import { findJejuRegion, JejuRegion } from '@/lib/jeju-regions';
+import { Benefit, MapMarker, Coupon, Region } from '@/types';
+import { API_ENDPOINTS, MAP_CONFIG } from '@/lib/constants';
+import { detectRegion } from '@/hooks/use-region-detection';
 import { calculateDistance, formatDistance, getBenefitValue } from '@/lib/geo-utils';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function Map() {
   const [currentBounds, setCurrentBounds] = useState<any>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [visibleBenefits, setVisibleBenefits] = useState<Benefit[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<JejuRegion | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
   const { location, getCurrentLocation } = useLocation();
   const { user } = useAuth();
@@ -117,20 +117,28 @@ export default function Map() {
 
   // Filter benefits by selected region
   useEffect(() => {
-    let filteredBenefits = normalizedBenefits;
-    
-    if (selectedRegion) {
-      filteredBenefits = normalizedBenefits.filter((benefit: any) => {
-        const location = benefit.merchant?.location as any;
-        if (!location || typeof location !== 'object') return false;
+    const filterBenefitsByRegion = async () => {
+      let filteredBenefits = normalizedBenefits;
+      
+      if (selectedRegion) {
+        // Filter benefits asynchronously using region detection API
+        const filteredResults = await Promise.all(
+          normalizedBenefits.map(async (benefit: any) => {
+            const location = benefit.merchant?.location as any;
+            if (!location || typeof location !== 'object') return null;
+            
+            const region = await detectRegion(location.lat, location.lng);
+            return region?.id === selectedRegion.id ? benefit : null;
+          })
+        );
         
-        const coords = { lat: location.lat, lng: location.lng };
-        const region = findJejuRegion(coords);
-        return region?.id === selectedRegion.id;
-      });
-    }
+        filteredBenefits = filteredResults.filter((b): b is typeof normalizedBenefits[0] => b !== null);
+      }
+      
+      setVisibleBenefits(filteredBenefits);
+    };
     
-    setVisibleBenefits(filteredBenefits);
+    filterBenefitsByRegion();
   }, [normalizedBenefits, selectedRegion]);
 
   // Convert normalized benefits to map markers
@@ -158,12 +166,13 @@ export default function Map() {
     return () => clearTimeout(timeoutId);
   };
 
-  const handleMapClick = (e: any) => {
+  const handleMapClick = async (e: any) => {
     // Get clicked coordinates
-    const coords = { lat: e.coord.y, lng: e.coord.x };
+    const lat = e.coord.y;
+    const lng = e.coord.x;
     
-    // Find which region was clicked
-    const region = findJejuRegion(coords);
+    // Detect which region was clicked using API
+    const region = await detectRegion(lat, lng);
     
     if (region) {
       setSelectedRegion(region);

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import useEmblaCarousel from 'embla-carousel-react';
 import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
@@ -19,13 +20,23 @@ export default function Home() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [selectedBannerIndex, setSelectedBannerIndex] = useState(0);
   const { location } = useLocation();
   const { user } = useAuth();
+  
+  // Initialize Embla Carousel for banners
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true });
 
   // Get categories for quick access
   const { data: categories } = useQuery({
     queryKey: [API_ENDPOINTS.CATEGORIES],
     staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  // Get home banners for carousel
+  const { data: bannersData } = useQuery({
+    queryKey: ['/api/banners'],
+    staleTime: 15 * 60 * 1000, // 15 minutes
   });
 
   // Get popular benefits (HP_SCORE algorithm)
@@ -97,6 +108,39 @@ export default function Home() {
   const nearbyBenefits = (popularBenefits as any)?.benefits || [];
   const newItems = (newBenefits as any)?.benefits || [];
   const endingItems = (endingSoonBenefits as any)?.benefits || [];
+  const banners = (bannersData as any)?.banners || [];
+
+  // Auto-slide carousel every 5 seconds
+  useEffect(() => {
+    if (!emblaApi || banners.length === 0) return;
+
+    const autoplay = setInterval(() => {
+      emblaApi.scrollNext();
+    }, 5000);
+
+    return () => clearInterval(autoplay);
+  }, [emblaApi, banners.length]);
+
+  // Track current banner index
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedBannerIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  const handleBannerClick = (banner: any) => {
+    if (banner.linkUrl) {
+      window.location.href = banner.linkUrl;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -109,26 +153,67 @@ export default function Home() {
       <main className="animate-fade-in">
         {/* Banner Carousel */}
         <section className="px-4 pt-4">
-          <div className="relative overflow-hidden rounded-xl">
-            <img 
-              src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400" 
-              alt="질주 배너" 
-              className="w-full h-40 object-cover" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-              <div>
-                <h2 className="text-white text-xl font-bold">주변 혜택을 빠르게 찾아보세요</h2>
-                <p className="text-white/90 text-sm mt-1">최대 50% 할인 쿠폰 지금 받기</p>
+          {banners.length > 0 ? (
+            <>
+              <div className="overflow-hidden rounded-xl" ref={emblaRef}>
+                <div className="flex">
+                  {banners.map((banner: any, index: number) => (
+                    <div 
+                      key={banner.id} 
+                      className="flex-[0_0_100%] min-w-0 relative cursor-pointer"
+                      onClick={() => handleBannerClick(banner)}
+                      data-testid={`banner-item-${index}`}
+                    >
+                      <img 
+                        src={banner.imageUrl} 
+                        alt={banner.title} 
+                        className="w-full h-40 object-cover" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                        <div>
+                          <h2 className="text-white text-xl font-bold">{banner.title}</h2>
+                          {banner.subtitle && (
+                            <p className="text-white/90 text-sm mt-1">{banner.subtitle}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Carousel Dots */}
+              <div className="flex justify-center gap-1.5 mt-3">
+                {banners.map((_: any, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => emblaApi?.scrollTo(index)}
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-colors",
+                      index === selectedBannerIndex ? "bg-primary" : "bg-muted"
+                    )}
+                    data-testid={`button-banner-dot-${index}`}
+                    aria-label={`배너 ${index + 1}번으로 이동`}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            // Fallback banner when no banners in database
+            <div className="relative overflow-hidden rounded-xl">
+              <img 
+                src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400" 
+                alt="질주 배너" 
+                className="w-full h-40 object-cover" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                <div>
+                  <h2 className="text-white text-xl font-bold">주변 혜택을 빠르게 찾아보세요</h2>
+                  <p className="text-white/90 text-sm mt-1">최대 50% 할인 쿠폰 지금 받기</p>
+                </div>
               </div>
             </div>
-          </div>
-          
-          {/* Carousel Dots */}
-          <div className="flex justify-center gap-1.5 mt-3">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <div className="w-2 h-2 rounded-full bg-muted"></div>
-            <div className="w-2 h-2 rounded-full bg-muted"></div>
-          </div>
+          )}
         </section>
 
         {/* Category Quick Access */}

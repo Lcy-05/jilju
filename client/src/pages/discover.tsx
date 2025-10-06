@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation as useRouterLocation } from 'wouter';
 import { Header } from '@/components/layout/header';
@@ -34,6 +34,9 @@ export default function Discover() {
     nowOpen: false
   });
   
+  // Track if component has mounted to skip initial URL update
+  const hasMounted = useRef(false);
+  
   const { location } = useLocation();
   const { user } = useAuth();
 
@@ -41,7 +44,7 @@ export default function Discover() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const params: SearchOptions = {
-      categories: urlParams.getAll('categories'),
+      categories: urlParams.getAll('cats'), // Map URL 'cats' to state 'categories'
       types: urlParams.getAll('types'),
       sort: (urlParams.get('sort') as any) || 'distance',
       nowOpen: urlParams.get('nowOpen') === 'true'
@@ -49,6 +52,15 @@ export default function Discover() {
     setSearchOptions(params);
     setSearchQuery(urlParams.get('q') || '');
   }, []);
+
+  // Update URL when search options change (skip initial mount)
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+    updateURL();
+  }, [searchOptions, searchQuery]);
 
   // Get categories for filtering
   const { data: categories } = useQuery({
@@ -82,8 +94,8 @@ export default function Discover() {
         params.set('bbox', `${location.lat-0.01},${location.lng-0.01},${location.lat+0.01},${location.lng+0.01}`);
       }
 
-      searchOptions.categories?.forEach(cat => params.append('cats[]', cat));
-      searchOptions.types?.forEach(type => params.append('types[]', type));
+      searchOptions.categories?.forEach(cat => params.append('cats', cat));
+      searchOptions.types?.forEach(type => params.append('types', type));
       
       if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
       if (searchOptions.sort) params.set('sort', searchOptions.sort);
@@ -99,7 +111,7 @@ export default function Discover() {
 
   const handleSearchSubmit = (query: string) => {
     setSearchQuery(query);
-    updateURL();
+    // URL will be updated by useEffect
   };
 
   const updateURL = () => {
@@ -107,7 +119,7 @@ export default function Discover() {
     if (searchQuery) params.set('q', searchQuery);
     if (searchOptions.sort) params.set('sort', searchOptions.sort);
     if (searchOptions.nowOpen) params.set('nowOpen', 'true');
-    searchOptions.categories?.forEach(cat => params.append('categories', cat));
+    searchOptions.categories?.forEach(cat => params.append('cats', cat));
     searchOptions.types?.forEach(type => params.append('types', type));
     
     const newUrl = `/discover${params.toString() ? '?' + params.toString() : ''}`;
@@ -149,7 +161,8 @@ export default function Discover() {
   const benefits = searchResults?.benefits || [];
   const totalCount = searchResults?.total || 0;
 
-  const mainCategories = ['음식', '카페', '쇼핑', '뷰티', '헬스'];
+  // Use dynamic categories from API
+  const displayCategories = (categories as any)?.categories || [];
   const benefitTypes = [
     { value: 'PERCENT', label: '할인율' },
     { value: 'AMOUNT', label: '정액할인' },
@@ -167,18 +180,18 @@ export default function Discover() {
       {/* Filter Bar */}
       <section className="sticky top-16 z-40 bg-background px-4 py-3 border-b border-border">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {mainCategories.map((category) => {
-            const isSelected = searchOptions.categories?.includes(category);
+          {displayCategories.map((category: Category) => {
+            const isSelected = searchOptions.categories?.includes(category.id);
             return (
               <Button
-                key={category}
+                key={category.id}
                 variant={isSelected ? "default" : "secondary"}
                 size="sm"
-                onClick={() => handleCategoryFilter(category, !isSelected)}
+                onClick={() => handleCategoryFilter(category.id, !isSelected)}
                 className="flex-shrink-0 rounded-full"
-                data-testid={`button-category-${category}`}
+                data-testid={`button-category-${category.name}`}
               >
-                {category}
+                {category.name}
               </Button>
             );
           })}
@@ -238,8 +251,8 @@ export default function Discover() {
                   <Button 
                     className="flex-1" 
                     onClick={() => {
-                      updateURL();
                       setIsFilterOpen(false);
+                      // URL will be updated by useEffect
                     }}
                   >
                     필터 적용
@@ -280,7 +293,7 @@ export default function Discover() {
                       className="w-full justify-start"
                       onClick={() => {
                         handleSortChange(value);
-                        updateURL();
+                        // URL will be updated by useEffect
                       }}
                       data-testid={`button-sort-${value}`}
                     >
@@ -298,7 +311,7 @@ export default function Discover() {
               checked={searchOptions.nowOpen}
               onCheckedChange={(checked) => {
                 setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }));
-                updateURL();
+                // URL will be updated by useEffect
               }}
             />
             <label htmlFor="now-open-quick">지금 사용 가능</label>
@@ -349,7 +362,7 @@ export default function Discover() {
                 onClick={() => {
                   setSearchQuery('');
                   setSearchOptions({ sort: 'distance' });
-                  updateURL();
+                  // URL will be updated by useEffect
                 }}
               >
                 검색 초기화
