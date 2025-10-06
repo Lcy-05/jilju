@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, UserPlus, Store } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const loginSchema = z.object({
   email: z.string().email('올바른 이메일을 입력하세요'),
@@ -22,6 +23,7 @@ const registerSchema = z.object({
   email: z.string().email('올바른 이메일을 입력하세요'),
   password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   confirmPassword: z.string(),
+  isMerchantOwner: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',
   path: ['confirmPassword'],
@@ -63,6 +65,7 @@ export default function Auth() {
       email: '',
       password: '',
       confirmPassword: '',
+      isMerchantOwner: false,
     },
   });
 
@@ -89,12 +92,13 @@ export default function Auth() {
   const handleRegister = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      await register(data.email, data.password, data.name);
+      await register(data.email, data.password, data.name, data.isMerchantOwner);
       toast({
         title: '회원가입 성공',
-        description: '환영합니다! 로그인되었습니다.',
+        description: data.isMerchantOwner ? '사장님 계정으로 등록되었습니다!' : '환영합니다! 로그인되었습니다.',
       });
-      setLocation('/');
+      // Redirect to merchant dashboard if merchant owner, otherwise home
+      setLocation(data.isMerchantOwner ? '/merchant' : '/');
     } catch (error) {
       toast({
         title: '회원가입 실패',
@@ -239,13 +243,33 @@ export default function Auth() {
                   )}
                 </div>
 
+                <div className="flex items-center space-x-2 bg-muted p-3 rounded-lg">
+                  <Checkbox
+                    id="merchant-owner"
+                    checked={registerForm.watch('isMerchantOwner')}
+                    onCheckedChange={(checked) => 
+                      registerForm.setValue('isMerchantOwner', !!checked)
+                    }
+                    data-testid="checkbox-merchant-owner"
+                  />
+                  <div className="flex items-center gap-2 flex-1">
+                    <Store className="w-4 h-4 text-primary" />
+                    <label 
+                      htmlFor="merchant-owner" 
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      사장님 계정으로 가입
+                    </label>
+                  </div>
+                </div>
+
                 <Button 
                   type="submit" 
                   className="w-full" 
                   disabled={isLoading}
                   data-testid="button-register"
                 >
-                  {isLoading ? '회원가입 중...' : '회원가입'}
+                  {isLoading ? '회원가입 중...' : (registerForm.watch('isMerchantOwner') ? '사장님으로 가입하기' : '회원가입')}
                 </Button>
               </form>
             </TabsContent>

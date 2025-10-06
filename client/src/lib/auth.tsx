@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string, isMerchantOwner?: boolean) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Register mutation
   const registerMutation = useMutation({
-    mutationFn: async ({ email, password, name }: { email: string; password: string; name: string }) => {
-      const response = await apiRequest('POST', API_ENDPOINTS.AUTH.REGISTER, { email, password, name });
+    mutationFn: async ({ email, password, name, isMerchantOwner }: { email: string; password: string; name: string; isMerchantOwner?: boolean }) => {
+      const response = await apiRequest('POST', API_ENDPOINTS.AUTH.REGISTER, { email, password, name, isMerchantOwner });
       return response.json();
     },
     onSuccess: (data) => {
@@ -97,8 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login: async (email: string, password: string) => {
       await loginMutation.mutateAsync({ email, password });
     },
-    register: async (email: string, password: string, name: string) => {
-      await registerMutation.mutateAsync({ email, password, name });
+    register: async (email: string, password: string, name: string, isMerchantOwner?: boolean) => {
+      await registerMutation.mutateAsync({ email, password, name, isMerchantOwner });
     },
     logout,
     isLoading: userLoading || loginMutation.isPending || registerMutation.isPending,

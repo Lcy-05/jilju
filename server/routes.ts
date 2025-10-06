@@ -27,8 +27,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword
       });
       
-      // Assign default USER role
-      await storage.assignUserRole(user.id, "USER");
+      // Assign role based on isMerchantOwner flag or default to USER
+      const role = req.body.isMerchantOwner ? "MERCHANT_OWNER" : "USER";
+      await storage.assignUserRole(user.id, role);
       
       // Get user roles
       const roles = await storage.getUserRoles(user.id);
