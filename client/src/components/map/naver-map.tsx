@@ -111,7 +111,7 @@ export function NaverMap({
       )}
 
       {/* Map Controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[950]">
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[850]">
         <Button
           variant="secondary"
           size="sm"

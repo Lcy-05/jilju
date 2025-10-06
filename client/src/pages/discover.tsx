@@ -101,7 +101,7 @@ export default function Discover() {
       if (searchOptions.sort) params.set('sort', searchOptions.sort);
       if (searchOptions.nowOpen) params.set('nowOpen', 'true');
       
-      params.set('limit', '50');
+      params.set('limit', '200');
 
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
