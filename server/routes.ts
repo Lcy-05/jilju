@@ -620,6 +620,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Region detection routes
+  app.get("/api/regions/detect", async (req, res) => {
+    try {
+      const { lat, lng } = req.query;
+      
+      if (!lat || !lng) {
+        return res.status(400).json({ error: "Missing lat or lng parameters" });
+      }
+      
+      const latitude = parseFloat(lat as string);
+      const longitude = parseFloat(lng as string);
+      
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({ error: "Invalid lat or lng values" });
+      }
+      
+      const region = await storage.getRegionByLocation(latitude, longitude);
+      res.json({ region });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to detect region" });
+    }
+  });
+
   // Event Logging routes
   app.post("/api/events", async (req, res) => {
     try {

@@ -547,9 +547,61 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRegionByLocation(lat: number, lng: number): Promise<Region | undefined> {
-    // TODO: Implement PostGIS spatial query
-    // For now, return undefined
-    return undefined;
+    // Get all level 3 regions (zones) from database
+    const allRegions = await db.select().from(regions).where(eq(regions.level, 3));
+    
+    if (allRegions.length === 0) return undefined;
+    
+    // Haversine distance calculation
+    const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+      const R = 6371e3; // Earth's radius in meters
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c; // Distance in meters
+    };
+    
+    // Define radius for each region type (in meters)
+    const radiusMap: Record<string, number> = {
+      'ZONE_ARA': 3000,
+      'ZONE_SAMHWA': 3500,
+      'ZONE_CITY_HALL': 2000,
+      'ZONE_AIRPORT_COAST': 2500,
+      'ZONE_NOHYEONG': 3000,
+      'ZONE_EAST': 8000,
+      'ZONE_WEST': 10000,
+      'ZONE_SEOGWIPO': 8000
+    };
+    
+    // Find closest region within its radius
+    let closestRegion: Region | undefined = undefined;
+    let closestDistance = Infinity;
+    
+    for (const region of allRegions) {
+      if (!region.center) continue;
+      
+      // Parse center coordinates from "lat,lng" format
+      const [centerLat, centerLng] = region.center.split(',').map(Number);
+      if (isNaN(centerLat) || isNaN(centerLng)) continue;
+      
+      const distance = calculateDistance(lat, lng, centerLat, centerLng);
+      const regionRadius = radiusMap[region.code] || 5000; // Default 5km
+      
+      // Check if within region radius and closer than previous match
+      if (distance <= regionRadius && distance < closestDistance) {
+        closestRegion = region;
+        closestDistance = distance;
+      }
+    }
+    
+    return closestRegion;
   }
 
   async reverseGeocode(lat: number, lng: number): Promise<string> {
