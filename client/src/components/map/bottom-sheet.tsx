@@ -54,9 +54,7 @@ export function BottomSheet({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isScrollAtTop && contentRef.current && contentRef.current.scrollTop > 0) {
-      return;
-    }
+    // Always allow dragging from handle
     setIsDragging(true);
     setStartY(e.touches[0].clientY);
     setStartHeight(sheetHeight);
@@ -78,9 +76,7 @@ export function BottomSheet({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isScrollAtTop && contentRef.current && contentRef.current.scrollTop > 0) {
-      return;
-    }
+    // Always allow dragging from handle
     setIsDragging(true);
     setStartY(e.clientY);
     setStartHeight(sheetHeight);

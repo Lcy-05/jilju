@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MapMarker, NaverMapConfig } from '@/types';
-import { MAP_CONFIG, SERVICE_URLS } from '@/lib/constants';
+import { MAP_CONFIG, SERVICE_URLS, CATEGORY_ICONS, CATEGORY_COLORS } from '@/lib/constants';
 
 interface UseNaverMapsOptions {
   center?: { lat: number; lng: number };
@@ -202,14 +202,19 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
 
     markerData.forEach(markerInfo => {
       try {
+        // Get category name from marker data
+        const categoryName = (markerInfo.data as any)?.merchant?.category?.name || 
+                            (markerInfo.data as any)?.category?.name || 
+                            '기타';
+        
         const marker = new window.naver.maps.Marker({
           position: new window.naver.maps.LatLng(markerInfo.position.lat, markerInfo.position.lng),
           map: map,
           title: markerInfo.title,
           icon: {
-            content: getMarkerIcon(markerInfo.type),
-            size: new window.naver.maps.Size(32, 32),
-            anchor: new window.naver.maps.Point(16, 32)
+            content: getMarkerIcon(markerInfo.type, categoryName),
+            size: new window.naver.maps.Size(40, 40),
+            anchor: new window.naver.maps.Point(20, 40)
           },
           zIndex: markerInfo.type === 'benefit' ? 100 : 50
         });
@@ -329,26 +334,32 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
   };
 }
 
-function getMarkerIcon(type: 'benefit' | 'merchant'): string {
+function getMarkerIcon(type: 'benefit' | 'merchant', categoryName?: string): string {
+  // Get category icon and color
+  const icon = categoryName && CATEGORY_ICONS[categoryName as keyof typeof CATEGORY_ICONS] 
+    ? CATEGORY_ICONS[categoryName as keyof typeof CATEGORY_ICONS]
+    : '🏪';
+  
+  const color = categoryName && CATEGORY_COLORS[categoryName as keyof typeof CATEGORY_COLORS]
+    ? CATEGORY_COLORS[categoryName as keyof typeof CATEGORY_COLORS]
+    : CATEGORY_COLORS['기타'];
+
   const baseStyle = `
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 20px;
     color: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    border: 2px solid white;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    border: 3px solid white;
+    background: ${color};
+    transition: transform 0.2s ease;
   `;
 
-  if (type === 'benefit') {
-    return `<div style="${baseStyle} background: hsl(342 85.11% 52.55%);">🎁</div>`;
-  } else {
-    return `<div style="${baseStyle} background: hsl(203.8863 88.2845% 53.1373%);">🏪</div>`;
-  }
+  return `<div style="${baseStyle}">${icon}</div>`;
 }
 
 export default useNaverMaps;

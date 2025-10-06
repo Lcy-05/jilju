@@ -236,6 +236,22 @@ export const CATEGORY_ICONS = {
   '기타': '📱'
 };
 
+// Category colors for map markers
+export const CATEGORY_COLORS = {
+  '음식': '#FF6B35',    // Orange-red
+  '카페': '#8B5E3C',    // Coffee brown
+  '쇼핑': '#E63946',    // Red
+  '뷰티': '#FF006E',    // Pink
+  '헬스': '#06D6A0',    // Green
+  '의료': '#118AB2',    // Blue
+  '교육': '#073B4C',    // Dark blue
+  '오락': '#FFD60A',    // Yellow
+  '숙박': '#9D4EDD',    // Purple
+  '교통': '#457B9D',    // Steel blue
+  '기타': '#6C757D',    // Gray
+  '전체': '#212529'     // Dark
+};
+
 // Sort options
 export const SORT_OPTIONS = [
   { value: 'distance', label: '거리순' },
