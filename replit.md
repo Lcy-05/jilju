@@ -1,244 +1,57 @@
 # 질주 (Jilju) - Korean Location-Based Benefits Discovery Platform
 
 ## Overview
-
-질주 (Jilju) is a Korean location-based platform designed to help users discover nearby merchant benefits, issue and redeem coupons. The platform supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and includes features for merchant registration, an admin console, and a robust RBAC system. The project aims to provide a comprehensive solution for local businesses to attract customers through targeted promotions and for users to easily access valuable deals.
+질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## User Preferences
-
 I prefer clear, concise, and direct instructions. When suggesting code changes, provide the exact code snippets or file modifications needed. For new features, outline the steps required for implementation, from schema definition to API routes and frontend integration. Always prioritize security best practices, especially concerning user data and authentication. When making changes, avoid modifying primary key ID column types in existing tables. Use `npm run db:push --force` only when absolutely necessary.
 
 ## System Architecture
-
-The application is built with a React 18 + Vite frontend and a Node.js + Express.js backend, leveraging TypeScript across the stack. PostgreSQL (Neon-backed) with Drizzle ORM handles data persistence.
+The application features a React 18 + Vite frontend and a Node.js + Express.js backend, all built with TypeScript. PostgreSQL (Neon-backed) with Drizzle ORM is used for data persistence.
 
 **UI/UX Decisions:**
-- **Navigation:** A 5-tab bottom navigation bar (`Home`, `Discover`, `Map`, `Saved`, `Profile`) provides core navigation.
-- **Components:** Utilizes Tailwind CSS and shadcn/ui for styling, built on Radix UI primitives and Lucide React icons.
-- **Forms:** `react-hook-form` with `zod` for validation ensures robust form handling.
+- **Navigation:** A 5-tab bottom navigation bar (`Home`, `Discover`, `Map`, `Saved`, `Profile`).
+- **Components:** Tailwind CSS and shadcn/ui (built on Radix UI and Lucide React icons) for styling.
+- **Forms:** `react-hook-form` with `zod` for validation.
 
 **Technical Implementations:**
 - **State Management:** `@tanstack/react-query` v5 for server state.
-- **Routing:** `wouter` for lightweight client-side routing.
-- **Authentication:** Stateless JWT with `bcrypt` (12 salt rounds) for password hashing. JWTs include user ID, email, name, and roles, expiring in 7 days. New users are assigned a default `USER` role.
-- **Authorization:** Role-Based Access Control (RBAC) with defined roles: `USER`, `MERCHANT_OWNER`, `OPERATOR`, `ADMIN`.
+- **Routing:** `wouter` for client-side routing.
+- **Authentication:** Stateless JWT with `bcrypt` (12 salt rounds) for password hashing. JWTs expire in 7 days and contain user ID, email, name, and roles. New users get a default `USER` role.
+- **Authorization:** Role-Based Access Control (RBAC) supporting `USER`, `MERCHANT_OWNER`, `OPERATOR`, `ADMIN` roles.
 - **Storage Layer:** An `IStorage` interface (`server/storage.ts`) abstracts data access, implemented by `DatabaseStorage` using Drizzle ORM.
-- **Multi-environment Configuration:** Service URLs are configured for Production, Development/Staging, Local Development, and Replit Preview, with automatic environment detection.
+- **Multi-environment Configuration:** Supports Production, Development/Staging, Local Development, and Replit Preview.
 
 **Feature Specifications:**
-- **Authentication:** User registration, login, and protected endpoints.
+- **Authentication:** User registration, login, protected endpoints.
 - **User Roles:** Distinct permissions for each role.
-- **Key Features (Planned/Partial):**
-    - **HP_SCORE Algorithm:** Weighted scoring for home page recommendations based on distance, CTR, issue count, benefit strength, and freshness.
-    - **Geospatial Queries:** Planned integration with PostGIS for efficient nearby searches and location-based filtering.
-    - **Coupon System:** Generation, validation (with geofencing), and redemption of coupons.
-    - **Merchant Wizard:** A multi-step application flow for merchants to onboard and manage their offerings.
-    - **Admin Console:** Interface for reviewing merchant applications, managing users, and roles.
+- **Key Features:**
+    - **HP_SCORE Algorithm:** Weighted scoring for home page recommendations.
+    - **Geospatial Queries:** Planned integration with PostGIS for location-based searches.
+    - **Coupon System:** Generation, validation (with geofencing), and redemption.
+    - **Merchant Wizard:** Multi-step onboarding for merchants.
+    - **Admin Console:** Interface for managing merchants, users, and roles.
+    - **Database-Driven Region System:** `regions` table with 8 Jeju zones, `GET /api/regions/detect` endpoint for coordinate-based region detection.
+    - **Home Page Enhancements:** Dynamic banner carousel, category quick access buttons.
+    - **Discover Page:** Complete URL/State synchronization for filters.
+    - **Merchant Center:** Dashboard, Store Management, and Benefits Management with real data integration and robust validation for `MERCHANT_OWNER` users.
 
 **System Design Choices:**
-- **Database Schema:** Key tables include `users`, `roles`, `merchants`, `benefits`, `categories`, `regions`, `coupons`, `coupon_redemptions`, `user_bookmarks`, and `merchant_applications`.
+- **Database Schema:** Includes `users`, `roles`, `merchants`, `benefits`, `categories`, `regions`, `coupons`, `coupon_redemptions`, `user_bookmarks`, `merchant_applications`, `home_banners`, `benefit_versions`, `event_logs`, `daily_merchant_kpis`.
 - **Development Workflow:** Schema-first development with Drizzle ORM; `npm run db:push` syncs schema.
-- **Security:** Password fields are always stripped from API responses. JWT tokens are verified for protected routes.
+- **Security:** Password fields are stripped from API responses; JWT verification for protected routes.
+- **Map Page Integration:** Database-based region detection, region badge display, URL parameter support for regions.
+- **Layout & Safe-Area Support:** Map and bottom sheet adhere to `100vh` and safe-area insets.
+- **Z-Index Hierarchy:** Bottom Navigation (z-[1000]), Map Controls (z-[950]), Bottom Sheet (z-[900]), Map Container (z-[800]).
+- **New Database Tables:** `home_banners` (admin-editable carousel), `benefit_versions` (history), `event_logs` (analytics), `daily_merchant_kpis` (aggregated analytics).
+- **Updated Categories:** Simplified to 5 main categories (`뷰티`, `쇼핑`, `음식`, `카페`, `헬스`).
+- **Storage Layer Extensions:** CRUD for home banners, event logging, analytics retrieval.
+- **New Backend API Endpoints:** `/api/categories`, `/api/banners`, `/api/events`, `/api/analytics/merchant/:merchantId`.
 
 ## External Dependencies
-
 - **Database:** PostgreSQL (Neon-backed)
 - **ORM:** Drizzle ORM
 - **Authentication:** JWT (JSON Web Tokens), bcrypt
-- **UI Frameworks/Libraries:** React, Vite, wouter, @tanstack/react-query, Tailwind CSS, shadcn/ui, Radix UI, Lucide React, react-hook-form, zod.
-- **Geospatial:** Naver Maps API (NCP Maps API - active integration)
-- **Testing:** Playwright (for end-to-end testing)
-
-## Naver Maps Integration
-
-**Current Status (October 4, 2025):**
-The application uses Naver Maps JavaScript API v3 for interactive mapping and Naver Cloud Platform (NCP) APIs for geospatial services.
-
-**API Configuration:**
-- **Frontend:** Uses `ncpKeyId` parameter for Naver Maps JavaScript API v3
-- **Backend:** Uses `X-NCP-APIGW-API-KEY-ID` and `X-NCP-APIGW-API-KEY` headers for server-side API calls
-- **Environment Variables:** `VITE_NAVER_MAPS_CLIENT_ID` (frontend), `NAVER_MAPS_CLIENT_ID`, `NAVER_MAPS_CLIENT_SECRET` (backend)
-- **Web Service URL:** Configured in NCP console (domain only, no trailing slash)
-
-**Implemented Features:**
-
-1. **Interactive Map (client/src/hooks/use-naver-maps.ts):**
-   - ✅ Map initialization with custom center and zoom
-   - ✅ Marker management (add, remove, clustering)
-   - ✅ Map controls (zoom in/out, current location)
-   - ✅ Pan to location
-   - ✅ Bounds retrieval
-   - ✅ Event handling (click, bounds_changed)
-
-2. **Geocoding Services (server/services/naver-maps.ts):**
-   - ✅ Forward geocoding: Address → Coordinates
-   - ✅ Reverse geocoding: Coordinates → Address
-   - ✅ Distance calculation (Haversine formula)
-   - ✅ Distance formatting (m/km)
-   - ✅ Static Map URL generation
-   - ✅ Directions deep link generation (Naver Map app)
-
-3. **Location Services (client/src/hooks/use-location.ts):**
-   - ✅ Browser geolocation API integration
-   - ✅ Reverse geocoding for current location
-   - ✅ Location caching in localStorage
-
-4. **Map Page (client/src/pages/map.tsx):**
-   - ✅ Interactive map with benefit markers
-   - ✅ Bottom sheet for benefit list
-   - ✅ Location-based search (bbox and lat/lng/radius)
-   - ✅ Map controls (zoom, current location)
-
-**Implemented But Not Yet Used:**
-- Static Map URL generation (for thumbnails, previews)
-- Directions deep link (for navigation to merchant)
-
-**Technical Improvements Needed:**
-
-1. **Location Data Format:**
-   - Current: `merchant.location` stored as `"lat,lng"` string in database
-   - Needed: Parse to `{lat: number, lng: number}` object for frontend use
-   - Impact: Currently handled in frontend parsing, but should be normalized
-
-2. **Geospatial Queries:**
-   - Current: `getBenefitsNearby` returns all ACTIVE benefits (no true filtering)
-   - Needed: PostGIS extension for efficient spatial queries
-   - Features: Distance-based filtering, radius search, bbox queries, spatial indexing
-
-3. **Map Markers:**
-   - Current: Infrastructure ready (marker clustering, custom icons)
-   - Needed: Parse merchant location strings and display markers on map
-   - Status: Location data now available through API with merchant info
-
-**Planned Enhancements:**
-
-1. **Advanced Map Features:**
-   - Heat maps for benefit density
-   - Drawing tools for custom search areas
-   - Route optimization for multiple merchants
-   - Real-time traffic integration
-
-2. **Static Map Usage:**
-   - Benefit card thumbnails
-   - Share previews (Open Graph images)
-   - Email notifications with map snapshots
-
-3. **Navigation Features:**
-   - In-app directions to merchant
-   - Walking/driving time estimates
-   - Public transit integration (if available from Naver)
-
-4. **Performance Optimizations:**
-   - Marker viewport culling
-   - Lazy loading for distant markers
-   - Debounced bounds change events
-   - Progressive marker loading
-
-**Recent Changes (October 4, 2025):**
-- Fixed header UX: Removed from map/saved/profile pages, made compact on home/discover
-- Connected map zoom controls to Naver Maps API
-- Implemented database seeding with test merchants and benefits in Seoul and Jeju
-- Enhanced `getBenefitsNearby` to join merchant location data
-- Added lat/lng/radius parameter support to `/api/benefits/search`
-- **Map UX Improvements:**
-  - Enabled map dragging (draggable, pinchZoom, scrollWheel, kinetic pan)
-  - Redesigned bottom sheet drag handle: #D9D9D9 color, 36px × 4px pill shape
-  - Updated home category icons: transparent background, larger size (text-3xl)
-- **Jeju Region System:**
-  - Implemented 8-zone classification (아라권, 삼화권, 시청권, 공항연안권, 노형권, 동부권, 서부권, 서귀포권)
-  - Added region detection using Haversine formula
-  - Map click shows region badge with filter functionality
-  - URL parameter support: `/map?region=jeju` centers on Jeju
-- **Location Data Optimization:**
-  - Fixed critical location parsing bug (prevented {lat:0,lng:0} fallback)
-  - Implemented useMemo for location normalization (parse once, cache results)
-  - Merchant locations now correctly parsed from JSON strings to objects
-
-**Map Screen Improvements (October 5, 2025):**
-- **Jeju Island Default Center:** Map now initializes centered on Jeju Island (33.4996, 126.5312) with zoom level 11, showing the entire island region by default
-- **Fixed Z-Index Hierarchy:**
-  - Bottom Navigation: z-[1000] (always on top)
-  - Map Controls (zoom, location): z-[950]
-  - Bottom Sheet: z-[900]
-  - Map Container: z-[800]
-- **Layout and Safe-Area Support:**
-  - Map container uses 100vh with padding-bottom: calc(64px + env(safe-area-inset-bottom))
-  - Bottom sheet positioned at calc(64px + env(safe-area-inset-bottom)) from bottom
-  - Both bottom sheet and navigation use max-w-md mx-auto for responsive centering
-  - Proper safe-area handling for devices with notches (iPhone, etc.)
-- **Map Drag Functionality:** Verified map dragging works properly without interference from bottom sheet
-- **Bottom Navigation Visibility:** Bottom tab bar always visible and accessible, never covered by map or bottom sheet
-- **Distance Calculation Fix:** Changed DEFAULT_LOCATION from Seoul to Jeju Island (33.4996, 126.5312), ensuring accurate distance calculations when user location is unavailable. Distance now correctly shows 0-50km range for Jeju Island merchants instead of incorrect 462.9km values.
-## Database & Backend Infrastructure Updates (October 6, 2025)
-
-**New Database Tables:**
-- `home_banners`: Admin-editable carousel banners with ordering and active status
-- `benefit_versions`: Version history for benefit rollback and A/B testing
-- `event_logs`: Comprehensive analytics event tracking for all user actions
-- `daily_merchant_kpis`: Pre-aggregated daily analytics for merchant dashboards
-- Updated `categories`: Simplified to 5 main categories (뷰티, 쇼핑, 음식, 카페, 헬스)
-- Added `category_id` foreign keys to both `merchants` and `benefits` tables
-
-**Storage Layer Extensions:**
-- Home Banner CRUD: getHomeBanners, createHomeBanner, updateHomeBanner, deleteHomeBanner
-- Event Logging: logEvent (with full metadata), getEventLogs (with comprehensive filtering)
-- Analytics: getMerchantKpis (date range queries), getAnalyticsSummary (period aggregation with CTR/conversion)
-
-**New Backend API Endpoints:**
-- `GET /api/categories` - Returns active categories for home page quick access
-- `GET /api/banners` - Returns ordered banners for home carousel
-- `POST /api/banners` - Admin-only banner creation
-- `PATCH /api/banners/:id` - Admin-only banner updates
-- `DELETE /api/banners/:id` - Admin-only banner deletion
-- `POST /api/events` - Universal event logging endpoint (supports anonymous & authenticated users)
-- `GET /api/analytics/merchant/:merchantId` - Merchant analytics with period/date range support
-
-**Data Migration Completed:**
-- All 113 existing merchants assigned to appropriate categories
-- All 100 existing benefits inherited categories from their merchants
-- 3 sample banners seeded with Unsplash imagery
-
-**Status:** Backend infrastructure complete for consumer app Phase 3. Merchant Center (Phase 4) and Admin Backoffice (Phase 5) require additional frontend implementation.
-
-## Phase 3 Consumer App - COMPLETED (October 6, 2025)
-
-**✅ All Consumer App Features Implemented:**
-
-1. **Database-Driven Region System:**
-   - Created `regions` table with 8 Jeju zones (아라권, 삼화권, 시청권, 공항연안권, 노형권, 동부권, 서부권, 서귀포권)
-   - Seeded with dong-level location data
-   - `GET /api/regions/detect` endpoint for coordinate-based region detection
-
-2. **Home Page Enhancements:**
-   - Dynamic banner carousel with auto-slide (5s interval) and drag support using Embla Carousel
-   - Category quick access buttons fetching from `GET /api/categories`
-   - Direct navigation to Discover page with pre-selected filters
-
-3. **Discover Page - Complete URL/State Synchronization:**
-   - **Single Source of Truth:** All URL updates flow through one useEffect, eliminating duplicate history pushes
-   - **Mount Guard:** hasMounted ref prevents initial URL rewrite on page load
-   - **Bidirectional Mapping:** URL `cats` ↔ React state `categories` ↔ API `cats` parameter
-   - **Filter Persistence:** Reload, bookmark, deep link all maintain filter state correctly
-   - **No Manual Updates:** Removed all manual `updateURL()` calls from handlers
-
-4. **Map Page Integration:**
-   - Database-based region detection (no hardcoded constants)
-   - Region badge display with filter functionality
-   - URL parameter support: `/map?region=jeju`
-
-**E2E Testing Results:**
-- ✅ Home → Discover category navigation
-- ✅ Discover filter chip activation & URL sync
-- ✅ Filter persistence across page reload
-- ✅ Map page functionality (container, bottom sheet, markers)
-- ✅ Bottom navigation (Home ↔ Discover ↔ Map)
-
-**Architecture Highlights:**
-- URL synchronization managed exclusively through mount-guarded useEffect
-- Shortened URL parameters (`cats`, `types`) consistently used across all layers
-- Race conditions eliminated by removing stale manual updateURL invocations
-- Browser back/forward navigation works correctly with filter state
-
-**Next Steps:**
-- Phase 4: Merchant Center (dashboard, analytics, benefit management)
-- Phase 5: Admin Backoffice (approval workflows, CRUD, audit logs)
+- **UI Frameworks/Libraries:** React, Vite, wouter, @tanstack/react-query, Tailwind CSS, shadcn/ui, Radix UI, Lucide React, react-hook-form, zod, Embla Carousel.
+- **Geospatial:** Naver Maps API (NCP Maps API - for interactive maps and geocoding services), PostGIS (planned).
+- **Testing:** Playwright (for end-to-end testing).
