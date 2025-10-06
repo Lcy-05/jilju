@@ -13,6 +13,7 @@ import Profile from "@/pages/profile";
 import Auth from "@/pages/auth";
 import BenefitDetail from "@/pages/benefit-detail";
 import MerchantWizard from "@/pages/merchant/wizard";
+import MerchantDashboard from "@/pages/merchant/dashboard";
 import AdminConsole from "@/pages/admin/console";
 import NotFound from "@/pages/not-found";
 
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/register" component={Auth} />
       <Route path="/benefits/:id" component={BenefitDetail} />
       <Route path="/merchant/wizard" component={MerchantWizard} />
+      <Route path="/merchant/dashboard" component={MerchantDashboard} />
       <Route path="/admin" component={AdminConsole} />
       <Route component={NotFound} />
     </Switch>
