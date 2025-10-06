@@ -42,7 +42,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, ...userWithoutPassword } = user;
       
       res.status(201).json({ 
-        user: { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name },
+        user: { 
+          id: userWithoutPassword.id, 
+          email: userWithoutPassword.email, 
+          name: userWithoutPassword.name,
+          roles: roles
+        },
         token
       });
     } catch (error) {

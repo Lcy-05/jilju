@@ -61,9 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.token) {
+      if (data.token && data.user) {
         setToken(data.token);
         localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        // Ensure roles are included in the cached user data
         queryClient.setQueryData([API_ENDPOINTS.AUTH.ME], data.user);
       }
     },
