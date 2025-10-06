@@ -1,0 +1,276 @@
+1) 역할별 핵심 기능과 DB 연결
+A. 사용자(앱)
+필요한 기능
+
+권역/카테고리/혜택유형/영업중/정렬 필터로 탐색(리스트·지도)
+
+검색(업체/혜택/주소), 상세보기, 쿠폰 발급·사용, 즐겨찾기
+
+신고/문의
+
+DB 연동 포인트
+
+탐색: benefits JOIN merchants JOIN benefit_time_windows/blackouts (+BBOX/거리 계산: merchants.location)
+
+검색: benefits.search_tsv, merchants.search_tsv
+
+쿠폰 발급/사용: coupons, coupon_redemptions
+
+즐겨찾기: user_favorites(user_id, benefit_id|merchant_id)
+
+이벤트 로그(노출/클릭/발급/사용): event_logs
+
+대표 API
+
+GET /api/benefits/search?bbox&region&category&type&nowOpen&sort&cursor
+
+GET /api/benefits/:id
+
+POST /api/coupons / POST /api/coupons/redeem
+
+POST /api/events (impression/click 로깅)
+
+B. 사장님(업주 센터)
+필요한 기능
+
+매장 관리(주소/좌표/영업시간/예외/사진)
+
+혜택 관리(생성·수정·일시정지·게시요청, 반경·한도·블랙아웃·대상 등)
+
+성과 분석 대시보드(노출/클릭/발급/사용/전환율/매출추정, 기간·권역·카테고리 필터)
+
+직원 계정 초대(매장 범위 권한)
+
+DB 연동 포인트
+
+매장: merchants, merchant_hours, merchant_hour_exceptions, benefit_assets
+
+혜택: benefits, benefit_time_windows, benefit_blackouts, benefit_quota, benefit_versions
+
+성과: event_logs → 일별 집계 daily_merchant_kpis
+
+권한: user_roles(user_id, role_id, merchant_id)로 매장 범위 스코프
+
+대표 API
+
+GET/POST/PATCH /merchant/me (내 매장 조회·수정)
+
+GET/POST/PATCH /merchant/:id/benefits
+
+GET /analytics/merchant/:id?from&to&groupBy=day|hour
+
+POST /merchant/:id/invite (직원 초대)
+
+C. 관리자(백오피스)
+필요한 기능
+
+모든 엔터티 CRUD(업체/혜택/권역/카테고리/배너/사용자/권한)
+
+심사 파이프라인(초안→검토→승인→게시/반려), 버전·롤백
+
+일괄 업로드/병합, 중복 탐지, 남용 모니터링
+
+통합 통계·리포트, 감사로그 열람
+
+DB 연동 포인트
+
+전 테이블 읽기/쓰기 + admin_audit_logs 자동 기록(변경 전/후 스냅샷)
+
+RBAC: roles, permissions, role_permissions, user_roles
+
+배너/포스터: home_banners
+
+대표 API
+
+GET/POST/PATCH/DELETE /admin/merchants|benefits|categories|regions|banners|users
+
+POST /admin/benefits/:id/approve|reject|publish|pause
+
+GET /admin/audit?entity=benefit&id=...
+
+POST /admin/import/csv / POST /admin/dedup/check
+
+2) 데이터베이스 설계(핵심)
+-- 카테고리
+CREATE TABLE categories (id SERIAL PRIMARY KEY, name TEXT UNIQUE, icon_url TEXT);
+
+-- 권역/지역 (시·구·동/커스텀 권역까지)
+CREATE TABLE regions (
+  id BIGSERIAL PRIMARY KEY,
+  parent_id BIGINT REFERENCES regions(id),
+  name TEXT NOT NULL, level TEXT,           -- e.g. '권역','동'
+  geom geometry(MultiPolygon,4326),
+  center geography(Point,4326)
+);
+
+-- 가맹점
+CREATE TABLE merchants (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  category_path TEXT[],                      -- 대/중/소 path(선택)
+  category_id INT REFERENCES categories(id), -- 주 카테고리(뷰티·쇼핑·음식·카페·헬스)
+  address TEXT, phone TEXT,
+  region_id BIGINT REFERENCES regions(id),
+  location geography(Point,4326) NOT NULL,
+  status TEXT CHECK (status IN ('active','hidden','pending')) DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE merchant_hours (...);                    -- 요일별 시간
+CREATE TABLE merchant_hour_exceptions (...);          -- 예외일
+
+-- 혜택
+CREATE TYPE benefit_type AS ENUM ('PERCENT','AMOUNT','GIFT','MEMBERSHIP');
+CREATE TYPE benefit_status AS ENUM ('DRAFT','PENDING','APPROVED','PUBLISHED','PAUSED','EXPIRED','REJECTED');
+
+CREATE TABLE benefits (
+  id BIGSERIAL PRIMARY KEY,
+  merchant_id BIGINT REFERENCES merchants(id) ON DELETE CASCADE,
+  category_id INT REFERENCES categories(id),          -- 카테고리 분류
+  title TEXT NOT NULL, type benefit_type NOT NULL,
+  percent_value NUMERIC(5,2), amount_value INT, gift_item TEXT, membership_tier TEXT,
+  description TEXT, terms TEXT[],
+  min_order INT, student_only BOOLEAN DEFAULT FALSE,
+  valid_from TIMESTAMPTZ, valid_to TIMESTAMPTZ,
+  geo_radius_m INT DEFAULT 0,                         -- 지오펜싱
+  status benefit_status DEFAULT 'DRAFT',
+  rule JSONB DEFAULT '{}'::jsonb,                     -- 예외 규칙 확장
+  created_by BIGINT REFERENCES users(id), updated_by BIGINT REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now(), published_at TIMESTAMPTZ,
+  CONSTRAINT chk_type_values CHECK (
+    (type='PERCENT' AND percent_value IS NOT NULL AND amount_value IS NULL AND gift_item IS NULL AND membership_tier IS NULL) OR
+    (type='AMOUNT'  AND amount_value  IS NOT NULL AND percent_value IS NULL AND gift_item IS NULL AND membership_tier IS NULL) OR
+    (type='GIFT'    AND gift_item     IS NOT NULL AND percent_value IS NULL AND amount_value  IS NULL AND membership_tier IS NULL) OR
+    (type='MEMBERSHIP' AND membership_tier IS NOT NULL AND percent_value IS NULL AND amount_value IS NULL AND gift_item IS NULL)
+  ),
+  CONSTRAINT chk_date_range CHECK (valid_to > valid_from)
+);
+
+CREATE TABLE benefit_time_windows (...);              -- 요일/시간 조건
+CREATE TABLE benefit_blackouts (...);                 -- 블랙아웃
+CREATE TABLE benefit_quota (benefit_id BIGINT PRIMARY KEY, total_quota INT, daily_quota INT, per_user_limit INT);
+CREATE TABLE benefit_assets (id BIGSERIAL PRIMARY KEY, benefit_id BIGINT REFERENCES benefits(id), kind TEXT, url TEXT);
+CREATE TABLE benefit_versions (...);                  -- 버전/롤백
+
+-- 쿠폰
+CREATE TABLE coupons (...);                           -- 발급
+CREATE TABLE coupon_redemptions (...);                -- 사용
+
+-- 사용자/RBAC/감사
+CREATE TABLE users (...);
+CREATE TABLE roles (...); CREATE TABLE permissions (...);
+CREATE TABLE role_permissions (...); CREATE TABLE user_roles (...);
+CREATE TABLE admin_audit_logs (...);
+
+-- 홈 배너(관리자가 편집)
+CREATE TABLE home_banners (id SERIAL PRIMARY KEY, title TEXT, subtitle TEXT, image_url TEXT, link_url TEXT, order_index INT, is_active BOOLEAN DEFAULT TRUE);
+
+-- 이벤트 로그 & 일별 KPI(업주 분석용)
+CREATE TABLE event_logs (ts TIMESTAMPTZ, user_id BIGINT, event TEXT, params JSONB);
+CREATE TABLE daily_merchant_kpis (dt DATE, merchant_id BIGINT, impressions INT, clicks INT, issues INT, redeems INT, ctr NUMERIC, conv NUMERIC, revenue_est NUMERIC, PRIMARY KEY(dt,merchant_id));
+
+
+인덱스/공간
+
+merchants.location(GIST), regions.geom(GIST), benefits(valid_from,valid_to) 복합 + 상태 부분 인덱스
+
+benefits.search_tsv, merchants.search_tsv (GIN)
+
+rule JSONB GIN(자주 조회 키만)
+
+감사/관리
+
+관리자에서 한 **수정/삭제/추가는 반드시 admin_audit_logs**에 before/after 저장
+
+삭제는 가급적 soft(status='hidden')
+
+3) 사장님 “홍보 효과” 분석 설계
+이벤트 → 집계 → 대시보드
+
+이벤트 수집
+impression_list, impression_map, click_detail, coupon_issue, coupon_redeem 등 클라이언트에서 event_logs에 기록(benefit_id/merchant_id/region_id/from/latlng 등).
+
+일별 집계(ETL 배치)
+event_logs → daily_merchant_kpis
+
+INSERT INTO daily_merchant_kpis(dt, merchant_id, impressions, clicks, issues, redeems, ctr, conv, revenue_est)
+SELECT
+  (now() - interval '1 day')::date AS dt,
+  b.merchant_id,
+  SUM((event IN ('impression_list','impression_map'))::int),
+  SUM((event='click_detail')::int),
+  SUM((event='coupon_issue')::int),
+  SUM((event='coupon_redeem')::int),
+  ROUND(SUM((event='click_detail')::int)::numeric / NULLIF(SUM((event IN ('impression_list','impression_map'))::int),0), 4) AS ctr,
+  ROUND(SUM((event='coupon_redeem')::int)::numeric / NULLIF(SUM((event='coupon_issue')::int),0), 4) AS conv,
+  SUM(CASE WHEN event='coupon_redeem' THEN COALESCE(b.amount_value, (b.percent_value/100.0)*:avg_order) ELSE 0 END) AS revenue_est
+FROM event_logs e
+JOIN benefits b ON b.id = (e.params->>'benefit_id')::bigint
+WHERE e.ts >= date_trunc('day', now() - interval '1 day') AND e.ts < date_trunc('day', now())
+GROUP BY b.merchant_id;
+
+
+업주 대시보드 지표
+
+노출수/클릭수/발급/사용/전환율/매출추정(정액 or %×평균주문액)
+
+시간대·요일·카테고리·권역별 브레이크다운
+
+혜택 버전별(A/B) 성과 비교: benefit_versions.version 기준
+
+4) 관리자 계정에서 “모두 수정/삭제/추가”가 가능한 이유(플로우)
+
+RBAC: ADMIN 롤에 * 권한 부여 → 모든 엔터티 API 허용
+
+모든 쓰기 API는 트랜잭션 + admin_audit_logs 기록:
+
+action(create|update|delete), entity(benefit|merchant|banner...), before, after, actor_id, ip, at
+
+혜택 변경은 항상 새 버전 생성 → 승인 후 PUBLISHED로 교체 (롤백 가능)
+
+5) 역할별 인터페이스 기획
+사용자 앱
+
+홈: 검색바(권역 칩 + 검색 입력), 카테고리 퀵(뷰티/쇼핑/음식/카페/헬스), 배너 캐러셀(관리자 설정), 추천 리스트
+
+탐색: 상단 필터(카테고리/권역/혜택유형/지금 사용 가능/정렬), 무한스크롤, 빈 상태 CTA
+
+지도: 제주 중심 초기화, 커스텀 3버튼(내 위치/+/−), 바텀시트(드래그·끝까지 스크롤)
+
+상세: 혜택 정보(타입·할인·조건·유효기간), 매장정보(주소/영업시간/지도), [쿠폰 받기]
+
+쿠폰함/저장함/내 정보: 표준
+
+사장님(업주 센터)
+
+대시보드: 오늘/7일/30일 KPI, 상위 혜택, 시간대 성과, 전환 퍼널(노출→클릭→발급→사용)
+
+매장: 기본정보/좌표 픽커/영업시간·예외/사진 관리
+
+혜택: 템플릿 선택→조건 상세→미리보기→게시 요청, 버전 이력, 일시정지/재게시
+
+쿠폰/남용: 실시간 사용목록, 지오펜싱 일치율, 이상패턴 알림
+
+설정: 직원 초대(매장 범위 롤), 알림 수신, 정산정보
+
+관리자(백오피스)
+
+칸반 심사: DRAFT → SUBMITTED → IN_REVIEW → NEEDS_INFO → APPROVED → PUBLISHED/REJECTED
+
+업체/혜택/권역/카테고리/배너: CRUD + 미리보기 + CSV 업로드 + 병합
+
+통계: 전체/권역/카테고리/가맹점별 KPI, 기간 비교
+
+감사/권한: 로그 열람, 롤/퍼미션 관리, 사용자 상태 관리
+
+6) 필터/정렬 제대로 “먹게” 만드는 체크리스트
+
+[서버] 쿼리 파라미터 → SQL WHERE/ORDER BY 명확히 매핑(위 예시 사용)
+
+[캐시] 동일 요청만 캐시 키 공유(sha1(params))—필터 바꿀 때 반드시 새로운 키
+
+[클라이언트] 필터 바뀌면 리스트를 교체(append 아님) + 로딩 스켈레톤
+
+[NOW_OPEN] 서버에서 영업시간/예외/타임존으로 판정
+
+[거리] current_position || map_center를 기준으로 computeDistance → km 표기

@@ -61,16 +61,34 @@ export const regions = pgTable("regions", {
   levelIdx: index("regions_level_idx").on(table.level)
 }));
 
-// Categories for merchants and benefits
+// Categories for merchants and benefits (뷰티, 쇼핑, 음식, 카페, 헬스)
 export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  path: text("path").array().notNull(), // Hierarchical path like ["음식", "카페", "디저트"]
-  icon: text("icon"),
+  name: text("name").notNull().unique(),
+  iconUrl: text("icon_url"),
   color: text("color"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow()
-});
+}, (table) => ({
+  nameIdx: index("categories_name_idx").on(table.name)
+}));
+
+// Home banners (admin-editable carousel)
+export const homeBanners = pgTable("home_banners", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  imageUrl: text("image_url").notNull(),
+  linkUrl: text("link_url"),
+  orderIndex: integer("order_index").default(0),
+  isActive: boolean("is_active").default(true),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  orderIdx: index("home_banners_order_idx").on(table.orderIndex),
+  activeIdx: index("home_banners_active_idx").on(table.isActive)
+}));
 
 // Merchant applications (S0-S8 wizard)
 export const merchantApplications = pgTable("merchant_applications", {
@@ -123,7 +141,8 @@ export const merchants = pgTable("merchants", {
   applicationId: uuid("application_id").references(() => merchantApplications.id),
   name: text("name").notNull(),
   description: text("description"),
-  categoryPath: text("category_path").array().notNull(),
+  categoryId: uuid("category_id").references(() => categories.id), // Primary category
+  categoryPath: text("category_path").array(), // Legacy hierarchical path (optional)
   address: text("address").notNull(),
   addressDetail: text("address_detail"),
   phone: text("phone").notNull(),
@@ -140,6 +159,7 @@ export const merchants = pgTable("merchants", {
   updatedAt: timestamp("updated_at").defaultNow()
 }, (table) => ({
   nameIdx: index("merchants_name_idx").on(table.name),
+  categoryIdx: index("merchants_category_idx").on(table.categoryId),
   regionIdx: index("merchants_region_idx").on(table.regionId),
   statusIdx: index("merchants_status_idx").on(table.status)
 }));
@@ -176,6 +196,7 @@ export const merchantHourExceptions = pgTable("merchant_hour_exceptions", {
 export const benefits = pgTable("benefits", {
   id: uuid("id").primaryKey().defaultRandom(),
   merchantId: uuid("merchant_id").references(() => merchants.id).notNull(),
+  categoryId: uuid("category_id").references(() => categories.id), // Primary category
   title: text("title").notNull(),
   description: text("description"),
   type: text("type").notNull(), // PERCENT, AMOUNT, GIFT, MEMBERSHIP
@@ -202,6 +223,7 @@ export const benefits = pgTable("benefits", {
   updatedAt: timestamp("updated_at").defaultNow()
 }, (table) => ({
   merchantIdx: index("benefits_merchant_idx").on(table.merchantId),
+  categoryIdx: index("benefits_category_idx").on(table.categoryId),
   validPeriodIdx: index("benefits_valid_period_idx").on(table.validFrom, table.validTo),
   statusIdx: index("benefits_status_idx").on(table.status),
   typeIdx: index("benefits_type_idx").on(table.type)
@@ -244,6 +266,55 @@ export const benefitAssets = pgTable("benefit_assets", {
   alt: text("alt"),
   order: integer("order").default(0)
 });
+
+// Benefit versions (for rollback and A/B testing)
+export const benefitVersions = pgTable("benefit_versions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  benefitId: uuid("benefit_id").references(() => benefits.id).notNull(),
+  version: integer("version").notNull(),
+  snapshot: jsonb("snapshot").notNull(), // Full benefit data snapshot
+  publishedBy: uuid("published_by").references(() => users.id),
+  publishedAt: timestamp("published_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  benefitVersionIdx: index("benefit_versions_benefit_version_idx").on(table.benefitId, table.version)
+}));
+
+// Event logs for analytics (impressions, clicks, issues, redemptions)
+export const eventLogs = pgTable("event_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  event: text("event").notNull(), // impression_list, impression_map, click_detail, coupon_issue, coupon_redeem
+  benefitId: uuid("benefit_id").references(() => benefits.id),
+  merchantId: uuid("merchant_id").references(() => merchants.id),
+  regionId: uuid("region_id").references(() => regions.id),
+  params: jsonb("params"), // Additional event parameters
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  eventIdx: index("event_logs_event_idx").on(table.event),
+  benefitIdx: index("event_logs_benefit_idx").on(table.benefitId),
+  merchantIdx: index("event_logs_merchant_idx").on(table.merchantId),
+  createdAtIdx: index("event_logs_created_at_idx").on(table.createdAt)
+}));
+
+// Daily merchant KPIs (aggregated analytics)
+export const dailyMerchantKpis = pgTable("daily_merchant_kpis", {
+  date: text("date").notNull(), // "YYYY-MM-DD"
+  merchantId: uuid("merchant_id").references(() => merchants.id).notNull(),
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  issues: integer("issues").default(0),
+  redeems: integer("redeems").default(0),
+  ctr: decimal("ctr", { precision: 10, scale: 4 }), // Click-through rate
+  conversionRate: decimal("conversion_rate", { precision: 10, scale: 4 }), // Redemption rate
+  revenueEst: decimal("revenue_est", { precision: 12, scale: 2 }), // Estimated revenue
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  pk: primaryKey({ columns: [table.date, table.merchantId] }),
+  merchantIdx: index("daily_merchant_kpis_merchant_idx").on(table.merchantId),
+  dateIdx: index("daily_merchant_kpis_date_idx").on(table.date)
+}));
 
 // Coupons table
 export const coupons = pgTable("coupons", {
@@ -362,23 +433,33 @@ export const usersRelations = relations(users, ({ many }) => ({
   auditLogs: many(adminAuditLogs)
 }));
 
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  merchants: many(merchants),
+  benefits: many(benefits)
+}));
+
 export const merchantsRelations = relations(merchants, ({ one, many }) => ({
   region: one(regions, { fields: [merchants.regionId], references: [regions.id] }),
+  category: one(categories, { fields: [merchants.categoryId], references: [categories.id] }),
   application: one(merchantApplications, { fields: [merchants.applicationId], references: [merchantApplications.id] }),
   hours: many(merchantHours),
   hourExceptions: many(merchantHourExceptions),
   benefits: many(benefits),
-  redemptions: many(couponRedemptions)
+  redemptions: many(couponRedemptions),
+  kpis: many(dailyMerchantKpis)
 }));
 
 export const benefitsRelations = relations(benefits, ({ one, many }) => ({
   merchant: one(merchants, { fields: [benefits.merchantId], references: [merchants.id] }),
+  category: one(categories, { fields: [benefits.categoryId], references: [categories.id] }),
   timeWindows: many(benefitTimeWindows),
   blackouts: many(benefitBlackouts),
   quota: many(benefitQuota),
   assets: many(benefitAssets),
+  versions: many(benefitVersions),
   coupons: many(coupons),
-  bookmarks: many(userBookmarks)
+  bookmarks: many(userBookmarks),
+  eventLogs: many(eventLogs)
 }));
 
 export const couponsRelations = relations(coupons, ({ one, many }) => ({
@@ -393,6 +474,10 @@ export const insertMerchantSchema = createInsertSchema(merchants).omit({ id: tru
 export const insertBenefitSchema = createInsertSchema(benefits).omit({ id: true, createdAt: true, updatedAt: true, publishedAt: true });
 export const insertCouponSchema = createInsertSchema(coupons).omit({ id: true, issuedAt: true, redeemedAt: true });
 export const insertMerchantApplicationSchema = createInsertSchema(merchantApplications).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
+export const insertHomeBannerSchema = createInsertSchema(homeBanners).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertEventLogSchema = createInsertSchema(eventLogs).omit({ id: true, createdAt: true });
+export const insertBenefitVersionSchema = createInsertSchema(benefitVersions).omit({ id: true, createdAt: true, publishedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -407,3 +492,11 @@ export type MerchantApplication = typeof merchantApplications.$inferSelect;
 export type InsertMerchantApplication = z.infer<typeof insertMerchantApplicationSchema>;
 export type Region = typeof regions.$inferSelect;
 export type Category = typeof categories.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type HomeBanner = typeof homeBanners.$inferSelect;
+export type InsertHomeBanner = z.infer<typeof insertHomeBannerSchema>;
+export type EventLog = typeof eventLogs.$inferSelect;
+export type InsertEventLog = z.infer<typeof insertEventLogSchema>;
+export type BenefitVersion = typeof benefitVersions.$inferSelect;
+export type InsertBenefitVersion = z.infer<typeof insertBenefitVersionSchema>;
+export type DailyMerchantKpi = typeof dailyMerchantKpis.$inferSelect;
