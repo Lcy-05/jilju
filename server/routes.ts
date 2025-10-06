@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertUserSchema, insertBenefitSchema, insertCouponSchema } from "@shared/schema";
+import { insertUserSchema, insertBenefitSchema, insertCouponSchema, insertMerchantSchema } from "@shared/schema";
 import { authenticateToken, requireRole, hashPassword, comparePassword, generateToken } from "./auth";
 import { searchService } from "./services/search";
 import { couponService } from "./services/coupon";
@@ -393,6 +393,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/merchants/:merchantId/benefits", async (req, res) => {
+    try {
+      const benefits = await storage.getBenefitsByMerchant(req.params.merchantId);
+      res.json({ benefits });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get merchant benefits" });
+    }
+  });
+
   // User bookmarks
   app.post("/api/bookmarks", authenticateToken, async (req, res) => {
     try {
@@ -566,6 +575,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Application rejected" });
     } catch (error) {
       res.status(500).json({ error: "Rejection failed" });
+    }
+  });
+
+  // Merchant management routes
+  app.patch("/api/merchants/:id", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const merchantId = req.params.id;
+      
+      // TODO: Add merchant ownership verification - check if req.user owns this merchant
+      
+      const merchantUpdateSchema = z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        addressDetail: z.string().optional(),
+        website: z.string().optional(),
+        images: z.array(z.string()).optional(),
+        socialLinks: z.any().optional()
+      });
+      
+      const updates = merchantUpdateSchema.parse(req.body);
+      
+      const merchant = await storage.updateMerchant(merchantId, updates);
+      
+      if (!merchant) {
+        return res.status(404).json({ error: "Merchant not found" });
+      }
+      
+      res.json({ merchant });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid merchant data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update merchant" });
+    }
+  });
+
+  app.get("/api/merchants/:id/hours", async (req, res) => {
+    try {
+      const hours = await storage.getMerchantHours(req.params.id);
+      res.json({ hours });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get merchant hours" });
+    }
+  });
+
+  app.put("/api/merchants/:id/hours", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const merchantId = req.params.id;
+      const { hours } = req.body;
+      
+      // TODO: Add merchant ownership verification
+      
+      if (!Array.isArray(hours)) {
+        return res.status(400).json({ error: "Hours must be an array" });
+      }
+      
+      await storage.updateMerchantHours(merchantId, hours);
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update merchant hours" });
+    }
+  });
+
+  // Benefit management routes
+  app.post("/api/merchants/:merchantId/benefits", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const { merchantId } = req.params;
+      
+      const benefitSchema = insertBenefitSchema.omit({ merchantId: true, createdBy: true });
+      const validatedData = benefitSchema.parse(req.body);
+      
+      const benefitData = {
+        ...validatedData,
+        merchantId,
+        createdBy: req.user.id
+      };
+      
+      const benefit = await storage.createBenefit(benefitData);
+      res.status(201).json({ benefit });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid benefit data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create benefit" });
+    }
+  });
+
+  app.patch("/api/benefits/:id", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const benefitId = req.params.id;
+      
+      const updates = {
+        ...req.body,
+        updatedBy: req.user.id
+      };
+      
+      const benefit = await storage.updateBenefit(benefitId, updates);
+      
+      if (!benefit) {
+        return res.status(404).json({ error: "Benefit not found" });
+      }
+      
+      res.json({ benefit });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update benefit" });
+    }
+  });
+
+  app.delete("/api/benefits/:id", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      await storage.deleteBenefit(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete benefit" });
+    }
+  });
+
+  app.post("/api/benefits/:id/publish", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const benefitId = req.params.id;
+      const userId = req.user.id;
+      
+      const version = await storage.publishBenefit(benefitId, userId);
+      res.json({ version, success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to publish benefit" });
+    }
+  });
+
+  app.get("/api/benefits/:id/versions", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const versions = await storage.getBenefitVersions(req.params.id);
+      res.json({ versions });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get benefit versions" });
     }
   });
 

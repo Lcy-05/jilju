@@ -478,6 +478,7 @@ export const insertCategorySchema = createInsertSchema(categories).omit({ id: tr
 export const insertHomeBannerSchema = createInsertSchema(homeBanners).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertEventLogSchema = createInsertSchema(eventLogs).omit({ id: true, createdAt: true });
 export const insertBenefitVersionSchema = createInsertSchema(benefitVersions).omit({ id: true, createdAt: true, publishedAt: true });
+export const insertMerchantHoursSchema = createInsertSchema(merchantHours).omit({ id: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -500,3 +501,5 @@ export type InsertEventLog = z.infer<typeof insertEventLogSchema>;
 export type BenefitVersion = typeof benefitVersions.$inferSelect;
 export type InsertBenefitVersion = z.infer<typeof insertBenefitVersionSchema>;
 export type DailyMerchantKpi = typeof dailyMerchantKpis.$inferSelect;
+export type MerchantHours = typeof merchantHours.$inferSelect;
+export type InsertMerchantHours = z.infer<typeof insertMerchantHoursSchema>;

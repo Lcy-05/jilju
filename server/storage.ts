@@ -14,6 +14,7 @@ import {
   eventLogs,
   dailyMerchantKpis,
   benefitVersions,
+  merchantHours,
   type User,
   type InsertUser,
   type Merchant,
@@ -27,7 +28,9 @@ import {
   type InsertHomeBanner,
   type EventLog,
   type InsertEventLog,
-  type DailyMerchantKpi
+  type DailyMerchantKpi,
+  type BenefitVersion,
+  type MerchantHours
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte } from "drizzle-orm";
@@ -50,11 +53,19 @@ export interface IStorage {
   getBenefitStats(benefitId: string): Promise<any>;
   getBenefitsByMerchant(merchantId: string): Promise<Benefit[]>;
   searchBenefits(query: string, options?: any): Promise<Benefit[]>;
+  createBenefit(data: any): Promise<Benefit>;
+  updateBenefit(id: string, updates: Partial<Benefit>): Promise<Benefit | undefined>;
+  deleteBenefit(id: string): Promise<void>;
+  publishBenefit(benefitId: string, userId: string): Promise<BenefitVersion>;
+  getBenefitVersions(benefitId: string): Promise<BenefitVersion[]>;
   
   // Merchant operations
   getMerchant(id: string): Promise<Merchant | undefined>;
   getMerchantsNearby(lat: number, lng: number, radiusKm: number, filters?: any): Promise<Merchant[]>;
   searchMerchants(query: string): Promise<Merchant[]>;
+  updateMerchant(id: string, updates: Partial<Merchant>): Promise<Merchant | undefined>;
+  getMerchantHours(merchantId: string): Promise<any[]>;
+  updateMerchantHours(merchantId: string, hours: any[]): Promise<void>;
   
   // Bookmark operations
   bookmarkBenefit(userId: string, benefitId: string): Promise<void>;
@@ -290,6 +301,80 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  async createBenefit(data: any): Promise<Benefit> {
+    const [benefit] = await db
+      .insert(benefits)
+      .values({
+        ...data,
+        status: data.status || 'DRAFT',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return benefit;
+  }
+
+  async updateBenefit(id: string, updates: Partial<Benefit>): Promise<Benefit | undefined> {
+    const [benefit] = await db
+      .update(benefits)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(benefits.id, id))
+      .returning();
+    return benefit || undefined;
+  }
+
+  async deleteBenefit(id: string): Promise<void> {
+    await db.delete(benefits).where(eq(benefits.id, id));
+  }
+
+  async publishBenefit(benefitId: string, userId: string): Promise<BenefitVersion> {
+    const [benefit] = await db.select().from(benefits).where(eq(benefits.id, benefitId));
+    
+    if (!benefit) {
+      throw new Error('Benefit not found');
+    }
+
+    const [lastVersion] = await db
+      .select()
+      .from(benefitVersions)
+      .where(eq(benefitVersions.benefitId, benefitId))
+      .orderBy(desc(benefitVersions.version))
+      .limit(1);
+
+    const newVersion = (lastVersion?.version || 0) + 1;
+
+    const [benefitVersion] = await db
+      .insert(benefitVersions)
+      .values({
+        benefitId,
+        version: newVersion,
+        snapshot: benefit as any,
+        publishedBy: userId,
+        publishedAt: new Date()
+      })
+      .returning();
+
+    await db
+      .update(benefits)
+      .set({ 
+        status: 'ACTIVE', 
+        publishedAt: new Date(),
+        updatedBy: userId 
+      })
+      .where(eq(benefits.id, benefitId));
+
+    return benefitVersion;
+  }
+
+  async getBenefitVersions(benefitId: string): Promise<BenefitVersion[]> {
+    const results = await db
+      .select()
+      .from(benefitVersions)
+      .where(eq(benefitVersions.benefitId, benefitId))
+      .orderBy(desc(benefitVersions.version));
+    return results;
+  }
+
   // Merchant operations
   async getMerchant(id: string): Promise<Merchant | undefined> {
     const [merchant] = await db.select().from(merchants).where(eq(merchants.id, id));
@@ -326,6 +411,42 @@ export class DatabaseStorage implements IStorage {
       )
       .limit(20);
     return results;
+  }
+
+  async updateMerchant(id: string, updates: Partial<Merchant>): Promise<Merchant | undefined> {
+    const [merchant] = await db
+      .update(merchants)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(merchants.id, id))
+      .returning();
+    return merchant || undefined;
+  }
+
+  async getMerchantHours(merchantId: string): Promise<MerchantHours[]> {
+    const results = await db
+      .select()
+      .from(merchantHours)
+      .where(eq(merchantHours.merchantId, merchantId))
+      .orderBy(asc(merchantHours.dayOfWeek));
+    return results;
+  }
+
+  async updateMerchantHours(merchantId: string, hours: any[]): Promise<void> {
+    await db.delete(merchantHours).where(eq(merchantHours.merchantId, merchantId));
+    
+    if (hours.length > 0) {
+      await db.insert(merchantHours).values(
+        hours.map(h => ({
+          merchantId,
+          dayOfWeek: h.dayOfWeek,
+          openTime: h.openTime,
+          closeTime: h.closeTime,
+          isOpen: h.isOpen,
+          breakStart: h.breakStart,
+          breakEnd: h.breakEnd
+        }))
+      );
+    }
   }
 
   // Bookmark operations
