@@ -261,15 +261,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPopularBenefits(limit: number = 20): Promise<Benefit[]> {
-    // Return active benefits ordered by creation date for now
+    // Return active benefits with merchant info ordered by creation date for now
     // TODO: Implement popularity scoring
     const results = await db
-      .select()
+      .select({
+        benefit: benefits,
+        merchant: merchants
+      })
       .from(benefits)
-      .where(eq(benefits.status, 'ACTIVE'))
+      .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
+      .where(and(
+        eq(benefits.status, 'ACTIVE'),
+        eq(merchants.status, 'ACTIVE')
+      ))
       .orderBy(desc(benefits.createdAt))
       .limit(limit);
-    return results;
+    
+    // Flatten the results
+    return results.map(row => ({
+      ...row.benefit,
+      merchant: row.merchant
+    }));
   }
 
   async getRecommendedBenefits(userId: string, lat?: number, lng?: number): Promise<Benefit[]> {
@@ -643,18 +655,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchBenefits(query: string, options?: any): Promise<Benefit[]> {
-    // Simple text search for now
+    // Simple text search with merchant info
     const results = await db
-      .select()
+      .select({
+        benefit: benefits,
+        merchant: merchants
+      })
       .from(benefits)
+      .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
       .where(
         and(
           eq(benefits.status, 'ACTIVE'),
+          eq(merchants.status, 'ACTIVE'),
           sql`${benefits.title} ILIKE ${`%${query}%`}`
         )
       )
-      .limit(20);
-    return results;
+      .limit(100);
+    
+    // Flatten the results
+    return results.map(row => ({
+      ...row.benefit,
+      merchant: row.merchant
+    }));
   }
 
   async getCoupon(token: string): Promise<Coupon | undefined> {
