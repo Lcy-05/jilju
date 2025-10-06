@@ -10,6 +10,10 @@ import {
   merchantApplications,
   userRoles,
   couponRedemptions,
+  homeBanners,
+  eventLogs,
+  dailyMerchantKpis,
+  benefitVersions,
   type User,
   type InsertUser,
   type Merchant,
@@ -18,7 +22,12 @@ import {
   type Region,
   type Category,
   type MerchantApplication,
-  type InsertMerchantApplication
+  type InsertMerchantApplication,
+  type HomeBanner,
+  type InsertHomeBanner,
+  type EventLog,
+  type InsertEventLog,
+  type DailyMerchantKpi
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte } from "drizzle-orm";
@@ -68,6 +77,20 @@ export interface IStorage {
   getCategories(): Promise<Category[]>;
   getRegionByLocation(lat: number, lng: number): Promise<Region | undefined>;
   reverseGeocode(lat: number, lng: number): Promise<string>;
+  
+  // Home Banner operations
+  getHomeBanners(activeOnly?: boolean): Promise<HomeBanner[]>;
+  createHomeBanner(data: InsertHomeBanner): Promise<HomeBanner>;
+  updateHomeBanner(id: string, updates: Partial<InsertHomeBanner>): Promise<HomeBanner>;
+  deleteHomeBanner(id: string): Promise<void>;
+  
+  // Event Logging operations
+  logEvent(data: InsertEventLog): Promise<EventLog>;
+  getEventLogs(filters?: { merchantId?: string; benefitId?: string; event?: string; fromDate?: Date; toDate?: Date }): Promise<EventLog[]>;
+  
+  // Analytics operations
+  getMerchantKpis(merchantId: string, fromDate?: string, toDate?: string): Promise<DailyMerchantKpi[]>;
+  getAnalyticsSummary(merchantId: string, period: 'today' | '7days' | '30days'): Promise<any>;
   
   // Merchant Application operations
   createMerchantApplication(data: InsertMerchantApplication): Promise<MerchantApplication>;
@@ -329,6 +352,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: benefits.id,
         merchantId: benefits.merchantId,
+        categoryId: benefits.categoryId,
         title: benefits.title,
         description: benefits.description,
         type: benefits.type,
@@ -593,6 +617,137 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(merchantApplications.id, applicationId));
+  }
+
+  // Home Banner operations
+  async getHomeBanners(activeOnly: boolean = true): Promise<HomeBanner[]> {
+    const conditions = activeOnly ? [eq(homeBanners.isActive, true)] : [];
+    
+    const query = conditions.length > 0
+      ? db.select().from(homeBanners).where(and(...conditions))
+      : db.select().from(homeBanners);
+    
+    const results = await query.orderBy(asc(homeBanners.orderIndex));
+    return results;
+  }
+
+  async createHomeBanner(data: InsertHomeBanner): Promise<HomeBanner> {
+    const [banner] = await db
+      .insert(homeBanners)
+      .values(data)
+      .returning();
+    return banner;
+  }
+
+  async updateHomeBanner(id: string, updates: Partial<InsertHomeBanner>): Promise<HomeBanner> {
+    const [banner] = await db
+      .update(homeBanners)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(homeBanners.id, id))
+      .returning();
+    return banner;
+  }
+
+  async deleteHomeBanner(id: string): Promise<void> {
+    await db.delete(homeBanners).where(eq(homeBanners.id, id));
+  }
+
+  // Event Logging operations
+  async logEvent(data: InsertEventLog): Promise<EventLog> {
+    const [event] = await db
+      .insert(eventLogs)
+      .values(data)
+      .returning();
+    return event;
+  }
+
+  async getEventLogs(filters?: {
+    merchantId?: string;
+    benefitId?: string;
+    event?: string;
+    fromDate?: Date;
+    toDate?: Date;
+  }): Promise<EventLog[]> {
+    const conditions: any[] = [];
+    
+    if (filters?.merchantId) {
+      conditions.push(eq(eventLogs.merchantId, filters.merchantId));
+    }
+    if (filters?.benefitId) {
+      conditions.push(eq(eventLogs.benefitId, filters.benefitId));
+    }
+    if (filters?.event) {
+      conditions.push(eq(eventLogs.event, filters.event));
+    }
+    if (filters?.fromDate) {
+      conditions.push(gte(eventLogs.createdAt, filters.fromDate));
+    }
+    if (filters?.toDate) {
+      conditions.push(lte(eventLogs.createdAt, filters.toDate));
+    }
+    
+    const query = conditions.length > 0
+      ? db.select().from(eventLogs).where(and(...conditions))
+      : db.select().from(eventLogs);
+    
+    const results = await query.orderBy(desc(eventLogs.createdAt)).limit(1000);
+    return results;
+  }
+
+  // Analytics operations
+  async getMerchantKpis(merchantId: string, fromDate?: string, toDate?: string): Promise<DailyMerchantKpi[]> {
+    const conditions = [eq(dailyMerchantKpis.merchantId, merchantId)];
+    
+    if (fromDate) {
+      conditions.push(gte(dailyMerchantKpis.date, fromDate));
+    }
+    if (toDate) {
+      conditions.push(lte(dailyMerchantKpis.date, toDate));
+    }
+    
+    const results = await db
+      .select()
+      .from(dailyMerchantKpis)
+      .where(and(...conditions))
+      .orderBy(asc(dailyMerchantKpis.date));
+    
+    return results;
+  }
+
+  async getAnalyticsSummary(merchantId: string, period: 'today' | '7days' | '30days'): Promise<any> {
+    const today = new Date();
+    const fromDate = new Date(today);
+    
+    if (period === 'today') {
+      fromDate.setHours(0, 0, 0, 0);
+    } else if (period === '7days') {
+      fromDate.setDate(today.getDate() - 7);
+    } else if (period === '30days') {
+      fromDate.setDate(today.getDate() - 30);
+    }
+    
+    const fromDateStr = fromDate.toISOString().split('T')[0];
+    
+    const kpis = await this.getMerchantKpis(merchantId, fromDateStr);
+    
+    // Aggregate the KPIs
+    const totals = kpis.reduce((acc, kpi) => ({
+      impressions: acc.impressions + (kpi.impressions || 0),
+      clicks: acc.clicks + (kpi.clicks || 0),
+      issues: acc.issues + (kpi.issues || 0),
+      redeems: acc.redeems + (kpi.redeems || 0),
+      revenueEst: acc.revenueEst + parseFloat(kpi.revenueEst?.toString() || '0')
+    }), { impressions: 0, clicks: 0, issues: 0, redeems: 0, revenueEst: 0 });
+    
+    // Calculate rates
+    const ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0;
+    const conversionRate = totals.issues > 0 ? (totals.redeems / totals.issues) * 100 : 0;
+    
+    return {
+      ...totals,
+      ctr,
+      conversionRate
+    };
   }
 }
 
