@@ -199,3 +199,46 @@ The application uses Naver Maps JavaScript API v3 for interactive mapping and Na
 - 3 sample banners seeded with Unsplash imagery
 
 **Status:** Backend infrastructure complete for consumer app Phase 3. Merchant Center (Phase 4) and Admin Backoffice (Phase 5) require additional frontend implementation.
+
+## Phase 3 Consumer App - COMPLETED (October 6, 2025)
+
+**✅ All Consumer App Features Implemented:**
+
+1. **Database-Driven Region System:**
+   - Created `regions` table with 8 Jeju zones (아라권, 삼화권, 시청권, 공항연안권, 노형권, 동부권, 서부권, 서귀포권)
+   - Seeded with dong-level location data
+   - `GET /api/regions/detect` endpoint for coordinate-based region detection
+
+2. **Home Page Enhancements:**
+   - Dynamic banner carousel with auto-slide (5s interval) and drag support using Embla Carousel
+   - Category quick access buttons fetching from `GET /api/categories`
+   - Direct navigation to Discover page with pre-selected filters
+
+3. **Discover Page - Complete URL/State Synchronization:**
+   - **Single Source of Truth:** All URL updates flow through one useEffect, eliminating duplicate history pushes
+   - **Mount Guard:** hasMounted ref prevents initial URL rewrite on page load
+   - **Bidirectional Mapping:** URL `cats` ↔ React state `categories` ↔ API `cats` parameter
+   - **Filter Persistence:** Reload, bookmark, deep link all maintain filter state correctly
+   - **No Manual Updates:** Removed all manual `updateURL()` calls from handlers
+
+4. **Map Page Integration:**
+   - Database-based region detection (no hardcoded constants)
+   - Region badge display with filter functionality
+   - URL parameter support: `/map?region=jeju`
+
+**E2E Testing Results:**
+- ✅ Home → Discover category navigation
+- ✅ Discover filter chip activation & URL sync
+- ✅ Filter persistence across page reload
+- ✅ Map page functionality (container, bottom sheet, markers)
+- ✅ Bottom navigation (Home ↔ Discover ↔ Map)
+
+**Architecture Highlights:**
+- URL synchronization managed exclusively through mount-guarded useEffect
+- Shortened URL parameters (`cats`, `types`) consistently used across all layers
+- Race conditions eliminated by removing stale manual updateURL invocations
+- Browser back/forward navigation works correctly with filter state
+
+**Next Steps:**
+- Phase 4: Merchant Center (dashboard, analytics, benefit management)
+- Phase 5: Admin Backoffice (approval workflows, CRUD, audit logs)
