@@ -28,20 +28,19 @@ interface DailyKPI {
 export default function MerchantDashboard() {
   const { user } = useAuth();
 
-  // Get merchant ID from user's merchant relationship
-  // For now, we'll use a placeholder - in real app, fetch from user profile
-  const merchantId = 'placeholder-merchant-id';
+  // Get merchant ID from user object
+  const merchantId = user?.merchantId;
 
   // Fetch KPI summary
   const { data: summary, isLoading: summaryLoading } = useQuery<KPISummary>({
     queryKey: [`/api/analytics/merchant/${merchantId}/summary`],
-    enabled: !!merchantId && merchantId !== 'placeholder-merchant-id'
+    enabled: !!merchantId
   });
 
   // Fetch daily KPIs (last 30 days)
   const { data: dailyData, isLoading: dailyLoading } = useQuery<DailyKPI[]>({
     queryKey: [`/api/analytics/merchant/${merchantId}`, { period: 'daily', days: 30 }],
-    enabled: !!merchantId && merchantId !== 'placeholder-merchant-id'
+    enabled: !!merchantId
   });
 
   // Placeholder data for demo

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MerchantLayout } from "@/components/layout/merchant-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
 import { Clock, MapPin, Image as ImageIcon, Globe, Save } from "lucide-react";
 import type { Merchant, MerchantHours } from "@shared/schema";
 
@@ -35,36 +36,35 @@ interface HoursFormData {
 
 export default function StoreManagement() {
   const { toast } = useToast();
+  const { user } = useAuth();
   
-  // For demo purposes, use a mock merchant ID
-  // In real app, get from user's merchant relationship
-  const merchantId = "mock-merchant-id";
+  // Get merchant ID from user object
+  const merchantId = user?.merchantId;
 
   // Fetch merchant data
   const { data: merchant, isLoading: merchantLoading } = useQuery<{ merchant: Merchant }>({
     queryKey: [`/api/merchants/${merchantId}`],
-    enabled: false // Disabled until real merchant ID is available
+    enabled: !!merchantId
   });
 
   // Fetch merchant hours
   const { data: hoursData, isLoading: hoursLoading } = useQuery<{ hours: MerchantHours[] }>({
     queryKey: [`/api/merchants/${merchantId}/hours`],
-    enabled: false // Disabled until real merchant ID is available
+    enabled: !!merchantId
   });
 
   // Initialize form data
   const [storeData, setStoreData] = useState<StoreFormData>({
-    name: merchant?.merchant.name || "",
-    description: merchant?.merchant.description || "",
-    phone: merchant?.merchant.phone || "",
-    address: merchant?.merchant.address || "",
-    addressDetail: merchant?.merchant.addressDetail || "",
-    website: merchant?.merchant.website || "",
-    images: merchant?.merchant.images || []
+    name: "",
+    description: "",
+    phone: "",
+    address: "",
+    addressDetail: "",
+    website: "",
+    images: []
   });
 
   const [hours, setHours] = useState<HoursFormData[]>(
-    hoursData?.hours || 
     Array.from({ length: 7 }, (_, i) => ({
       dayOfWeek: i,
       isOpen: i !== 0, // Closed on Sunday by default
@@ -73,9 +73,41 @@ export default function StoreManagement() {
     }))
   );
 
+  // Update form data when merchant data loads
+  useEffect(() => {
+    if (merchant?.merchant) {
+      setStoreData({
+        name: merchant.merchant.name || "",
+        description: merchant.merchant.description || "",
+        phone: merchant.merchant.phone || "",
+        address: merchant.merchant.address || "",
+        addressDetail: merchant.merchant.addressDetail || "",
+        website: merchant.merchant.website || "",
+        images: merchant.merchant.images || []
+      });
+    }
+  }, [merchant]);
+
+  // Update hours data when hours data loads
+  useEffect(() => {
+    if (hoursData?.hours && hoursData.hours.length > 0) {
+      setHours(hoursData.hours.map(h => ({
+        dayOfWeek: h.dayOfWeek,
+        isOpen: h.isOpen,
+        openTime: h.openTime || "09:00",
+        closeTime: h.closeTime || "18:00",
+        breakStart: h.breakStart,
+        breakEnd: h.breakEnd
+      })));
+    }
+  }, [hoursData]);
+
   // Update merchant mutation
   const updateMerchantMutation = useMutation({
     mutationFn: async (data: Partial<StoreFormData>) => {
+      if (!merchantId) {
+        throw new Error("Merchant ID is required");
+      }
       return await apiRequest('PATCH', `/api/merchants/${merchantId}`, data);
     },
     onSuccess: () => {
@@ -97,6 +129,9 @@ export default function StoreManagement() {
   // Update hours mutation
   const updateHoursMutation = useMutation({
     mutationFn: async (data: HoursFormData[]) => {
+      if (!merchantId) {
+        throw new Error("Merchant ID is required");
+      }
       return await apiRequest('PUT', `/api/merchants/${merchantId}/hours`, { hours: data });
     },
     onSuccess: () => {
@@ -116,10 +151,12 @@ export default function StoreManagement() {
   });
 
   const handleStoreUpdate = () => {
+    if (!merchantId) return;
     updateMerchantMutation.mutate(storeData);
   };
 
   const handleHoursUpdate = () => {
+    if (!merchantId) return;
     updateHoursMutation.mutate(hours);
   };
 
@@ -220,7 +257,7 @@ export default function StoreManagement() {
 
             <Button 
               onClick={handleStoreUpdate} 
-              disabled={updateMerchantMutation.isPending}
+              disabled={!merchantId || updateMerchantMutation.isPending}
               data-testid="button-save-store-info"
               className="w-full md:w-auto"
             >
@@ -284,7 +321,7 @@ export default function StoreManagement() {
 
             <Button 
               onClick={handleHoursUpdate} 
-              disabled={updateHoursMutation.isPending}
+              disabled={!merchantId || updateHoursMutation.isPending}
               data-testid="button-save-hours"
               className="w-full md:w-auto"
             >

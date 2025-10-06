@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
 import { Plus, Edit, Trash2, CheckCircle, Clock, Pause, Save, Eye } from "lucide-react";
 import { format } from "date-fns";
 import type { Benefit } from "@shared/schema";
@@ -30,12 +31,13 @@ interface BenefitFormData {
 
 export default function BenefitsManagement() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   
-  // For demo purposes, use a mock merchant ID
-  const merchantId = "mock-merchant-id";
+  // Get merchant ID from user object
+  const merchantId = user?.merchantId;
 
   // Form state
   const [formData, setFormData] = useState<BenefitFormData>({
@@ -51,7 +53,7 @@ export default function BenefitsManagement() {
   // Fetch benefits
   const { data: benefitsData, isLoading } = useQuery<{ benefits: Benefit[] }>({
     queryKey: [`/api/merchants/${merchantId}/benefits`],
-    enabled: false // Disabled until real merchant ID is available
+    enabled: !!merchantId
   });
 
   const benefits = benefitsData?.benefits || [];
@@ -59,6 +61,9 @@ export default function BenefitsManagement() {
   // Create benefit mutation
   const createMutation = useMutation({
     mutationFn: async (data: BenefitFormData) => {
+      if (!merchantId) {
+        throw new Error("Merchant ID is required");
+      }
       return await apiRequest('POST', `/api/merchants/${merchantId}/benefits`, data);
     },
     onSuccess: () => {
@@ -82,6 +87,9 @@ export default function BenefitsManagement() {
   // Update benefit mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<BenefitFormData> }) => {
+      if (!merchantId) {
+        throw new Error("Merchant ID is required");
+      }
       return await apiRequest('PATCH', `/api/benefits/${id}`, data);
     },
     onSuccess: () => {
@@ -106,6 +114,9 @@ export default function BenefitsManagement() {
   // Delete benefit mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!merchantId) {
+        throw new Error("Merchant ID is required");
+      }
       return await apiRequest('DELETE', `/api/benefits/${id}`);
     },
     onSuccess: () => {
@@ -127,6 +138,9 @@ export default function BenefitsManagement() {
   // Publish benefit mutation
   const publishMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!merchantId) {
+        throw new Error("Merchant ID is required");
+      }
       return await apiRequest('POST', `/api/benefits/${id}/publish`);
     },
     onSuccess: () => {
@@ -158,13 +172,13 @@ export default function BenefitsManagement() {
   };
 
   const handleCreate = () => {
+    if (!merchantId) return;
     createMutation.mutate(formData);
   };
 
   const handleUpdate = () => {
-    if (selectedBenefit) {
-      updateMutation.mutate({ id: selectedBenefit.id, data: formData });
-    }
+    if (!merchantId || !selectedBenefit) return;
+    updateMutation.mutate({ id: selectedBenefit.id, data: formData });
   };
 
   const handleEdit = (benefit: Benefit) => {
@@ -369,7 +383,7 @@ export default function BenefitsManagement() {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} data-testid="button-cancel-create">
                   취소
                 </Button>
-                <Button onClick={handleCreate} disabled={createMutation.isPending} data-testid="button-save-create">
+                <Button onClick={handleCreate} disabled={!merchantId || createMutation.isPending} data-testid="button-save-create">
                   <Save className="w-4 h-4 mr-2" />
                   {createMutation.isPending ? "저장 중..." : "저장"}
                 </Button>
@@ -490,7 +504,7 @@ export default function BenefitsManagement() {
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} data-testid="button-cancel-edit">
                 취소
               </Button>
-              <Button onClick={handleUpdate} disabled={updateMutation.isPending} data-testid="button-save-edit">
+              <Button onClick={handleUpdate} disabled={!merchantId || updateMutation.isPending} data-testid="button-save-edit">
                 <Save className="w-4 h-4 mr-2" />
                 {updateMutation.isPending ? "저장 중..." : "저장"}
               </Button>

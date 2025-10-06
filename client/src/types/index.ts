@@ -5,6 +5,7 @@ export interface User {
   phone?: string;
   isVerified: boolean;
   roles?: string[];
+  merchantId?: string | null;
 }
 
 export interface Benefit {
