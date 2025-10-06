@@ -44,6 +44,7 @@ export interface IStorage {
   assignUserRole(userId: string, roleId: string, merchantId?: string): Promise<void>;
   getUserRoles(userId: string): Promise<string[]>;
   getUserPermissions(userId: string): Promise<string[]>;
+  getUserMerchantId(userId: string): Promise<string | null>;
   
   // Benefit operations
   getBenefit(id: string): Promise<Benefit | undefined>;
@@ -173,6 +174,21 @@ export class DatabaseStorage implements IStorage {
     }
     
     return Array.from(permissions);
+  }
+
+  async getUserMerchantId(userId: string): Promise<string | null> {
+    const [userRole] = await db
+      .select({ merchantId: userRoles.merchantId })
+      .from(userRoles)
+      .where(
+        and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.roleId, 'MERCHANT_OWNER')
+        )
+      )
+      .limit(1);
+    
+    return userRole?.merchantId || null;
   }
 
   // Benefit operations

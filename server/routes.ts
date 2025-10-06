@@ -34,6 +34,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user roles
       const roles = await storage.getUserRoles(user.id);
       
+      // Get merchant ID if user is a merchant owner
+      const merchantId = await storage.getUserMerchantId(user.id);
+      
       // Generate JWT token
       const token = generateToken({ id: user.id, email: user.email, name: user.name }, roles);
       
@@ -46,7 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: userWithoutPassword.id, 
           email: userWithoutPassword.email, 
           name: userWithoutPassword.name,
-          roles: roles
+          roles: roles,
+          merchantId
         },
         token
       });
@@ -74,6 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user roles
       const roles = await storage.getUserRoles(user.id);
       
+      // Get merchant ID if user is a merchant owner
+      const merchantId = await storage.getUserMerchantId(user.id);
+      
       // Generate JWT token
       const token = generateToken({ id: user.id, email: user.email, name: user.name }, roles);
       
@@ -82,7 +89,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, ...userWithoutPassword } = user;
       
       res.json({ 
-        user: { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name, roles },
+        user: { 
+          id: userWithoutPassword.id, 
+          email: userWithoutPassword.email, 
+          name: userWithoutPassword.name, 
+          roles,
+          merchantId
+        },
         token 
       });
     } catch (error) {
@@ -103,6 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get fresh roles
       const roles = await storage.getUserRoles(user.id);
       
+      // Get merchant ID if user is a merchant owner
+      const merchantId = await storage.getUserMerchantId(user.id);
+      
       // SECURITY: Never send password field to client
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userWithoutPassword } = user;
@@ -111,7 +127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: userWithoutPassword.id,
         email: userWithoutPassword.email,
         name: userWithoutPassword.name,
-        roles
+        roles,
+        merchantId
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to get user info" });
