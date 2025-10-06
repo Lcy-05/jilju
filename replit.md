@@ -169,3 +169,33 @@ The application uses Naver Maps JavaScript API v3 for interactive mapping and Na
 - **Map Drag Functionality:** Verified map dragging works properly without interference from bottom sheet
 - **Bottom Navigation Visibility:** Bottom tab bar always visible and accessible, never covered by map or bottom sheet
 - **Distance Calculation Fix:** Changed DEFAULT_LOCATION from Seoul to Jeju Island (33.4996, 126.5312), ensuring accurate distance calculations when user location is unavailable. Distance now correctly shows 0-50km range for Jeju Island merchants instead of incorrect 462.9km values.
+## Database & Backend Infrastructure Updates (October 6, 2025)
+
+**New Database Tables:**
+- `home_banners`: Admin-editable carousel banners with ordering and active status
+- `benefit_versions`: Version history for benefit rollback and A/B testing
+- `event_logs`: Comprehensive analytics event tracking for all user actions
+- `daily_merchant_kpis`: Pre-aggregated daily analytics for merchant dashboards
+- Updated `categories`: Simplified to 5 main categories (뷰티, 쇼핑, 음식, 카페, 헬스)
+- Added `category_id` foreign keys to both `merchants` and `benefits` tables
+
+**Storage Layer Extensions:**
+- Home Banner CRUD: getHomeBanners, createHomeBanner, updateHomeBanner, deleteHomeBanner
+- Event Logging: logEvent (with full metadata), getEventLogs (with comprehensive filtering)
+- Analytics: getMerchantKpis (date range queries), getAnalyticsSummary (period aggregation with CTR/conversion)
+
+**New Backend API Endpoints:**
+- `GET /api/categories` - Returns active categories for home page quick access
+- `GET /api/banners` - Returns ordered banners for home carousel
+- `POST /api/banners` - Admin-only banner creation
+- `PATCH /api/banners/:id` - Admin-only banner updates
+- `DELETE /api/banners/:id` - Admin-only banner deletion
+- `POST /api/events` - Universal event logging endpoint (supports anonymous & authenticated users)
+- `GET /api/analytics/merchant/:merchantId` - Merchant analytics with period/date range support
+
+**Data Migration Completed:**
+- All 113 existing merchants assigned to appropriate categories
+- All 100 existing benefits inherited categories from their merchants
+- 3 sample banners seeded with Unsplash imagery
+
+**Status:** Backend infrastructure complete for consumer app Phase 3. Merchant Center (Phase 4) and Admin Backoffice (Phase 5) require additional frontend implementation.

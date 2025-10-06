@@ -569,6 +569,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Categories routes
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json({ categories });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get categories" });
+    }
+  });
+
+  // Home Banners routes
+  app.get("/api/banners", async (req, res) => {
+    try {
+      const { activeOnly = 'true' } = req.query;
+      const banners = await storage.getHomeBanners(activeOnly === 'true');
+      res.json({ banners });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get banners" });
+    }
+  });
+
+  app.post("/api/banners", requireRole(['ADMIN']), async (req, res) => {
+    try {
+      const banner = await storage.createHomeBanner({
+        ...req.body,
+        createdBy: req.user.id
+      });
+      res.json({ banner });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create banner" });
+    }
+  });
+
+  app.patch("/api/banners/:id", requireRole(['ADMIN']), async (req, res) => {
+    try {
+      const banner = await storage.updateHomeBanner(req.params.id, req.body);
+      res.json({ banner });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update banner" });
+    }
+  });
+
+  app.delete("/api/banners/:id", requireRole(['ADMIN']), async (req, res) => {
+    try {
+      await storage.deleteHomeBanner(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete banner" });
+    }
+  });
+
+  // Event Logging routes
+  app.post("/api/events", async (req, res) => {
+    try {
+      const { event, benefitId, merchantId, regionId, params } = req.body;
+      
+      const eventLog = await storage.logEvent({
+        userId: req.user?.id || null,
+        event,
+        benefitId: benefitId || null,
+        merchantId: merchantId || null,
+        regionId: regionId || null,
+        params: params || null
+      });
+      
+      res.json({ event: eventLog });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to log event" });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/analytics/merchant/:merchantId", requireRole(['MERCHANT_OWNER', 'ADMIN']), async (req, res) => {
+    try {
+      const { merchantId } = req.params;
+      const { period, fromDate, toDate } = req.query;
+      
+      // If both date bounds provided, return time-series KPI data
+      if (fromDate && toDate && typeof fromDate === 'string' && typeof toDate === 'string') {
+        const kpis = await storage.getMerchantKpis(merchantId, fromDate, toDate);
+        res.json({ kpis });
+      } else {
+        // Otherwise return aggregated summary for period
+        const periodValue = (period as string) || '7days';
+        const summary = await storage.getAnalyticsSummary(merchantId, periodValue as 'today' | '7days' | '30days');
+        res.json({ summary });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
