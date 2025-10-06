@@ -52,7 +52,7 @@ export const regions = pgTable("regions", {
   code: text("code").notNull().unique(), // Administrative code
   name: text("name").notNull(),
   level: integer("level").notNull(), // 1: 시도, 2: 시군구, 3: 읍면동
-  parentId: uuid("parent_id").references(() => regions.id),
+  parentId: uuid("parent_id"),
   geom: text("geom"), // PostGIS geometry for boundaries
   center: text("center"), // PostGIS point for center coordinates
   createdAt: timestamp("created_at").defaultNow()
