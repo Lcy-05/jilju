@@ -229,8 +229,9 @@ export class DatabaseStorage implements IStorage {
           name: merchants.name,
           address: merchants.address,
           location: merchants.location,
-          categoryPath: merchants.categoryPath
+          categoryId: merchants.categoryId
         },
+        category: categories,
         distance: sql<number>`
           ST_Distance(
             ST_MakePoint(
@@ -243,6 +244,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(benefits)
       .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
+      .leftJoin(categories, eq(merchants.categoryId, categories.id))
       .where(and(...conditions))
       .orderBy(sql`
         ST_Distance(
@@ -260,6 +262,7 @@ export class DatabaseStorage implements IStorage {
       ...row.benefit,
       merchant: {
         ...row.merchant,
+        category: row.category,
         distance: row.distance
       } as any
     }));
@@ -271,10 +274,12 @@ export class DatabaseStorage implements IStorage {
     const results = await db
       .select({
         benefit: benefits,
-        merchant: merchants
+        merchant: merchants,
+        category: categories
       })
       .from(benefits)
       .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
+      .leftJoin(categories, eq(merchants.categoryId, categories.id))
       .where(and(
         eq(benefits.status, 'ACTIVE'),
         eq(merchants.status, 'ACTIVE')
@@ -285,7 +290,10 @@ export class DatabaseStorage implements IStorage {
     // Flatten the results
     return results.map(row => ({
       ...row.benefit,
-      merchant: row.merchant
+      merchant: {
+        ...row.merchant,
+        category: row.category
+      } as any
     }));
   }
 
@@ -296,17 +304,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBenefitStats(benefitId: string): Promise<any> {
-    // Get coupon counts
-    const [stats] = await db
-      .select({
-        issued: sql<number>`COUNT(CASE WHEN ${coupons.redeemedAt} IS NULL THEN 1 END)`,
-        used: sql<number>`COUNT(CASE WHEN ${coupons.redeemedAt} IS NOT NULL THEN 1 END)`,
-        total: sql<number>`COUNT(*)`
-      })
-      .from(coupons)
-      .where(eq(coupons.benefitId, benefitId));
-    
-    return stats || { issued: 0, used: 0, total: 0 };
+    // Return basic stats without coupon data
+    return { issued: 0, used: 0, total: 0 };
   }
 
   async getBenefitsByMerchant(merchantId: string): Promise<Benefit[]> {

@@ -150,11 +150,6 @@ export default function Discover() {
     setIsBenefitModalOpen(true);
   };
 
-  const handleCouponIssue = (coupon: Coupon) => {
-    setSelectedCoupon(coupon);
-    setIsCouponModalOpen(true);
-  };
-
   const benefits = searchResults?.benefits || [];
   const totalCount = searchResults?.total || 0;
 
@@ -392,14 +387,6 @@ export default function Discover() {
         benefit={selectedBenefit}
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
-        onCouponIssue={handleCouponIssue}
-      />
-
-      <CouponModal
-        coupon={selectedCoupon}
-        isOpen={isCouponModalOpen}
-        onClose={() => setIsCouponModalOpen(false)}
-        onViewInWallet={() => setLocation('/saved?tab=coupons')}
       />
     </div>
   );

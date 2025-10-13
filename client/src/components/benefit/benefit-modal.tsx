@@ -16,7 +16,6 @@ interface BenefitModalProps {
   merchant?: Merchant;
   isOpen: boolean;
   onClose: () => void;
-  onCouponIssue?: (coupon: any) => void;
   isBookmarked?: boolean;
 }
 
@@ -25,7 +24,6 @@ export function BenefitModal({
   merchant, 
   isOpen, 
   onClose, 
-  onCouponIssue,
   isBookmarked = false 
 }: BenefitModalProps) {
   const [isBookmarkedState, setIsBookmarkedState] = useState(isBookmarked);
@@ -36,31 +34,6 @@ export function BenefitModal({
   useEffect(() => {
     setIsBookmarkedState(isBookmarked);
   }, [isBookmarked]);
-
-  // Issue coupon mutation
-  const issueCouponMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/coupons', { 
-        benefitId: benefit?.id 
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: '쿠폰 발급 완료',
-        description: '쿠폰이 성공적으로 발급되었습니다.',
-      });
-      onCouponIssue?.(data.coupon);
-      onClose();
-    },
-    onError: (error: any) => {
-      toast({
-        variant: 'destructive',
-        title: '쿠폰 발급 실패',
-        description: error.message || '쿠폰 발급 중 오류가 발생했습니다.',
-      });
-    }
-  });
 
   // Bookmark mutation
   const bookmarkMutation = useMutation({
@@ -349,17 +322,16 @@ export function BenefitModal({
           <div className="sticky bottom-0 bg-card pt-4 -mx-4 px-4 border-t">
             <Button
               className="w-full py-4 text-lg font-semibold"
-              onClick={() => issueCouponMutation.mutate()}
-              disabled={issueCouponMutation.isPending || !isAuthenticated}
-              data-testid="button-issue-coupon"
+              onClick={() => {
+                if (merchant?.location) {
+                  const coords = JSON.parse(merchant.location);
+                  window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${coords.lng},${coords.lat}`, '_blank');
+                }
+              }}
+              data-testid="button-navigate"
             >
-              {issueCouponMutation.isPending ? '발급 중...' : '쿠폰 받기'}
+              길찾기
             </Button>
-            {!isAuthenticated && (
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                로그인 후 쿠폰을 받을 수 있습니다.
-              </p>
-            )}
           </div>
         </div>
       </DialogContent>

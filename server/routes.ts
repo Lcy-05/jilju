@@ -204,7 +204,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasMore: Number(offset) + Number(limit) < results.length
       });
     } catch (error) {
-      res.status(500).json({ error: "Search failed" });
+      console.error("Benefit search error:", error);
+      res.status(500).json({ error: "Search failed", details: error instanceof Error ? error.message : String(error) });
     }
   });
 
