@@ -353,7 +353,6 @@ function getMarkerIcon(type: 'benefit' | 'merchant', categoryName?: string): str
     justify-content: center;
     font-size: 20px;
     color: white;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
     border: 3px solid white;
     background: ${color};
     transition: transform 0.2s ease;

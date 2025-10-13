@@ -12,14 +12,14 @@ export default function BenefitDetail() {
   const [match, params] = useRoute('/benefits/:id');
 
   // Get benefit details
-  const { data: benefitData, isLoading, error } = useQuery({
+  const { data: benefitData, isLoading, error } = useQuery<{ benefit: Benefit }>({
     queryKey: [API_ENDPOINTS.BENEFITS.DETAIL, params?.id],
     enabled: !!params?.id,
     staleTime: 5 * 60 * 1000,
   });
 
   // Get merchant details
-  const { data: merchantData } = useQuery({
+  const { data: merchantData } = useQuery<{ merchant: any }>({
     queryKey: [API_ENDPOINTS.MERCHANTS.DETAIL, benefitData?.benefit?.merchantId],
     enabled: !!benefitData?.benefit?.merchantId,
     staleTime: 10 * 60 * 1000,
