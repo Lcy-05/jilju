@@ -3,12 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { NaverMap } from '@/components/map/naver-map';
 import { BottomSheet } from '@/components/map/bottom-sheet';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
-import { CouponModal } from '@/components/coupon/coupon-modal';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Header } from '@/components/layout/header';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
-import { Benefit, MapMarker, Coupon, Region } from '@/types';
+import { Benefit, MapMarker, Region } from '@/types';
 import { API_ENDPOINTS, MAP_CONFIG } from '@/lib/constants';
 import { detectRegion } from '@/hooks/use-region-detection';
 import { calculateDistance, formatDistance, getBenefitValue } from '@/lib/geo-utils';
@@ -17,9 +16,7 @@ import { X } from 'lucide-react';
 
 export default function Map() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [currentBounds, setCurrentBounds] = useState<any>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [visibleBenefits, setVisibleBenefits] = useState<Benefit[]>([]);
@@ -191,11 +188,6 @@ export default function Map() {
     setIsBenefitModalOpen(true);
   };
 
-  const handleCouponIssue = (coupon: Coupon) => {
-    setSelectedCoupon(coupon);
-    setIsCouponModalOpen(true);
-  };
-
   const handleViewList = () => {
     // Navigate to discover page with current location
     window.location.href = '/discover';
@@ -251,14 +243,6 @@ export default function Map() {
         benefit={selectedBenefit}
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
-        onCouponIssue={handleCouponIssue}
-      />
-
-      <CouponModal
-        coupon={selectedCoupon}
-        isOpen={isCouponModalOpen}
-        onClose={() => setIsCouponModalOpen(false)}
-        onViewInWallet={() => window.location.href = '/saved?tab=coupons'}
       />
     </div>
   );

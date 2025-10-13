@@ -5,21 +5,18 @@ import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
-import { CouponModal } from '@/components/coupon/coupon-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
-import { Benefit, Category, Coupon } from '@/types';
+import { Benefit, Category } from '@/types';
 import { API_ENDPOINTS, CATEGORY_ICONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [selectedBannerIndex, setSelectedBannerIndex] = useState(0);
   const { location } = useLocation();
   const { user } = useAuth();
@@ -92,11 +89,6 @@ export default function Home() {
   const handleBenefitClick = (benefit: Benefit) => {
     setSelectedBenefit(benefit);
     setIsBenefitModalOpen(true);
-  };
-
-  const handleCouponIssue = (coupon: Coupon) => {
-    setSelectedCoupon(coupon);
-    setIsCouponModalOpen(true);
   };
 
   const handleCategoryClick = (category: Category) => {
@@ -374,14 +366,6 @@ export default function Home() {
         benefit={selectedBenefit}
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
-        onCouponIssue={handleCouponIssue}
-      />
-
-      <CouponModal
-        coupon={selectedCoupon}
-        isOpen={isCouponModalOpen}
-        onClose={() => setIsCouponModalOpen(false)}
-        onViewInWallet={() => window.location.href = '/saved?tab=coupons'}
       />
     </div>
   );

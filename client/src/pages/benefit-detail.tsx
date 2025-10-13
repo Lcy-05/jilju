@@ -1,19 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRoute } from 'wouter';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
-import { CouponModal } from '@/components/coupon/coupon-modal';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
-import { Benefit, Coupon } from '@/types';
+import { Benefit } from '@/types';
 import { API_ENDPOINTS } from '@/lib/constants';
 
 export default function BenefitDetail() {
   const [match, params] = useRoute('/benefits/:id');
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
 
   // Get benefit details
   const { data: benefitData, isLoading, error } = useQuery({
@@ -28,11 +24,6 @@ export default function BenefitDetail() {
     enabled: !!benefitData?.benefit?.merchantId,
     staleTime: 10 * 60 * 1000,
   });
-
-  const handleCouponIssue = (coupon: Coupon) => {
-    setSelectedCoupon(coupon);
-    setIsCouponModalOpen(true);
-  };
 
   const handleBack = () => {
     window.history.back();
@@ -104,18 +95,9 @@ export default function BenefitDetail() {
         merchant={merchant}
         isOpen={true}
         onClose={handleBack}
-        onCouponIssue={handleCouponIssue}
       />
 
       <BottomNavigation />
-
-      {/* Coupon Modal */}
-      <CouponModal
-        coupon={selectedCoupon}
-        isOpen={isCouponModalOpen}
-        onClose={() => setIsCouponModalOpen(false)}
-        onViewInWallet={() => window.location.href = '/saved?tab=coupons'}
-      />
     </div>
   );
 }

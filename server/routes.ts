@@ -2,12 +2,10 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertUserSchema, insertBenefitSchema, insertCouponSchema, insertMerchantSchema } from "@shared/schema";
+import { insertUserSchema, insertBenefitSchema, insertMerchantSchema } from "@shared/schema";
 import { authenticateToken, requireRole, hashPassword, comparePassword, generateToken } from "./auth";
 import { searchService } from "./services/search";
-import { couponService } from "./services/coupon";
 import { naverMapsService } from "./services/naver-maps";
-import { validateCouponRedemption } from "./services/coupon";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -274,100 +272,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ stats });
     } catch (error) {
       res.status(500).json({ error: "Failed to get benefit stats" });
-    }
-  });
-
-  // Coupon routes
-  app.post("/api/coupons", authenticateToken, async (req, res) => {
-    try {
-      const { benefitId } = req.body;
-      const userId = req.user.id;
-
-      if (!benefitId) {
-        return res.status(400).json({ error: "Benefit ID required" });
-      }
-
-      const result = await couponService.issueCoupon(userId, benefitId);
-      
-      if (!result.success) {
-        return res.status(400).json({ error: result.error });
-      }
-
-      // Track coupon issuance activity
-      await storage.trackActivity(
-        userId,
-        'COUPON_ISSUED',
-        benefitId,
-        'BENEFIT'
-      );
-
-      res.json({ coupon: result.coupon });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to issue coupon" });
-    }
-  });
-
-  app.post("/api/coupons/redeem", async (req, res) => {
-    try {
-      const { token, merchantId, location, pin } = req.body;
-
-      if (!token || !merchantId) {
-        return res.status(400).json({ error: "Token and merchant ID required" });
-      }
-
-      const result = await validateCouponRedemption(token, merchantId, location, pin);
-      
-      if (!result.valid) {
-        return res.status(400).json({ error: result.reason });
-      }
-
-      const success = await storage.redeemCoupon(token, merchantId, location);
-      
-      if (!success) {
-        return res.status(400).json({ error: "Failed to redeem coupon" });
-      }
-
-      res.json({ success: true, message: "Coupon redeemed successfully" });
-    } catch (error) {
-      res.status(500).json({ error: "Coupon redemption failed" });
-    }
-  });
-
-  app.get("/api/coupons/validate/:token", async (req, res) => {
-    try {
-      const { token } = req.params;
-      const { merchantId, location } = req.query;
-
-      if (!merchantId) {
-        return res.status(400).json({ error: "Merchant ID required" });
-      }
-
-      const isValid = await storage.validateCoupon(
-        token, 
-        merchantId as string, 
-        location as string
-      );
-
-      res.json({ valid: isValid });
-    } catch (error) {
-      res.status(500).json({ error: "Validation failed" });
-    }
-  });
-
-  app.get("/api/users/:userId/coupons", authenticateToken, async (req, res) => {
-    try {
-      const userId = req.params.userId;
-      const { status } = req.query;
-
-      // Check if user can access these coupons
-      if (req.user.id !== userId && !req.user.roles?.includes('ADMIN')) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-
-      const coupons = await storage.getUserCoupons(userId, status as any);
-      res.json({ coupons });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get user coupons" });
     }
   });
 

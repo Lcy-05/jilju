@@ -2,14 +2,12 @@ import {
   users,
   merchants,
   benefits,
-  coupons,
   userBookmarks,
   userActivity,
   regions,
   categories,
   merchantApplications,
   userRoles,
-  couponRedemptions,
   homeBanners,
   eventLogs,
   dailyMerchantKpis,
@@ -19,7 +17,6 @@ import {
   type InsertUser,
   type Merchant,
   type Benefit,
-  type Coupon,
   type Region,
   type Category,
   type MerchantApplication,
@@ -72,14 +69,6 @@ export interface IStorage {
   bookmarkBenefit(userId: string, benefitId: string): Promise<void>;
   unbookmarkBenefit(userId: string, benefitId: string): Promise<void>;
   getUserBookmarks(userId: string): Promise<Benefit[]>;
-  
-  // Coupon operations
-  issueCoupon(userId: string, benefitId: string, metadata?: any): Promise<Coupon>;
-  validateCoupon(token: string, merchantId: string, location?: { lat: number; lng: number }): Promise<{ valid: boolean; reason?: string; coupon?: Coupon }>;
-  redeemCoupon(token: string, merchantId: string, location?: { lat: number; lng: number }): Promise<Coupon>;
-  getUserCoupons(userId: string, status?: 'active' | 'used' | 'expired'): Promise<Coupon[]>;
-  getCoupon(token: string): Promise<Coupon | undefined>;
-  createCoupon(data: any): Promise<Coupon>;
   
   // Activity tracking
   trackActivity(userId: string, type: string, resourceId: string, resourceType: string, metadata?: any): Promise<void>;
@@ -530,108 +519,6 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  // Coupon operations
-  async issueCoupon(userId: string, benefitId: string, metadata?: any): Promise<Coupon> {
-    const token = crypto.randomUUID();
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
-    const expireAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    const [coupon] = await db
-      .insert(coupons)
-      .values({
-        userId,
-        benefitId,
-        token,
-        pin,
-        expireAt,
-        deviceId: metadata?.deviceId,
-        userAgent: metadata?.userAgent,
-        ipAddress: metadata?.ipAddress
-      })
-      .returning();
-    return coupon;
-  }
-
-  async validateCoupon(
-    token: string,
-    merchantId: string,
-    location?: { lat: number; lng: number }
-  ): Promise<{ valid: boolean; reason?: string; coupon?: Coupon }> {
-    const [coupon] = await db
-      .select()
-      .from(coupons)
-      .where(eq(coupons.token, token));
-
-    if (!coupon) {
-      return { valid: false, reason: 'Coupon not found' };
-    }
-
-    if (coupon.redeemedAt) {
-      return { valid: false, reason: 'Coupon already redeemed' };
-    }
-
-    if (new Date() > coupon.expireAt) {
-      return { valid: false, reason: 'Coupon expired' };
-    }
-
-    // TODO: Implement geofencing validation
-    // Check if location is within benefit's geoRadiusM
-
-    return { valid: true, coupon };
-  }
-
-  async redeemCoupon(
-    token: string,
-    merchantId: string,
-    location?: { lat: number; lng: number }
-  ): Promise<Coupon> {
-    const validation = await this.validateCoupon(token, merchantId, location);
-    
-    if (!validation.valid) {
-      throw new Error(validation.reason || 'Invalid coupon');
-    }
-
-    const coupon = validation.coupon!;
-
-    // Update coupon
-    const [updatedCoupon] = await db
-      .update(coupons)
-      .set({ redeemedAt: new Date() })
-      .where(eq(coupons.id, coupon.id))
-      .returning();
-
-    // Create redemption record
-    await db.insert(couponRedemptions).values({
-      couponId: coupon.id,
-      merchantId,
-      location: location ? `POINT(${location.lng} ${location.lat})` : null
-    });
-
-    return updatedCoupon;
-  }
-
-  async getUserCoupons(userId: string, status?: 'active' | 'used' | 'expired'): Promise<Coupon[]> {
-    let conditions = [eq(coupons.userId, userId)];
-
-    if (status === 'active') {
-      conditions.push(sql`${coupons.redeemedAt} IS NULL`);
-      conditions.push(gte(coupons.expireAt, new Date()));
-    } else if (status === 'used') {
-      conditions.push(sql`${coupons.redeemedAt} IS NOT NULL`);
-    } else if (status === 'expired') {
-      conditions.push(sql`${coupons.redeemedAt} IS NULL`);
-      conditions.push(lte(coupons.expireAt, new Date()));
-    }
-
-    const results = await db
-      .select()
-      .from(coupons)
-      .where(and(...conditions))
-      .orderBy(desc(coupons.issuedAt));
-    
-    return results;
-  }
-
   // Activity tracking
   async trackActivity(
     userId: string,
@@ -693,16 +580,6 @@ export class DatabaseStorage implements IStorage {
       ...row.benefit,
       merchant: row.merchant
     }));
-  }
-
-  async getCoupon(token: string): Promise<Coupon | undefined> {
-    const [coupon] = await db.select().from(coupons).where(eq(coupons.token, token));
-    return coupon || undefined;
-  }
-
-  async createCoupon(data: any): Promise<Coupon> {
-    const [coupon] = await db.insert(coupons).values(data).returning();
-    return coupon;
   }
 
   async getRegionByLocation(lat: number, lng: number): Promise<Region | undefined> {

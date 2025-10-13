@@ -5,7 +5,6 @@ import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
-import { CouponModal } from '@/components/coupon/coupon-modal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -13,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Filter, ChevronDown } from 'lucide-react';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
-import { Benefit, SearchOptions, Category, Region, Coupon } from '@/types';
+import { Benefit, SearchOptions, Category, Region } from '@/types';
 import { API_ENDPOINTS, SORT_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -21,9 +20,7 @@ export default function Discover() {
   const [, setLocation] = useRouterLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Search and filter state

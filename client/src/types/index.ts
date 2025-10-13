@@ -58,18 +58,6 @@ export interface MerchantHour {
   breakEnd?: string;
 }
 
-export interface Coupon {
-  id: string;
-  benefitId: string;
-  userId: string;
-  token: string;
-  pin: string;
-  expireAt: Date;
-  issuedAt: Date;
-  redeemedAt?: Date;
-  benefit?: Benefit;
-}
-
 export interface Region {
   id: string;
   code: string;
@@ -111,8 +99,6 @@ export interface SearchOptions {
 export interface BenefitStats {
   views: number;
   bookmarks: number;
-  couponsIssued: number;
-  couponsUsed: number;
   ctr: number;
 }
 

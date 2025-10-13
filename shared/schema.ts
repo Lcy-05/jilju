@@ -316,41 +316,6 @@ export const dailyMerchantKpis = pgTable("daily_merchant_kpis", {
   dateIdx: index("daily_merchant_kpis_date_idx").on(table.date)
 }));
 
-// Coupons table
-export const coupons = pgTable("coupons", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  benefitId: uuid("benefit_id").references(() => benefits.id).notNull(),
-  userId: uuid("user_id").references(() => users.id).notNull(),
-  token: text("token").notNull().unique(), // UUID token for QR/barcode
-  pin: text("pin").notNull(), // 4-digit PIN for offline verification
-  expireAt: timestamp("expire_at").notNull(),
-  issuedAt: timestamp("issued_at").defaultNow(),
-  redeemedAt: timestamp("redeemed_at"),
-  deviceId: text("device_id"), // Device that issued the coupon
-  userAgent: text("user_agent"),
-  ipAddress: text("ip_address")
-}, (table) => ({
-  tokenIdx: index("coupons_token_idx").on(table.token),
-  userIdx: index("coupons_user_idx").on(table.userId),
-  benefitIdx: index("coupons_benefit_idx").on(table.benefitId),
-  expireIdx: index("coupons_expire_idx").on(table.expireAt)
-}));
-
-// Coupon redemptions (merchant scan/verification)
-export const couponRedemptions = pgTable("coupon_redemptions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  couponId: uuid("coupon_id").references(() => coupons.id).notNull(),
-  merchantId: uuid("merchant_id").references(() => merchants.id).notNull(),
-  redeemedBy: uuid("redeemed_by").references(() => users.id), // Staff member who scanned
-  location: text("location"), // PostGIS point where redeemed
-  deviceId: text("device_id"),
-  ipAddress: text("ip_address"),
-  redeemedAt: timestamp("redeemed_at").defaultNow()
-}, (table) => ({
-  couponIdx: index("coupon_redemptions_coupon_idx").on(table.couponId),
-  locationIdx: index("coupon_redemptions_location_gist_idx").using("gist", table.location),
-  redeemedAtIdx: index("coupon_redemptions_redeemed_at_idx").on(table.redeemedAt)
-}));
 
 // User favorites/bookmarks
 export const userBookmarks = pgTable("user_bookmarks", {
@@ -426,7 +391,6 @@ export const adminAuditLogs = pgTable("admin_audit_logs", {
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userRoles: many(userRoles),
-  coupons: many(coupons),
   bookmarks: many(userBookmarks),
   activities: many(userActivity),
   leads: many(leads),
@@ -445,7 +409,6 @@ export const merchantsRelations = relations(merchants, ({ one, many }) => ({
   hours: many(merchantHours),
   hourExceptions: many(merchantHourExceptions),
   benefits: many(benefits),
-  redemptions: many(couponRedemptions),
   kpis: many(dailyMerchantKpis)
 }));
 
@@ -457,22 +420,14 @@ export const benefitsRelations = relations(benefits, ({ one, many }) => ({
   quota: many(benefitQuota),
   assets: many(benefitAssets),
   versions: many(benefitVersions),
-  coupons: many(coupons),
   bookmarks: many(userBookmarks),
   eventLogs: many(eventLogs)
-}));
-
-export const couponsRelations = relations(coupons, ({ one, many }) => ({
-  benefit: one(benefits, { fields: [coupons.benefitId], references: [benefits.id] }),
-  user: one(users, { fields: [coupons.userId], references: [users.id] }),
-  redemptions: many(couponRedemptions)
 }));
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMerchantSchema = createInsertSchema(merchants).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBenefitSchema = createInsertSchema(benefits).omit({ id: true, createdAt: true, updatedAt: true, publishedAt: true });
-export const insertCouponSchema = createInsertSchema(coupons).omit({ id: true, issuedAt: true, redeemedAt: true });
 export const insertMerchantApplicationSchema = createInsertSchema(merchantApplications).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertHomeBannerSchema = createInsertSchema(homeBanners).omit({ id: true, createdAt: true, updatedAt: true });
@@ -487,8 +442,6 @@ export type Merchant = typeof merchants.$inferSelect;
 export type InsertMerchant = z.infer<typeof insertMerchantSchema>;
 export type Benefit = typeof benefits.$inferSelect;
 export type InsertBenefit = z.infer<typeof insertBenefitSchema>;
-export type Coupon = typeof coupons.$inferSelect;
-export type InsertCoupon = z.infer<typeof insertCouponSchema>;
 export type MerchantApplication = typeof merchantApplications.$inferSelect;
 export type InsertMerchantApplication = z.infer<typeof insertMerchantApplicationSchema>;
 export type Region = typeof regions.$inferSelect;
