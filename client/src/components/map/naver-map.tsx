@@ -13,6 +13,7 @@ interface NaverMapProps {
   markers?: MapMarker[];
   center?: { lat: number; lng: number };
   zoom?: number;
+  showControls?: boolean;
   className?: string;
 }
 
@@ -23,6 +24,7 @@ export function NaverMap({
   markers = [],
   center,
   zoom = 14,
+  showControls = true,
   className
 }: NaverMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -110,39 +112,47 @@ export function NaverMap({
         </div>
       )}
 
-      {/* Map Controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[850]">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleCurrentLocation}
-          disabled={locationLoading}
-          className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
-          data-testid="button-current-location"
+      {/* Map Controls - Only show when bottom sheet is collapsed */}
+      {showControls && (
+        <div 
+          className={cn(
+            "absolute bottom-4 right-4 flex flex-col gap-2 z-[850]",
+            "transition-opacity duration-200",
+            showControls ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
         >
-          <MyLocationTwoTone className="w-5 h-5" />
-        </Button>
-        
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleZoomIn}
-          className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
-          data-testid="button-zoom-in"
-        >
-          <Add className="w-6 h-6" />
-        </Button>
-        
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleZoomOut}
-          className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
-          data-testid="button-zoom-out"
-        >
-          <Remove className="w-6 h-6" />
-        </Button>
-      </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleCurrentLocation}
+            disabled={locationLoading}
+            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
+            data-testid="button-current-location"
+          >
+            <MyLocationTwoTone className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleZoomIn}
+            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
+            data-testid="button-zoom-in"
+          >
+            <Add className="w-6 h-6" />
+          </Button>
+          
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleZoomOut}
+            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
+            data-testid="button-zoom-out"
+          >
+            <Remove className="w-6 h-6" />
+          </Button>
+        </div>
+      )}
 
     </div>
   );

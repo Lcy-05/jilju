@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NaverMap } from '@/components/map/naver-map';
-import { BottomSheet } from '@/components/map/bottom-sheet';
+import { BottomSheet, SheetState } from '@/components/map/bottom-sheet';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Header } from '@/components/layout/header';
@@ -21,6 +21,7 @@ export default function Map() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [visibleBenefits, setVisibleBenefits] = useState<Benefit[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [sheetState, setSheetState] = useState<SheetState>('collapsed');
 
   const { location, getCurrentLocation } = useLocation();
   const { user } = useAuth();
@@ -223,6 +224,7 @@ export default function Map() {
           onMarkerClick={handleMarkerClick}
           onMapClick={handleMapClick}
           onBoundsChanged={handleBoundsChanged}
+          showControls={sheetState === 'collapsed'}
           className="w-full h-full"
         />
 
@@ -231,6 +233,7 @@ export default function Map() {
           benefits={visibleBenefits}
           onBenefitClick={handleBenefitClick}
           onViewList={handleViewList}
+          onSheetStateChange={setSheetState}
           hasMore={false}
           isLoading={isLoading}
         />

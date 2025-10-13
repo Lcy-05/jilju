@@ -6,6 +6,8 @@ import { BenefitCard } from '@/components/benefit/benefit-card';
 import { Benefit } from '@/types';
 import { cn } from '@/lib/utils';
 
+export type SheetState = 'collapsed' | 'half' | 'expanded';
+
 interface BottomSheetProps {
   benefits: (Benefit & { merchant?: { name: string; address: string } })[];
   onBenefitClick?: (benefit: Benefit) => void;
@@ -13,6 +15,7 @@ interface BottomSheetProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoading?: boolean;
+  onSheetStateChange?: (state: SheetState) => void;
   className?: string;
 }
 
@@ -27,6 +30,7 @@ export function BottomSheet({
   onLoadMore,
   hasMore = false,
   isLoading = false,
+  onSheetStateChange,
   className 
 }: BottomSheetProps) {
   const [sheetHeight, setSheetHeight] = useState(MIN_HEIGHT);
@@ -38,6 +42,28 @@ export function BottomSheet({
   const [isScrollAtTop, setIsScrollAtTop] = useState(true);
 
   const maxHeight = typeof window !== 'undefined' ? window.innerHeight * (MAX_HEIGHT_PERCENT / 100) : 600;
+
+  // Calculate sheet state based on height
+  const getSheetState = (height: number): SheetState => {
+    const halfThreshold = maxHeight * 0.4;
+    const expandedThreshold = maxHeight * 0.6;
+    
+    if (height <= halfThreshold) {
+      return 'collapsed';
+    } else if (height < expandedThreshold) {
+      return 'half';
+    } else {
+      return 'expanded';
+    }
+  };
+
+  // Notify parent when sheet state changes
+  useEffect(() => {
+    if (onSheetStateChange) {
+      const state = getSheetState(sheetHeight);
+      onSheetStateChange(state);
+    }
+  }, [sheetHeight, maxHeight, onSheetStateChange]);
 
   const handleScroll = () => {
     if (contentRef.current) {
