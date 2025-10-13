@@ -219,7 +219,7 @@ export default function Map() {
 
         <NaverMap
           center={mapCenter}
-          zoom={11}
+          zoom={10}
           markers={markers}
           onMarkerClick={handleMarkerClick}
           onMapClick={handleMapClick}
