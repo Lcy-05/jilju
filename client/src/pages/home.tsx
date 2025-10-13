@@ -364,6 +364,7 @@ export default function Home() {
       {/* Modals */}
       <BenefitModal
         benefit={selectedBenefit}
+        merchant={selectedBenefit?.merchant}
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
       />

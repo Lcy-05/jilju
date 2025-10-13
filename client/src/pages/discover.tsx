@@ -385,6 +385,7 @@ export default function Discover() {
       {/* Modals */}
       <BenefitModal
         benefit={selectedBenefit}
+        merchant={selectedBenefit?.merchant}
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
       />

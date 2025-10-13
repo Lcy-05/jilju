@@ -241,6 +241,7 @@ export default function Map() {
       {/* Modals */}
       <BenefitModal
         benefit={selectedBenefit}
+        merchant={selectedBenefit?.merchant}
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
       />
