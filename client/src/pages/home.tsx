@@ -201,7 +201,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
                 <div>
                   <h2 className="text-white text-xl font-bold">주변 혜택을 빠르게 찾아보세요</h2>
-                  <p className="text-white/90 text-sm mt-1">최대 50% 할인 쿠폰 지금 받기</p>
+                  <p className="text-white/90 text-sm mt-1">최대 50% 할인 혜택 지금 확인</p>
                 </div>
               </div>
             </div>
