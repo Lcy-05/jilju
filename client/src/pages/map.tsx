@@ -224,7 +224,7 @@ export default function Map() {
           onMarkerClick={handleMarkerClick}
           onMapClick={handleMapClick}
           onBoundsChanged={handleBoundsChanged}
-          showControls={sheetState === 'collapsed'}
+          showControls={true}
           className="w-full h-full"
         />
 
