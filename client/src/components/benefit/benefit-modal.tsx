@@ -153,6 +153,11 @@ export function BenefitModal({
                     {merchant?.name}에서 제공하는 {benefit.title} 혜택 상세 정보
                   </DialogDescription>
                 </DialogHeader>
+                {merchant && (
+                  <p className="text-base text-foreground/70 mt-2 font-medium" data-testid="text-merchant-name">
+                    {merchant.name}
+                  </p>
+                )}
               </div>
               <Button
                 variant="ghost"
@@ -170,13 +175,6 @@ export function BenefitModal({
                 />
               </Button>
             </div>
-
-            {merchant && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                <MapPin className="w-5 h-5" />
-                <span data-testid="text-merchant-name">{merchant.name}</span>
-              </div>
-            )}
 
             {/* Conditions */}
             <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
