@@ -323,10 +323,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Ending Soon */}
+        {/* Black Friday */}
         <section className="px-4 py-4 pb-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">마감 임박</h3>
+            <h3 className="text-lg font-semibold">블랙 프라이데이 (블프)</h3>
             <Button 
               variant="link" 
               size="sm"
@@ -351,8 +351,8 @@ export default function Home() {
               ))
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <div className="text-4xl mb-4">⏰</div>
-                <p className="text-sm">마감 임박 혜택이 없습니다</p>
+                <div className="text-4xl mb-4">🛍️</div>
+                <p className="text-sm">블랙 프라이데이 혜택이 없습니다</p>
               </div>
             )}
           </div>
