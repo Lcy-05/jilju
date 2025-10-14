@@ -19,6 +19,7 @@ export interface Benefit {
   gift?: string;
   membershipTier?: string;
   terms: string[];
+  images?: string[];
   studentOnly: boolean;
   minOrder?: number;
   validFrom: Date;

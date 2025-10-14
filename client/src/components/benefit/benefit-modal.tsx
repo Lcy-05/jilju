@@ -126,13 +126,21 @@ export function BenefitModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0">
         {/* Hero Image */}
-        <div className="relative h-56 bg-muted flex items-center justify-center">
-          <span className="text-6xl">🎁</span>
+        <div className="relative h-56 bg-muted flex items-center justify-center overflow-hidden">
+          {benefit.images && benefit.images.length > 0 ? (
+            <img 
+              src={benefit.images[0]} 
+              alt={benefit.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-6xl">🎁</span>
+          )}
           <Button
             variant="secondary"
             size="sm"
             onClick={onClose}
-            className="absolute top-4 right-4 rounded-full w-10 h-10 p-0"
+            className="absolute top-4 right-4 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white"
             data-testid="button-close-modal"
           >
             ✕
