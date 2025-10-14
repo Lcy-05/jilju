@@ -1,5 +1,6 @@
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { X } from 'lucide-react';
 import { NaverMap } from './naver-map';
 import { MapMarker } from '@/types';
@@ -29,6 +30,13 @@ export function FullscreenMapModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-full w-screen h-screen p-0 m-0 rounded-none">
+        <VisuallyHidden>
+          <DialogTitle>{merchantName} 위치</DialogTitle>
+          <DialogDescription>
+            {merchantName}의 위치를 지도에서 확인할 수 있습니다.
+          </DialogDescription>
+        </VisuallyHidden>
+
         {/* Close Button */}
         <Button
           variant="secondary"
