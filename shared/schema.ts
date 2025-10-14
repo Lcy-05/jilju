@@ -207,6 +207,7 @@ export const benefits = pgTable("benefits", {
   membershipTier: text("membership_tier"), // For MEMBERSHIP type
   
   terms: text("terms").array(), // Array of terms and conditions
+  images: text("images").array(), // Array of benefit images (uploaded by admin)
   studentOnly: boolean("student_only").default(false),
   minOrder: integer("min_order"), // Minimum order amount in KRW
   validFrom: timestamp("valid_from").notNull(),
