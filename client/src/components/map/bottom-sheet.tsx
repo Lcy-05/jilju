@@ -23,7 +23,7 @@ interface BottomSheetProps {
   className?: string;
 }
 
-const MIN_HEIGHT = 100; // px
+const MIN_HEIGHT = 150; // px - increased to prevent header content from being covered by bottom nav
 const MAX_HEIGHT_PERCENT = 85; // % of viewport
 const LOAD_MORE_THRESHOLD = 200; // px from bottom
 
