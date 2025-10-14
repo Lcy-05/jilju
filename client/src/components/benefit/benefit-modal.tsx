@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import { FullscreenMapModal } from '@/components/map/fullscreen-map-modal';
 
 interface BenefitModalProps {
   benefit: Benefit | null;
@@ -27,6 +28,7 @@ export function BenefitModal({
   isBookmarked = false 
 }: BenefitModalProps) {
   const [isBookmarkedState, setIsBookmarkedState] = useState(isBookmarked);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -137,7 +139,8 @@ export function BenefitModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0">
         {/* Hero Image */}
         <div className="relative h-56 bg-muted flex items-center justify-center overflow-hidden">
@@ -242,7 +245,7 @@ export function BenefitModal({
                   className="relative rounded-lg overflow-hidden mb-4 h-40 bg-muted flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => {
                     if (merchantCoords && merchant) {
-                      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${merchantCoords.lng},${merchantCoords.lat}`, '_blank');
+                      setIsMapModalOpen(true);
                     }
                   }}
                   data-testid="button-map-preview"
@@ -365,6 +368,17 @@ export function BenefitModal({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      {/* Fullscreen Map Modal */}
+      {merchantCoords && merchant && (
+        <FullscreenMapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          center={merchantCoords}
+          merchantName={merchant.name}
+        />
+      )}
+    </>
   );
 }
