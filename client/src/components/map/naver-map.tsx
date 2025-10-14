@@ -116,7 +116,7 @@ export function NaverMap({
       {showControls && (
         <div 
           className={cn(
-            "absolute bottom-4 right-4 flex flex-col gap-2 z-[850]",
+            "absolute bottom-4 right-4 flex flex-col gap-2 z-[950]",
             "transition-opacity duration-200",
             showControls ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
