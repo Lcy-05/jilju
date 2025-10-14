@@ -149,12 +149,12 @@ export function BottomSheet({
     <div
       ref={sheetRef}
       className={cn(
-        "fixed left-0 right-0 max-w-md mx-auto bg-background rounded-t-3xl shadow-2xl",
+        "fixed left-0 right-0 max-w-md mx-auto bg-background rounded-t-3xl border-t border-border",
         "z-[20]",
         className
       )}
       style={{
-        bottom: 'calc(64px + env(safe-area-inset-bottom))',
+        bottom: '64px',
         height: `${sheetHeight}px`,
         transition: isDragging ? 'none' : 'height 0.2s ease-out'
       }}
