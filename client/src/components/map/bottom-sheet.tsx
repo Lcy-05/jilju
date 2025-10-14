@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BenefitCard } from '@/components/benefit/benefit-card';
-import { Benefit } from '@/types';
+import { Benefit, Category } from '@/types';
 import { cn } from '@/lib/utils';
 
 export type SheetState = 'collapsed' | 'half' | 'expanded';
@@ -11,6 +11,9 @@ export type SheetState = 'collapsed' | 'half' | 'expanded';
 interface BottomSheetProps {
   benefits: (Benefit & { merchant?: { name: string; address: string } })[];
   totalCount?: number;
+  categories?: Category[];
+  selectedCategories?: string[];
+  onCategoryToggle?: (categoryId: string) => void;
   onBenefitClick?: (benefit: Benefit) => void;
   onViewList?: () => void;
   onLoadMore?: () => void;
@@ -27,6 +30,9 @@ const LOAD_MORE_THRESHOLD = 200; // px from bottom
 export function BottomSheet({ 
   benefits, 
   totalCount,
+  categories = [],
+  selectedCategories = [],
+  onCategoryToggle,
   onBenefitClick, 
   onViewList, 
   onLoadMore,
@@ -144,7 +150,7 @@ export function BottomSheet({
       ref={sheetRef}
       className={cn(
         "fixed left-0 right-0 max-w-md mx-auto bg-background rounded-t-3xl shadow-2xl",
-        "z-[900]",
+        "z-[20]",
         className
       )}
       style={{
@@ -173,7 +179,8 @@ export function BottomSheet({
         style={{ height: `calc(${sheetHeight}px - 48px)` }}
         onScroll={handleScroll}
       >
-        <div className="flex items-center justify-between mb-4">
+        {/* Header with count and view list button */}
+        <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold" data-testid="text-benefits-count">
             총 <span className="text-primary">{totalCount ?? benefits.length}</span>개의 혜택
           </h3>
@@ -189,6 +196,45 @@ export function BottomSheet({
             </Button>
           )}
         </div>
+
+        {/* Category Chips - Layout changes based on sheet state */}
+        {categories.length > 0 && (
+          <div 
+            className={cn(
+              "mb-4",
+              getSheetState(sheetHeight) === 'collapsed' 
+                ? "overflow-x-auto scrollbar-hide" 
+                : ""
+            )}
+          >
+            <div 
+              className={cn(
+                "flex gap-2",
+                getSheetState(sheetHeight) === 'collapsed' 
+                  ? "flex-nowrap" 
+                  : "flex-wrap"
+              )}
+            >
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategories.includes(category.id) ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => onCategoryToggle?.(category.id)}
+                  className={cn(
+                    "rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap flex-shrink-0 min-h-[44px]",
+                    selectedCategories.includes(category.id) 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-secondary"
+                  )}
+                  data-testid={`button-category-${category.name}`}
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Benefits List */}
         {isLoading && benefits.length === 0 ? (

@@ -211,7 +211,7 @@ export default function Map() {
       <div className="map-container relative">
         {/* Region Filter Badge */}
         {selectedRegion && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[25]">
             <Badge 
               variant="secondary" 
               className="px-4 py-2 text-sm font-semibold shadow-lg bg-background/95 backdrop-blur-sm"
@@ -236,43 +236,23 @@ export default function Map() {
           onMarkerClick={handleMarkerClick}
           onMapClick={handleMapClick}
           onBoundsChanged={handleBoundsChanged}
-          showControls={true}
+          showControls={sheetState === 'collapsed'}
           className="w-full h-full"
         />
-
-        {/* Category Filter Bar */}
-        <div className="absolute bottom-[calc(164px+env(safe-area-inset-bottom))] left-0 right-0 z-[950] max-w-md mx-auto px-4 pointer-events-none">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pointer-events-auto">
-            {(categoriesData as any)?.categories?.map((category: Category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategories.includes(category.id) ? "default" : "secondary"}
-                size="sm"
-                onClick={() => {
-                  setSelectedCategories(prev => 
-                    prev.includes(category.id)
-                      ? prev.filter(c => c !== category.id)
-                      : [...prev, category.id]
-                  );
-                }}
-                className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap flex-shrink-0 shadow-lg",
-                  selectedCategories.includes(category.id) 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-white dark:bg-gray-800"
-                )}
-                data-testid={`button-category-${category.name}`}
-              >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-        </div>
 
         {/* Bottom Sheet with benefits list */}
         <BottomSheet
           benefits={visibleBenefits}
           totalCount={benefitsData?.total}
+          categories={(categoriesData as any)?.categories || []}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={(categoryId) => {
+            setSelectedCategories(prev => 
+              prev.includes(categoryId)
+                ? prev.filter(c => c !== categoryId)
+                : [...prev, categoryId]
+            );
+          }}
           onBenefitClick={handleBenefitClick}
           onViewList={handleViewList}
           onSheetStateChange={setSheetState}

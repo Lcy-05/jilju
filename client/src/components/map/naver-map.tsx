@@ -116,10 +116,14 @@ export function NaverMap({
       {showControls && (
         <div 
           className={cn(
-            "absolute bottom-4 right-4 flex flex-col gap-2 z-[950]",
-            "transition-opacity duration-200",
+            "absolute flex flex-col gap-2 z-[10]",
+            "transition-all duration-200",
             showControls ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
+          style={{
+            bottom: 'calc(64px + 100px + env(safe-area-inset-bottom))', // Tab bar (64px) + Sheet min height (100px) + safe area
+            right: '16px'
+          }}
         >
           <Button
             variant="secondary"
