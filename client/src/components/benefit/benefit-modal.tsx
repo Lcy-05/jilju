@@ -35,6 +35,20 @@ export function BenefitModal({
     setIsBookmarkedState(isBookmarked);
   }, [isBookmarked]);
 
+  // Parse merchant coordinates safely (must be before early return)
+  const merchantCoords = useMemo(() => {
+    if (!merchant?.location) return null;
+    try {
+      const location = typeof merchant.location === 'string' 
+        ? JSON.parse(merchant.location) 
+        : merchant.location;
+      return location;
+    } catch (e) {
+      console.error('Failed to parse merchant location:', e);
+      return null;
+    }
+  }, [merchant?.location]);
+
   // Bookmark mutation
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
@@ -66,20 +80,6 @@ export function BenefitModal({
   });
 
   if (!benefit) return null;
-
-  // Parse merchant coordinates safely
-  const merchantCoords = useMemo(() => {
-    if (!merchant?.location) return null;
-    try {
-      const location = typeof merchant.location === 'string' 
-        ? JSON.parse(merchant.location) 
-        : merchant.location;
-      return location;
-    } catch (e) {
-      console.error('Failed to parse merchant location:', e);
-      return null;
-    }
-  }, [merchant?.location]);
 
   const getBenefitBadge = () => {
     switch (benefit.type) {
@@ -338,23 +338,14 @@ export function BenefitModal({
           <div>
             <h3 className="text-lg font-semibold mb-3">유의사항</h3>
             <ul className="text-sm text-muted-foreground space-y-2">
-              {benefit.terms?.map((term, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  <span>{term}</span>
-                </li>
-              )) || (
-                <>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    <span>제주대학교 재학생 대상</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    <span>제주대학교 포털에서 재학생 인증 후 사용가능</span>
-                  </li>
-                </>
-              )}
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>제주대학교 재학생 대상</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>제주대학교 포털에서 재학생 인증 후 사용가능</span>
+              </li>
             </ul>
           </div>
 
