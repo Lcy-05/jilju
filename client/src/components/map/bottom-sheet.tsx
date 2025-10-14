@@ -10,6 +10,7 @@ export type SheetState = 'collapsed' | 'half' | 'expanded';
 
 interface BottomSheetProps {
   benefits: (Benefit & { merchant?: { name: string; address: string } })[];
+  totalCount?: number;
   onBenefitClick?: (benefit: Benefit) => void;
   onViewList?: () => void;
   onLoadMore?: () => void;
@@ -25,6 +26,7 @@ const LOAD_MORE_THRESHOLD = 200; // px from bottom
 
 export function BottomSheet({ 
   benefits, 
+  totalCount,
   onBenefitClick, 
   onViewList, 
   onLoadMore,
@@ -173,7 +175,7 @@ export function BottomSheet({
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold" data-testid="text-benefits-count">
-            총 <span className="text-primary">{benefits.length}</span>개의 혜택
+            총 <span className="text-primary">{totalCount ?? benefits.length}</span>개의 혜택
           </h3>
           {onViewList && (
             <Button 

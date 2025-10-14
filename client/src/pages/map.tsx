@@ -7,12 +7,14 @@ import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Header } from '@/components/layout/header';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
-import { Benefit, MapMarker, Region } from '@/types';
+import { Benefit, MapMarker, Region, Category } from '@/types';
 import { API_ENDPOINTS, MAP_CONFIG } from '@/lib/constants';
 import { detectRegion } from '@/hooks/use-region-detection';
 import { calculateDistance, formatDistance, getBenefitValue } from '@/lib/geo-utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Map() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
@@ -21,10 +23,17 @@ export default function Map() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [visibleBenefits, setVisibleBenefits] = useState<Benefit[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sheetState, setSheetState] = useState<SheetState>('collapsed');
 
   const { location, getCurrentLocation } = useLocation();
   const { user } = useAuth();
+
+  // Get categories for filtering
+  const { data: categoriesData } = useQuery({
+    queryKey: [API_ENDPOINTS.CATEGORIES],
+    staleTime: 30 * 60 * 1000,
+  });
 
   // Initialize map center to Jeju Island by default
   useEffect(() => {
@@ -36,9 +45,9 @@ export default function Map() {
 
   // Get benefits in current map bounds (BBOX search)
   const { data: benefitsData, isLoading } = useQuery({
-    queryKey: [API_ENDPOINTS.BENEFITS.SEARCH, 'bbox', currentBounds],
+    queryKey: [API_ENDPOINTS.BENEFITS.SEARCH, 'bbox', currentBounds, selectedCategories],
     queryFn: async () => {
-      if (!currentBounds) return { benefits: [] };
+      if (!currentBounds) return { benefits: [], total: 0 };
       
       // Convert bounds to bbox string
       const bbox = `${currentBounds.getSW().y},${currentBounds.getSW().x},${currentBounds.getNE().y},${currentBounds.getNE().x}`;
@@ -47,6 +56,9 @@ export default function Map() {
         bbox,
         limit: MAP_CONFIG.MARKER_LIMIT.toString()
       });
+
+      // Add category filters
+      selectedCategories.forEach(cat => params.append('cats', cat));
 
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
@@ -228,9 +240,39 @@ export default function Map() {
           className="w-full h-full"
         />
 
+        {/* Category Filter Bar */}
+        <div className="absolute bottom-[calc(164px+env(safe-area-inset-bottom))] left-0 right-0 z-[950] max-w-md mx-auto px-4 pointer-events-none">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pointer-events-auto">
+            {(categoriesData as any)?.categories?.map((category: Category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategories.includes(category.id) ? "default" : "secondary"}
+                size="sm"
+                onClick={() => {
+                  setSelectedCategories(prev => 
+                    prev.includes(category.id)
+                      ? prev.filter(c => c !== category.id)
+                      : [...prev, category.id]
+                  );
+                }}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap flex-shrink-0 shadow-lg",
+                  selectedCategories.includes(category.id) 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-white dark:bg-gray-800"
+                )}
+                data-testid={`button-category-${category.name}`}
+              >
+                {category.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom Sheet with benefits list */}
         <BottomSheet
           benefits={visibleBenefits}
+          totalCount={benefitsData?.total}
           onBenefitClick={handleBenefitClick}
           onViewList={handleViewList}
           onSheetStateChange={setSheetState}
