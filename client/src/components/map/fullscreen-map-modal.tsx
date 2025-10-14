@@ -34,14 +34,14 @@ export function FullscreenMapModal({
           variant="secondary"
           size="sm"
           onClick={onClose}
-          className="absolute top-4 left-4 z-[1000] rounded-full w-10 h-10 p-0 shadow-lg"
+          className="absolute top-4 left-4 z-[10001] rounded-full w-10 h-10 p-0 shadow-lg pointer-events-auto"
           data-testid="button-close-fullscreen-map"
         >
           <X className="w-5 h-5" />
         </Button>
 
         {/* Merchant Name Overlay */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 px-4 py-2 rounded-full shadow-lg">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[10001] bg-white/95 px-4 py-2 rounded-full shadow-lg pointer-events-none">
           <p className="font-semibold text-sm">{merchantName}</p>
         </div>
 
