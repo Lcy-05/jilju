@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +66,20 @@ export function BenefitModal({
   });
 
   if (!benefit) return null;
+
+  // Parse merchant coordinates safely
+  const merchantCoords = useMemo(() => {
+    if (!merchant?.location) return null;
+    try {
+      const location = typeof merchant.location === 'string' 
+        ? JSON.parse(merchant.location) 
+        : merchant.location;
+      return location;
+    } catch (e) {
+      console.error('Failed to parse merchant location:', e);
+      return null;
+    }
+  }, [merchant?.location]);
 
   const getBenefitBadge = () => {
     switch (benefit.type) {
@@ -223,9 +237,33 @@ export function BenefitModal({
               <div>
                 <h3 className="text-lg font-semibold mb-4">매장 정보</h3>
                 
-                {/* Mini Map Placeholder */}
-                <div className="relative rounded-lg overflow-hidden mb-4 h-40 bg-muted flex items-center justify-center">
-                  <span className="text-4xl">🗺️</span>
+                {/* Mini Map */}
+                <div 
+                  className="relative rounded-lg overflow-hidden mb-4 h-40 bg-muted flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => {
+                    if (merchantCoords && merchant) {
+                      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${merchantCoords.lng},${merchantCoords.lat}`, '_blank');
+                    }
+                  }}
+                  data-testid="button-map-preview"
+                >
+                  {merchantCoords && merchant ? (
+                    <>
+                      <iframe
+                        src={`https://map.naver.com/p/embed/search/${encodeURIComponent(merchant.name)}?c=${merchantCoords.lng},${merchantCoords.lat},16,0,0,0,dh`}
+                        className="w-full h-full pointer-events-none"
+                        style={{ border: 0 }}
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="bg-white/90 px-4 py-2 rounded-lg flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-sm font-medium">지도에서 보기</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <span className="text-4xl">🗺️</span>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -325,9 +363,8 @@ export function BenefitModal({
             <Button
               className="w-full py-4 text-lg font-semibold"
               onClick={() => {
-                if (merchant?.location) {
-                  const coords = JSON.parse(merchant.location);
-                  window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${coords.lng},${coords.lat}`, '_blank');
+                if (merchantCoords && merchant) {
+                  window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${merchantCoords.lng},${merchantCoords.lat}`, '_blank');
                 }
               }}
               data-testid="button-navigate"
