@@ -301,15 +301,11 @@ export function BenefitModal({
                 <>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    <span>다른 할인 혜택과 중복 사용 불가</span>
+                    <span>제주대학교 재학생 대상</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    <span>1인 1일 1회 사용 가능</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    <span>쿠폰 발급 후 10분 내 사용 권장</span>
+                    <span>제주대학교 포털에서 재학생 인증 후 사용가능</span>
                   </li>
                 </>
               )}
