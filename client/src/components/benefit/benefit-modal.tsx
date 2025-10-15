@@ -115,11 +115,9 @@ export function BenefitModal({
   };
 
   const handleDirections = () => {
-    // This would integrate with Naver Maps or other navigation apps
-    toast({
-      title: '길찾기',
-      description: '네이버 지도 앱에서 길찾기를 시작합니다.',
-    });
+    if (merchantCoords && merchant) {
+      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${merchantCoords.lng},${merchantCoords.lat}`, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleShare = () => {
@@ -367,13 +365,11 @@ export function BenefitModal({
             <Button
               className="w-full py-4 text-lg font-semibold"
               onClick={() => {
-                if (merchantCoords && merchant) {
-                  window.open(`https://map.naver.com/v5/search/${encodeURIComponent(merchant.name)}/${merchantCoords.lng},${merchantCoords.lat}`, '_blank');
-                }
+                window.open('https://portal.jejunu.ac.kr/login.htm', '_blank', 'noopener,noreferrer');
               }}
-              data-testid="button-navigate"
+              data-testid="button-use-benefit"
             >
-              길찾기
+              이용하기
             </Button>
           </div>
         </div>
