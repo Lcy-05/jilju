@@ -30,7 +30,7 @@ export function BenefitModal({
   const [isBookmarkedState, setIsBookmarkedState] = useState(isBookmarked);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -187,8 +187,18 @@ export function BenefitModal({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => bookmarkMutation.mutate()}
-                disabled={bookmarkMutation.isPending || !isAuthenticated}
+                onClick={() => {
+                  if (!token) {
+                    toast({
+                      variant: 'destructive',
+                      title: '로그인이 필요합니다',
+                      description: '북마크를 추가하려면 로그인하세요.',
+                    });
+                    return;
+                  }
+                  bookmarkMutation.mutate();
+                }}
+                disabled={bookmarkMutation.isPending}
                 className="p-2"
                 data-testid="button-bookmark-modal"
               >

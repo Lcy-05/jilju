@@ -150,7 +150,7 @@ export function BottomSheet({
       ref={sheetRef}
       className={cn(
         "fixed left-0 right-0 max-w-md mx-auto bg-background rounded-t-3xl border-t border-border",
-        "z-[20]",
+        "z-[20] pointer-events-none",
         className
       )}
       style={{
@@ -162,7 +162,7 @@ export function BottomSheet({
     >
       {/* Handle */}
       <div 
-        className="flex justify-center py-2 cursor-grab active:cursor-grabbing"
+        className="flex justify-center py-2 cursor-grab active:cursor-grabbing pointer-events-auto"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -175,7 +175,7 @@ export function BottomSheet({
       {/* Content */}
       <div 
         ref={contentRef}
-        className="px-4 pb-4 overflow-y-auto"
+        className="px-4 pb-4 overflow-y-auto pointer-events-auto"
         style={{ height: `calc(${sheetHeight}px - 48px)` }}
         onScroll={handleScroll}
       >
