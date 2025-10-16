@@ -30,25 +30,25 @@ export function BenefitCard({
     switch (benefit.type) {
       case 'PERCENT':
         return (
-          <Badge className="badge-percent text-xs font-medium">
+          <Badge className="badge-percent text-sm font-semibold px-3 py-1">
             {benefit.percent}%
           </Badge>
         );
       case 'AMOUNT':
         return (
-          <Badge className="badge-amount text-xs font-medium">
+          <Badge className="badge-amount text-sm font-semibold px-3 py-1">
             {benefit.amount?.toLocaleString()}원
           </Badge>
         );
       case 'GIFT':
         return (
-          <Badge className="badge-gift text-xs font-medium">
+          <Badge className="badge-gift text-sm font-semibold px-3 py-1">
             증정
           </Badge>
         );
       case 'MEMBERSHIP':
         return (
-          <Badge className="badge-membership text-xs font-medium">
+          <Badge className="badge-membership text-sm font-semibold px-3 py-1">
             멤버십
           </Badge>
         );
@@ -99,7 +99,7 @@ export function BenefitCard({
                   <div className="flex items-center gap-2 mb-1">
                     {getBenefitBadge()}
                     {isNowOpen() && (
-                      <Badge variant="outline" className="text-primary border-primary text-xs">
+                      <Badge variant="outline" className="text-primary border-primary text-sm font-medium px-2.5 py-0.5">
                         지금 사용 가능
                       </Badge>
                     )}
@@ -216,13 +216,15 @@ export function BenefitCard({
           </p>
         )}
         
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
             {benefit.distanceFormatted || '거리 정보 없음'}
           </span>
           
           {isNowOpen() ? (
-            <span className="text-primary font-medium">지금 사용 가능</span>
+            <Badge variant="outline" className="text-primary border-primary font-medium px-2.5 py-0.5">
+              지금 사용 가능
+            </Badge>
           ) : expirationStatus ? (
             <span className={cn(
               "font-medium",

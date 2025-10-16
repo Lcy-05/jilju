@@ -150,7 +150,7 @@ export function BottomSheet({
       ref={sheetRef}
       className={cn(
         "fixed left-0 right-0 max-w-md mx-auto bg-background rounded-t-3xl border-t border-border",
-        "z-[20] pointer-events-none",
+        "z-[900] pointer-events-none",
         className
       )}
       style={{

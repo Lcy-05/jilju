@@ -44,7 +44,8 @@ export default function Discover() {
       categories: urlParams.getAll('cats'), // Map URL 'cats' to state 'categories'
       types: urlParams.getAll('types'),
       sort: (urlParams.get('sort') as any) || 'distance',
-      nowOpen: urlParams.get('nowOpen') === 'true'
+      nowOpen: urlParams.get('nowOpen') === 'true',
+      regionId: urlParams.get('regionId') || undefined
     };
     setSearchOptions(params);
     setSearchQuery(urlParams.get('q') || '');
@@ -116,6 +117,7 @@ export default function Discover() {
     if (searchQuery) params.set('q', searchQuery);
     if (searchOptions.sort) params.set('sort', searchOptions.sort);
     if (searchOptions.nowOpen) params.set('nowOpen', 'true');
+    if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
     searchOptions.categories?.forEach(cat => params.append('cats', cat));
     searchOptions.types?.forEach(type => params.append('types', type));
     
@@ -171,7 +173,8 @@ export default function Discover() {
 
       {/* Filter Bar */}
       <section className="sticky top-16 z-40 bg-background px-4 py-3 border-b border-border">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        {/* Category Filters with Filter Button */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
           {displayCategories.map((category: Category) => {
             const isSelected = searchOptions.categories?.includes(category.id);
             return (
@@ -261,6 +264,32 @@ export default function Discover() {
           </Sheet>
         </div>
         
+        {/* Region Filters */}
+        {(regions as any)?.regions && (regions as any).regions.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
+            {(regions as any).regions.map((region: Region) => {
+              const isSelected = searchOptions.regionId === region.id;
+              return (
+                <Button
+                  key={region.id}
+                  variant={isSelected ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => {
+                    setSearchOptions(prev => ({
+                      ...prev,
+                      regionId: isSelected ? undefined : region.id
+                    }));
+                  }}
+                  className="flex-shrink-0 rounded-full"
+                  data-testid={`button-region-${region.name}`}
+                >
+                  {region.name}
+                </Button>
+              );
+            })}
+          </div>
+        )}
+        
         <div className="flex items-center gap-2 mt-2">
           <Sheet>
             <SheetTrigger asChild>
@@ -312,8 +341,8 @@ export default function Discover() {
       </section>
 
       {/* Results */}
-      <section className="px-4 py-4">
-        <div className="text-sm text-muted-foreground mb-4" data-testid="text-results-count">
+      <section className="px-4 pt-6 pb-4">
+        <div className="text-base font-medium text-foreground mb-4" data-testid="text-results-count">
           총 {totalCount.toLocaleString()}개의 혜택
         </div>
         
