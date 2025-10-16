@@ -3,6 +3,14 @@
 ## Overview
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
+## Recent Changes
+**2025-10-16: UI/UX Improvements**
+- Fixed z-index hierarchy on map page (Bottom Navigation: z-1000, BottomSheet: z-900) to enable bottom navigation clicks
+- Added region filter to discover page with URL persistence for shareable, bookmarkable searches
+- Improved "총 n개의 혜택" header layout with better spacing (pt-6) and visibility (text-base, font-medium)
+- Enhanced badge designs: type badges (증정, 할인%, etc.) upgraded to text-sm, font-semibold, px-3 py-1
+- Enhanced "지금 사용 가능" badge with Badge component, text-sm, font-medium styling for better visibility
+
 ## User Preferences
 I prefer clear, concise, and direct instructions. When suggesting code changes, provide the exact code snippets or file modifications needed. For new features, outline the steps required for implementation, from schema definition to API routes and frontend integration. Always prioritize security best practices, especially concerning user data and authentication. When making changes, avoid modifying primary key ID column types in existing tables. Use `npm run db:push --force` only when absolutely necessary.
 
@@ -33,7 +41,7 @@ The application features a React 18 + Vite frontend and a Node.js + Express.js b
     - **Admin Console:** Interface for managing merchants, users, and roles.
     - **Database-Driven Region System:** `regions` table with 8 Jeju zones, `GET /api/regions/detect` endpoint for coordinate-based region detection.
     - **Home Page Enhancements:** Dynamic banner carousel, category quick access buttons.
-    - **Discover Page:** Complete URL/State synchronization for filters.
+    - **Discover Page:** Complete URL/State synchronization for all filters (categories, types, regions, nowOpen, sort, search query). Region filters enable location-based discovery with URL persistence.
     - **Merchant Center:** Dashboard, Store Management, and Benefits Management with real data integration and robust validation for `MERCHANT_OWNER` users.
 
 **System Design Choices:**

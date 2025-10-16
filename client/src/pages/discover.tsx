@@ -68,7 +68,7 @@ export default function Discover() {
 
   // Get regions for filtering
   const { data: regions } = useQuery({
-    queryKey: [API_ENDPOINTS.GEOGRAPHY.REGIONS, 3], // Level 3 (동/읍/면)
+    queryKey: [`${API_ENDPOINTS.GEOGRAPHY.REGIONS}?level=3`], // Level 3 (동/읍/면)
     staleTime: 30 * 60 * 1000,
   });
 
