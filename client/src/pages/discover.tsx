@@ -166,14 +166,16 @@ export default function Discover() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Header
-        onSearchSubmit={handleSearchSubmit}
-        onSearchChange={setSearchQuery}
-        className="shadow-none border-b-0 pb-0 pt-2"
-      />
-
-      {/* Filter Bar - 헤더와 맞닿은 블록 */}
-      <section className="sticky top-16 z-40 bg-card px-4 pt-0 pb-3 border-b border-border">
+      {/* 통합 헤더 블록 - sticky 컨테이너 */}
+      <div className="sticky top-0 z-50 bg-card shadow-none border-b border-border">
+        <Header
+          onSearchSubmit={handleSearchSubmit}
+          onSearchChange={setSearchQuery}
+          className="shadow-none border-b-0 !pb-0 !pt-2"
+        />
+        
+        {/* Filter Bar - 헤더와 맞닿은 블록 */}
+        <section className="px-4 pt-0 pb-3">
         {/* Category Filters with Filter Button */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
           {displayCategories.map((category: Category) => {
@@ -340,6 +342,7 @@ export default function Discover() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* Results */}
       <section className="px-4 pt-6 pb-4">
