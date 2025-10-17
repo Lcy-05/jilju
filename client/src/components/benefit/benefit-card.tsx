@@ -84,7 +84,7 @@ export function BenefitCard({
   if (variant === 'horizontal') {
     return (
       <Card 
-        className={cn("cursor-pointer hover:shadow-md transition-shadow", className)}
+        className={cn("cursor-pointer hover:shadow-md transition-shadow h-auto", className)}
         onClick={onClick}
         data-testid={`card-benefit-${benefit.id}`}
       >
