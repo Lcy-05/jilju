@@ -14,6 +14,7 @@
 - **Reserved icon area**: Right column in grid always reserves space for bookmark button
 - **Badge styling**: Solid backgrounds (pink-500 for availability, red-500 for NEW, type-specific colors)
 - **Responsive sizing**: mobile (text-[10px], px-1.5) → tablet+ (text-xs, px-2)
+- **Discover page header integration**: Search bar and filter area unified as single visual block (shadow-none, bg-card)
 
 **2025-10-16: UI/UX Improvements**
 - Fixed z-index hierarchy on map page (Bottom Navigation: z-1000, BottomSheet: z-900) to enable bottom navigation clicks
