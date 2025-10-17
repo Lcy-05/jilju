@@ -302,7 +302,7 @@ export default function Home() {
                     onClick={() => handleBenefitClick(benefit)}
                     showMerchant={true}
                   />
-                  <Badge className="absolute top-3 right-16 bg-primary/10 text-primary border-primary">
+                  <Badge className="absolute top-3 right-16 bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
                     NEW
                   </Badge>
                 </div>

@@ -30,25 +30,25 @@ export function BenefitCard({
     switch (benefit.type) {
       case 'PERCENT':
         return (
-          <Badge className="badge-percent text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
+          <Badge className="badge-percent text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
             {benefit.percent}%
           </Badge>
         );
       case 'AMOUNT':
         return (
-          <Badge className="badge-amount text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
+          <Badge className="badge-amount text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
             {benefit.amount?.toLocaleString()}원
           </Badge>
         );
       case 'GIFT':
         return (
-          <Badge className="badge-gift text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
+          <Badge className="badge-gift text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
             증정
           </Badge>
         );
       case 'MEMBERSHIP':
         return (
-          <Badge className="badge-membership text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
+          <Badge className="badge-membership text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
             멤버십
           </Badge>
         );
@@ -96,10 +96,10 @@ export function BenefitCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1">
-                  <div className="flex items-center gap-1.5 md:gap-2 mb-1 flex-wrap">
+                  <div className="flex items-center gap-1 md:gap-1.5 mb-1 flex-wrap">
                     {getBenefitBadge()}
                     {isNowOpen() && (
-                      <Badge variant="outline" className="text-primary border-primary text-xs md:text-sm font-medium px-1.5 md:px-2.5 py-0.5">
+                      <Badge className="bg-pink-500 text-white text-[10px] md:text-xs font-medium px-1.5 md:px-2 py-0.5">
                         지금 사용 가능
                       </Badge>
                     )}
@@ -186,7 +186,7 @@ export function BenefitCard({
       <CardContent className="p-3">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1">
-            <div className="flex items-center gap-1.5 md:gap-2 mb-1.5 flex-wrap">
+            <div className="flex items-center gap-1 md:gap-1.5 mb-1.5 flex-wrap">
               {getBenefitBadge()}
             </div>
             <h4 className="font-semibold text-sm line-clamp-1" data-testid="text-benefit-title">
@@ -224,18 +224,18 @@ export function BenefitCard({
           </span>
           
           {isNowOpen() ? (
-            <Badge variant="outline" className="text-primary border-primary font-medium text-xs md:text-sm px-1.5 md:px-2.5 py-0.5">
+            <Badge className="bg-pink-500 text-white font-medium text-[10px] md:text-xs px-1.5 md:px-2 py-0.5">
               지금 사용 가능
             </Badge>
           ) : expirationStatus ? (
             <span className={cn(
-              "font-medium text-xs md:text-sm",
+              "font-medium text-[10px] md:text-xs",
               expirationStatus.variant === 'destructive' ? "text-destructive" : "text-muted-foreground"
             )}>
               {expirationStatus.label}
             </span>
           ) : (
-            <span className="text-muted-foreground">사용 제한</span>
+            <span className="text-muted-foreground text-[10px] md:text-xs">사용 제한</span>
           )}
         </div>
       </CardContent>
