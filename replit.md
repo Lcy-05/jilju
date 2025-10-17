@@ -10,6 +10,9 @@
 - Added flex-wrap to badge containers to prevent overlap on mobile screens
 - Enhanced merchant name visibility: font-semibold, responsive sizing (text-sm → text-base)
 - All BenefitCard variants (horizontal/vertical) now fully responsive
+- **Badge size further reduced**: mobile (text-[10px], px-1.5) → tablet+ (text-xs, px-2)
+- **Badge style improved**: "지금 사용 가능" changed to solid pink (bg-pink-500), NEW badge to solid red (bg-red-500)
+- **Badge spacing optimized**: gap reduced to gap-1 (mobile) / gap-1.5 (tablet+) to prevent overlap
 
 **2025-10-16: UI/UX Improvements**
 - Fixed z-index hierarchy on map page (Bottom Navigation: z-1000, BottomSheet: z-900) to enable bottom navigation clicks
