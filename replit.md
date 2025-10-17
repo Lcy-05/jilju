@@ -4,6 +4,13 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
+**2025-10-17: Responsive Design & Mobile Optimization**
+- Removed header/search bar from home page for cleaner mobile experience
+- Implemented responsive badge sizing: mobile (text-xs, px-2) → tablet+ (text-sm, px-3)
+- Added flex-wrap to badge containers to prevent overlap on mobile screens
+- Enhanced merchant name visibility: font-semibold, responsive sizing (text-sm → text-base)
+- All BenefitCard variants (horizontal/vertical) now fully responsive
+
 **2025-10-16: UI/UX Improvements**
 - Fixed z-index hierarchy on map page (Bottom Navigation: z-1000, BottomSheet: z-900) to enable bottom navigation clicks
 - Added region filter to discover page with URL persistence for shareable, bookmarkable searches
