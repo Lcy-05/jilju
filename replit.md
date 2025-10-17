@@ -4,15 +4,16 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
-**2025-10-17: Responsive Design & Mobile Optimization**
-- Removed header/search bar from home page for cleaner mobile experience
-- Implemented responsive badge sizing: mobile (text-xs, px-2) → tablet+ (text-sm, px-3)
-- Added flex-wrap to badge containers to prevent overlap on mobile screens
-- Enhanced merchant name visibility: font-semibold, responsive sizing (text-sm → text-base)
-- All BenefitCard variants (horizontal/vertical) now fully responsive
-- **Badge size further reduced**: mobile (text-[10px], px-1.5) → tablet+ (text-xs, px-2)
-- **Badge style improved**: "지금 사용 가능" changed to solid pink (bg-pink-500), NEW badge to solid red (bg-red-500)
-- **Badge spacing optimized**: gap reduced to gap-1 (mobile) / gap-1.5 (tablet+) to prevent overlap
+**2025-10-17: BenefitCard Layout Refactor - Grid-Based Design**
+- **Absolute positioning eliminated**: Removed all absolute badge positioning (primary cause of overlap)
+- **Grid 2-column structure**: Implemented `grid-cols-[1fr_auto]` to separate content/bookmark areas
+- **Content-driven heights**: Added `h-auto` to all cards, removed fixed heights (thumbnails removed from horizontal variant)
+- **Badge text optimization**: All badges use `whitespace-nowrap` to prevent line breaks
+- **Label abbreviation**: "지금 사용 가능" → "바로 사용" (3-character reduction for mobile efficiency)
+- **NEW badge integration**: Converted from absolute overlay to `showNewBadge` prop (bg-red-500)
+- **Reserved icon area**: Right column in grid always reserves space for bookmark button
+- **Badge styling**: Solid backgrounds (pink-500 for availability, red-500 for NEW, type-specific colors)
+- **Responsive sizing**: mobile (text-[10px], px-1.5) → tablet+ (text-xs, px-2)
 
 **2025-10-16: UI/UX Improvements**
 - Fixed z-index hierarchy on map page (Bottom Navigation: z-1000, BottomSheet: z-900) to enable bottom navigation clicks
