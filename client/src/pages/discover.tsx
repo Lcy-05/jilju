@@ -169,10 +169,11 @@ export default function Discover() {
       <Header
         onSearchSubmit={handleSearchSubmit}
         onSearchChange={setSearchQuery}
+        className="shadow-none border-b-0"
       />
 
-      {/* Filter Bar */}
-      <section className="sticky top-16 z-40 bg-background px-4 py-3 border-b border-border">
+      {/* Filter Bar - 헤더와 이어지는 블록 */}
+      <section className="sticky top-16 z-40 bg-card px-4 py-3 border-b border-border">
         {/* Category Filters with Filter Button */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
           {displayCategories.map((category: Category) => {
