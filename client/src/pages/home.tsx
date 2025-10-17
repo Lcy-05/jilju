@@ -295,17 +295,14 @@ export default function Home() {
           <div className="space-y-3">
             {newItems.length > 0 ? (
               newItems.slice(0, 3).map((benefit: Benefit) => (
-                <div key={benefit.id} className="relative">
-                  <BenefitCard
-                    benefit={benefit}
-                    variant="horizontal"
-                    onClick={() => handleBenefitClick(benefit)}
-                    showMerchant={true}
-                  />
-                  <Badge className="absolute top-3 right-16 bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
-                    NEW
-                  </Badge>
-                </div>
+                <BenefitCard
+                  key={benefit.id}
+                  benefit={benefit}
+                  variant="horizontal"
+                  onClick={() => handleBenefitClick(benefit)}
+                  showMerchant={true}
+                  showNewBadge={true}
+                />
               ))
             ) : (
               <div className="text-center py-8 text-muted-foreground">

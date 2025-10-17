@@ -14,6 +14,7 @@ interface BenefitCardProps {
   showMerchant?: boolean;
   variant?: 'horizontal' | 'vertical';
   className?: string;
+  showNewBadge?: boolean;
 }
 
 export function BenefitCard({
@@ -24,31 +25,32 @@ export function BenefitCard({
   isBookmarked = false,
   showMerchant = true,
   variant = 'vertical',
-  className
+  className,
+  showNewBadge = false
 }: BenefitCardProps) {
   const getBenefitBadge = () => {
     switch (benefit.type) {
       case 'PERCENT':
         return (
-          <Badge className="badge-percent text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
+          <Badge className="badge-percent text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
             {benefit.percent}%
           </Badge>
         );
       case 'AMOUNT':
         return (
-          <Badge className="badge-amount text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
+          <Badge className="badge-amount text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
             {benefit.amount?.toLocaleString()}원
           </Badge>
         );
       case 'GIFT':
         return (
-          <Badge className="badge-gift text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
+          <Badge className="badge-gift text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
             증정
           </Badge>
         );
       case 'MEMBERSHIP':
         return (
-          <Badge className="badge-membership text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5">
+          <Badge className="badge-membership text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
             멤버십
           </Badge>
         );
@@ -87,62 +89,48 @@ export function BenefitCard({
         data-testid={`card-benefit-${benefit.id}`}
       >
         <CardContent className="p-3">
-          <div className="flex gap-3">
-            {/* Thumbnail would go here - using placeholder div */}
-            <div className="w-24 h-24 bg-muted rounded-lg flex-shrink-0 flex items-center justify-center">
-              <span className="text-2xl">🎁</span>
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-1 md:gap-1.5 mb-1 flex-wrap">
-                    {getBenefitBadge()}
-                    {isNowOpen() && (
-                      <Badge className="bg-pink-500 text-white text-[10px] md:text-xs font-medium px-1.5 md:px-2 py-0.5">
-                        지금 사용 가능
-                      </Badge>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-sm line-clamp-1" data-testid="text-benefit-title">
-                    {benefit.title}
-                  </h4>
-                  {showMerchant && benefit.merchant && (
-                    <p className="text-sm md:text-base font-semibold text-foreground mt-1" data-testid="text-merchant-name">
-                      {benefit.merchant.name}
-                    </p>
-                  )}
-                </div>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBookmark?.();
-                  }}
-                  className="p-1 h-auto"
-                  data-testid="button-bookmark"
-                >
-                  <Bookmark 
-                    className={cn(
-                      "w-5 h-5",
-                      isBookmarked ? "fill-primary text-primary" : "text-muted-foreground"
-                    )}
-                  />
-                </Button>
+          {/* Grid 2열 구조: 컨텐츠 | 북마크 (썸네일 제거로 완전한 auto 높이) */}
+          <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
+            {/* Content - 우측 북마크 영역 예약됨 */}
+            <div className="min-w-0 pr-2">
+              {/* 배지들 */}
+              <div className="flex items-center gap-1 md:gap-1.5 mb-1 flex-wrap">
+                {getBenefitBadge()}
+                {showNewBadge && (
+                  <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+                    NEW
+                  </Badge>
+                )}
+                {isNowOpen() && (
+                  <Badge className="bg-pink-500 text-white text-[10px] md:text-xs font-medium px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+                    바로 사용
+                  </Badge>
+                )}
               </div>
               
-              <div className="flex items-center gap-3 mt-2 text-xs">
+              {/* 제목 */}
+              <h4 className="font-semibold text-sm line-clamp-1 mb-1" data-testid="text-benefit-title">
+                {benefit.title}
+              </h4>
+              
+              {/* 상점명 */}
+              {showMerchant && benefit.merchant && (
+                <p className="text-sm md:text-base font-semibold text-foreground mb-2" data-testid="text-merchant-name">
+                  {benefit.merchant.name}
+                </p>
+              )}
+              
+              {/* 하단 정보 */}
+              <div className="flex items-center gap-3 text-xs flex-wrap">
                 {benefit.distanceFormatted && (
-                  <span className="text-muted-foreground flex items-center gap-1">
+                  <span className="text-muted-foreground flex items-center gap-1 whitespace-nowrap">
                     <MapPin className="w-3.5 h-3.5" />
                     {benefit.distanceFormatted}
                   </span>
                 )}
                 
                 {expirationStatus && (
-                  <Badge variant={expirationStatus.variant} className="text-xs">
+                  <Badge variant={expirationStatus.variant} className="text-xs whitespace-nowrap">
                     <Clock className="w-3 h-3 mr-1" />
                     {expirationStatus.label}
                   </Badge>
@@ -156,7 +144,7 @@ export function BenefitCard({
                       e.stopPropagation();
                       onDirections();
                     }}
-                    className="text-xs text-primary flex items-center gap-1 p-0 h-auto"
+                    className="text-xs text-primary flex items-center gap-1 p-0 h-auto whitespace-nowrap"
                     data-testid="button-directions"
                   >
                     <Navigation className="w-3.5 h-3.5" />
@@ -165,6 +153,25 @@ export function BenefitCard({
                 )}
               </div>
             </div>
+            
+            {/* 북마크 버튼 - 우측 고정 */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onBookmark?.();
+              }}
+              className="p-1 h-auto"
+              data-testid="button-bookmark"
+            >
+              <Bookmark 
+                className={cn(
+                  "w-5 h-5",
+                  isBookmarked ? "fill-primary text-primary" : "text-muted-foreground"
+                )}
+              />
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -174,25 +181,36 @@ export function BenefitCard({
   // Vertical layout (default)
   return (
     <Card 
-      className={cn("cursor-pointer hover:shadow-md transition-shadow overflow-hidden", className)}
+      className={cn("cursor-pointer hover:shadow-md transition-shadow overflow-hidden h-auto", className)}
       onClick={onClick}
       data-testid={`card-benefit-${benefit.id}`}
     >
-      {/* Image placeholder */}
-      <div className="w-full h-36 bg-muted flex items-center justify-center">
+      {/* Image placeholder - aspect ratio */}
+      <div className="w-full aspect-video bg-muted flex items-center justify-center">
         <span className="text-4xl">🎁</span>
       </div>
       
       <CardContent className="p-3">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex-1">
+        {/* Grid 2열 구조: 컨텐츠 | 북마크 */}
+        <div className="grid grid-cols-[1fr_auto] gap-2 items-start mb-2">
+          <div className="min-w-0">
+            {/* 배지들 */}
             <div className="flex items-center gap-1 md:gap-1.5 mb-1.5 flex-wrap">
               {getBenefitBadge()}
+              {showNewBadge && (
+                <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+                  NEW
+                </Badge>
+              )}
             </div>
+            
+            {/* 제목 */}
             <h4 className="font-semibold text-sm line-clamp-1" data-testid="text-benefit-title">
               {benefit.title}
             </h4>
           </div>
+          
+          {/* 북마크 버튼 - 우측 고정 */}
           <Button
             variant="ghost"
             size="sm"
@@ -212,30 +230,32 @@ export function BenefitCard({
           </Button>
         </div>
         
+        {/* 상점명 */}
         {showMerchant && benefit.merchant && (
           <p className="text-sm md:text-base font-semibold text-foreground mb-2" data-testid="text-merchant-name">
             {benefit.merchant.name}
           </p>
         )}
         
-        <div className="flex items-center justify-between text-xs md:text-sm">
-          <span className="text-muted-foreground">
+        {/* 하단 정보 */}
+        <div className="flex items-center justify-between text-xs md:text-sm gap-2">
+          <span className="text-muted-foreground whitespace-nowrap">
             {benefit.distanceFormatted || '거리 정보 없음'}
           </span>
           
           {isNowOpen() ? (
-            <Badge className="bg-pink-500 text-white font-medium text-[10px] md:text-xs px-1.5 md:px-2 py-0.5">
-              지금 사용 가능
+            <Badge className="bg-pink-500 text-white font-medium text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+              바로 사용
             </Badge>
           ) : expirationStatus ? (
             <span className={cn(
-              "font-medium text-[10px] md:text-xs",
+              "font-medium text-[10px] md:text-xs whitespace-nowrap",
               expirationStatus.variant === 'destructive' ? "text-destructive" : "text-muted-foreground"
             )}>
               {expirationStatus.label}
             </span>
           ) : (
-            <span className="text-muted-foreground text-[10px] md:text-xs">사용 제한</span>
+            <span className="text-muted-foreground text-[10px] md:text-xs whitespace-nowrap">사용 제한</span>
           )}
         </div>
       </CardContent>
