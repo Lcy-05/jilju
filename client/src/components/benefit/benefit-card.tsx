@@ -30,25 +30,25 @@ export function BenefitCard({
     switch (benefit.type) {
       case 'PERCENT':
         return (
-          <Badge className="badge-percent text-sm font-semibold px-3 py-1">
+          <Badge className="badge-percent text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
             {benefit.percent}%
           </Badge>
         );
       case 'AMOUNT':
         return (
-          <Badge className="badge-amount text-sm font-semibold px-3 py-1">
+          <Badge className="badge-amount text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
             {benefit.amount?.toLocaleString()}원
           </Badge>
         );
       case 'GIFT':
         return (
-          <Badge className="badge-gift text-sm font-semibold px-3 py-1">
+          <Badge className="badge-gift text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
             증정
           </Badge>
         );
       case 'MEMBERSHIP':
         return (
-          <Badge className="badge-membership text-sm font-semibold px-3 py-1">
+          <Badge className="badge-membership text-xs md:text-sm font-semibold px-2 md:px-3 py-0.5 md:py-1">
             멤버십
           </Badge>
         );
@@ -96,10 +96,10 @@ export function BenefitCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-1.5 md:gap-2 mb-1 flex-wrap">
                     {getBenefitBadge()}
                     {isNowOpen() && (
-                      <Badge variant="outline" className="text-primary border-primary text-sm font-medium px-2.5 py-0.5">
+                      <Badge variant="outline" className="text-primary border-primary text-xs md:text-sm font-medium px-1.5 md:px-2.5 py-0.5">
                         지금 사용 가능
                       </Badge>
                     )}
@@ -108,7 +108,7 @@ export function BenefitCard({
                     {benefit.title}
                   </h4>
                   {showMerchant && benefit.merchant && (
-                    <p className="text-xs text-muted-foreground mt-1" data-testid="text-merchant-name">
+                    <p className="text-sm md:text-base font-semibold text-foreground mt-1" data-testid="text-merchant-name">
                       {benefit.merchant.name}
                     </p>
                   )}
@@ -186,8 +186,10 @@ export function BenefitCard({
       <CardContent className="p-3">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1">
-            {getBenefitBadge()}
-            <h4 className="font-semibold text-sm mt-1.5 line-clamp-1" data-testid="text-benefit-title">
+            <div className="flex items-center gap-1.5 md:gap-2 mb-1.5 flex-wrap">
+              {getBenefitBadge()}
+            </div>
+            <h4 className="font-semibold text-sm line-clamp-1" data-testid="text-benefit-title">
               {benefit.title}
             </h4>
           </div>
@@ -211,23 +213,23 @@ export function BenefitCard({
         </div>
         
         {showMerchant && benefit.merchant && (
-          <p className="text-sm text-muted-foreground mb-2" data-testid="text-merchant-name">
+          <p className="text-sm md:text-base font-semibold text-foreground mb-2" data-testid="text-merchant-name">
             {benefit.merchant.name}
           </p>
         )}
         
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-xs md:text-sm">
           <span className="text-muted-foreground">
             {benefit.distanceFormatted || '거리 정보 없음'}
           </span>
           
           {isNowOpen() ? (
-            <Badge variant="outline" className="text-primary border-primary font-medium px-2.5 py-0.5">
+            <Badge variant="outline" className="text-primary border-primary font-medium text-xs md:text-sm px-1.5 md:px-2.5 py-0.5">
               지금 사용 가능
             </Badge>
           ) : expirationStatus ? (
             <span className={cn(
-              "font-medium",
+              "font-medium text-xs md:text-sm",
               expirationStatus.variant === 'destructive' ? "text-destructive" : "text-muted-foreground"
             )}>
               {expirationStatus.label}

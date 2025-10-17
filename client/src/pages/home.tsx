@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useEmblaCarousel from 'embla-carousel-react';
-import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
@@ -136,13 +135,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Header
-        onSearchSubmit={(query) => {
-          window.location.href = `/discover?q=${encodeURIComponent(query)}`;
-        }}
-      />
-
-      <main className="animate-fade-in">
+      <main className="animate-fade-in pt-4">
         {/* Banner Carousel */}
         <section className="px-4 pt-4">
           {banners.length > 0 ? (
