@@ -145,7 +145,7 @@ export default function Home() {
                   {banners.map((banner: any, index: number) => (
                     <div 
                       key={banner.id} 
-                      className="flex-[0_0_100%] min-w-0 relative cursor-pointer"
+                      className="flex-[0_0_100%] min-w-0 cursor-pointer"
                       onClick={() => handleBannerClick(banner)}
                       data-testid={`banner-item-${index}`}
                     >
@@ -154,14 +154,6 @@ export default function Home() {
                         alt={banner.title} 
                         className="w-full h-40 object-cover" 
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                        <div>
-                          <h2 className="text-white text-xl font-bold">{banner.title}</h2>
-                          {banner.subtitle && (
-                            <p className="text-white/90 text-sm mt-1">{banner.subtitle}</p>
-                          )}
-                        </div>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -179,24 +171,19 @@ export default function Home() {
                     )}
                     data-testid={`button-banner-dot-${index}`}
                     aria-label={`배너 ${index + 1}번으로 이동`}
+                    aria-pressed={index === selectedBannerIndex}
                   />
                 ))}
               </div>
             </>
           ) : (
             // Fallback banner when no banners in database
-            <div className="relative overflow-hidden rounded-xl">
+            <div className="overflow-hidden rounded-xl">
               <img 
                 src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400" 
                 alt="질주 배너" 
                 className="w-full h-40 object-cover" 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                <div>
-                  <h2 className="text-white text-xl font-bold">주변 혜택을 빠르게 찾아보세요</h2>
-                  <p className="text-white/90 text-sm mt-1">최대 50% 할인 혜택 지금 확인</p>
-                </div>
-              </div>
             </div>
           )}
         </section>
