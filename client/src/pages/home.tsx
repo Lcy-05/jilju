@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useEmblaCarousel from 'embla-carousel-react';
+import { Link } from 'wouter';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
@@ -22,6 +23,15 @@ export default function Home() {
   
   // Initialize Embla Carousel for banners
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true });
+  
+  // Initialize Embla Carousel for partnership posters
+  const [partnersEmblaRef] = useEmblaCarousel({ 
+    loop: false, 
+    dragFree: true,
+    align: 'start',
+    containScroll: 'trimSnaps',
+    slidesToScroll: 1
+  });
 
   // Get categories for quick access
   const { data: categories } = useQuery({
@@ -49,22 +59,10 @@ export default function Home() {
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Get new benefits
-  const { data: newBenefits } = useQuery({
-    queryKey: [API_ENDPOINTS.BENEFITS.SEARCH, 'new', location?.lat, location?.lng],
-    queryFn: async () => {
-      if (!location?.lat || !location?.lng) return { benefits: [] };
-      const params = new URLSearchParams({
-        lat: location.lat.toString(),
-        lng: location.lng.toString(),
-        sort: 'newest',
-        limit: '10'
-      });
-      const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
-      return response.json();
-    },
-    enabled: !!(location?.lat && location?.lng),
-    staleTime: 5 * 60 * 1000,
+  // Get partnership posters
+  const { data: partnershipPostersData } = useQuery({
+    queryKey: ['/api/partnership-posters'],
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 
   // Get ending soon benefits
@@ -97,9 +95,9 @@ export default function Home() {
 
   const displayCategories = (categories as any)?.categories?.slice(0, 5) || [];
   const nearbyBenefits = (popularBenefits as any)?.benefits || [];
-  const newItems = (newBenefits as any)?.benefits || [];
   const endingItems = (endingSoonBenefits as any)?.benefits || [];
   const banners = (bannersData as any)?.banners || [];
+  const partnershipPosters = (partnershipPostersData as any)?.posters || [];
 
   // Auto-slide carousel every 5 seconds
   useEffect(() => {
@@ -264,40 +262,40 @@ export default function Home() {
           </div>
         </section>
 
-        {/* New Benefits */}
+        {/* Partnership Posters (대형 제휴) */}
         <section className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">신규 혜택</h3>
-            <Button 
-              variant="link" 
-              size="sm"
-              onClick={() => window.location.href = '/discover?sort=newest'}
-              className="text-sm text-primary font-medium p-0"
-              data-testid="button-view-all-new"
-            >
-              전체보기
-            </Button>
+            <h3 className="text-lg font-semibold">대형 제휴</h3>
           </div>
           
-          <div className="space-y-3">
-            {newItems.length > 0 ? (
-              newItems.slice(0, 3).map((benefit: Benefit) => (
-                <BenefitCard
-                  key={benefit.id}
-                  benefit={benefit}
-                  variant="horizontal"
-                  onClick={() => handleBenefitClick(benefit)}
-                  showMerchant={true}
-                  showNewBadge={true}
-                />
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="text-4xl mb-4">✨</div>
-                <p className="text-sm">신규 혜택이 없습니다</p>
+          {partnershipPosters.length > 0 ? (
+            <div className="overflow-hidden -mx-4">
+              <div className="embla-partners" ref={partnersEmblaRef}>
+                <div className="embla__container-partners flex gap-4 pl-4 pr-4">
+                  {partnershipPosters.map((poster: any) => (
+                    <Link
+                      key={poster.id}
+                      href={poster.linkUrl || '#'}
+                      className="embla__slide-partners flex-shrink-0 w-[45%] min-w-[280px] cursor-pointer no-underline"
+                      data-testid={`partnership-poster-${poster.id}`}
+                    >
+                      <img
+                        src={poster.imageUrl}
+                        alt={poster.title}
+                        className="w-full aspect-[4/3] object-cover rounded-xl shadow-md pointer-events-none"
+                        draggable="false"
+                      />
+                    </Link>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="text-4xl mb-4">🤝</div>
+              <p className="text-sm">제휴 포스터가 없습니다</p>
+            </div>
+          )}
         </section>
 
         {/* Black Friday */}

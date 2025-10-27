@@ -9,6 +9,7 @@ import {
   merchantApplications,
   userRoles,
   homeBanners,
+  partnershipPosters,
   eventLogs,
   dailyMerchantKpis,
   benefitVersions,
@@ -23,6 +24,8 @@ import {
   type InsertMerchantApplication,
   type HomeBanner,
   type InsertHomeBanner,
+  type PartnershipPoster,
+  type InsertPartnershipPoster,
   type EventLog,
   type InsertEventLog,
   type DailyMerchantKpi,
@@ -84,6 +87,12 @@ export interface IStorage {
   createHomeBanner(data: InsertHomeBanner): Promise<HomeBanner>;
   updateHomeBanner(id: string, updates: Partial<InsertHomeBanner>): Promise<HomeBanner>;
   deleteHomeBanner(id: string): Promise<void>;
+  
+  // Partnership Poster operations
+  getPartnershipPosters(activeOnly?: boolean): Promise<PartnershipPoster[]>;
+  createPartnershipPoster(data: InsertPartnershipPoster): Promise<PartnershipPoster>;
+  updatePartnershipPoster(id: string, updates: Partial<InsertPartnershipPoster>): Promise<PartnershipPoster>;
+  deletePartnershipPoster(id: string): Promise<void>;
   
   // Event Logging operations
   logEvent(data: InsertEventLog): Promise<EventLog>;
@@ -737,6 +746,43 @@ export class DatabaseStorage implements IStorage {
 
   async deleteHomeBanner(id: string): Promise<void> {
     await db.delete(homeBanners).where(eq(homeBanners.id, id));
+  }
+
+  // Partnership Poster operations
+  async getPartnershipPosters(activeOnly: boolean = true): Promise<PartnershipPoster[]> {
+    if (activeOnly) {
+      return db
+        .select()
+        .from(partnershipPosters)
+        .where(eq(partnershipPosters.isActive, true))
+        .orderBy(asc(partnershipPosters.orderIndex));
+    }
+    
+    return db
+      .select()
+      .from(partnershipPosters)
+      .orderBy(asc(partnershipPosters.orderIndex));
+  }
+
+  async createPartnershipPoster(data: InsertPartnershipPoster): Promise<PartnershipPoster> {
+    const [poster] = await db
+      .insert(partnershipPosters)
+      .values(data)
+      .returning();
+    return poster;
+  }
+
+  async updatePartnershipPoster(id: string, updates: Partial<InsertPartnershipPoster>): Promise<PartnershipPoster> {
+    const [poster] = await db
+      .update(partnershipPosters)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(partnershipPosters.id, id))
+      .returning();
+    return poster;
+  }
+
+  async deletePartnershipPoster(id: string): Promise<void> {
+    await db.delete(partnershipPosters).where(eq(partnershipPosters.id, id));
   }
 
   // Event Logging operations

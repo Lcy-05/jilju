@@ -197,3 +197,25 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Embla Carousel for Partnership Posters */
+.embla-partners {
+  overflow: hidden;
+}
+
+.embla__container-partners {
+  display: flex;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.embla__container-partners:active {
+  cursor: grabbing;
+}
+
+.embla__slide-partners {
+  flex: 0 0 auto;
+  min-width: 0;
+}

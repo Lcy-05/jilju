@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertUserSchema, insertBenefitSchema, insertMerchantSchema } from "@shared/schema";
+import { insertUserSchema, insertBenefitSchema, insertMerchantSchema, createPartnershipPosterSchema, updatePartnershipPosterSchema } from "@shared/schema";
 import { authenticateToken, requireRole, hashPassword, comparePassword, generateToken } from "./auth";
 import { searchService } from "./services/search";
 import { naverMapsService } from "./services/naver-maps";
@@ -692,6 +692,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete banner" });
+    }
+  });
+
+  // Partnership Posters routes
+  app.get("/api/partnership-posters", async (req, res) => {
+    try {
+      const { activeOnly = 'true' } = req.query;
+      const posters = await storage.getPartnershipPosters(activeOnly === 'true');
+      res.json({ posters });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get partnership posters" });
+    }
+  });
+
+  app.post("/api/partnership-posters", requireRole(['ADMIN']), async (req, res) => {
+    try {
+      const validatedData = createPartnershipPosterSchema.parse(req.body);
+      const poster = await storage.createPartnershipPoster({
+        ...validatedData,
+        createdBy: req.user.id
+      });
+      res.json({ poster });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create partnership poster" });
+    }
+  });
+
+  app.patch("/api/partnership-posters/:id", requireRole(['ADMIN']), async (req, res) => {
+    try {
+      const validatedData = updatePartnershipPosterSchema.parse(req.body);
+      const poster = await storage.updatePartnershipPoster(req.params.id, validatedData);
+      res.json({ poster });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update partnership poster" });
+    }
+  });
+
+  app.delete("/api/partnership-posters/:id", requireRole(['ADMIN']), async (req, res) => {
+    try {
+      await storage.deletePartnershipPoster(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete partnership poster" });
     }
   });
 

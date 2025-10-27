@@ -90,6 +90,23 @@ export const homeBanners = pgTable("home_banners", {
   activeIdx: index("home_banners_active_idx").on(table.isActive)
 }));
 
+// Partnership posters (대형 제휴 carousel)
+export const partnershipPosters = pgTable("partnership_posters", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  imageUrl: text("image_url").notNull(),
+  linkUrl: text("link_url"),
+  merchantId: uuid("merchant_id").references(() => merchants.id), // Optional link to specific merchant
+  orderIndex: integer("order_index").default(0),
+  isActive: boolean("is_active").default(true),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  orderIdx: index("partnership_posters_order_idx").on(table.orderIndex),
+  activeIdx: index("partnership_posters_active_idx").on(table.isActive)
+}));
+
 // Merchant applications (S0-S8 wizard)
 export const merchantApplications = pgTable("merchant_applications", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -432,6 +449,9 @@ export const insertBenefitSchema = createInsertSchema(benefits).omit({ id: true,
 export const insertMerchantApplicationSchema = createInsertSchema(merchantApplications).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertHomeBannerSchema = createInsertSchema(homeBanners).omit({ id: true, createdAt: true, updatedAt: true });
+export const createPartnershipPosterSchema = createInsertSchema(partnershipPosters).omit({ id: true, createdBy: true, createdAt: true, updatedAt: true });
+export const updatePartnershipPosterSchema = createInsertSchema(partnershipPosters).omit({ id: true, createdBy: true, createdAt: true, updatedAt: true }).partial();
+export const insertPartnershipPosterSchema = createInsertSchema(partnershipPosters).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertEventLogSchema = createInsertSchema(eventLogs).omit({ id: true, createdAt: true });
 export const insertBenefitVersionSchema = createInsertSchema(benefitVersions).omit({ id: true, createdAt: true, publishedAt: true });
 export const insertMerchantHoursSchema = createInsertSchema(merchantHours).omit({ id: true });
@@ -450,6 +470,10 @@ export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type HomeBanner = typeof homeBanners.$inferSelect;
 export type InsertHomeBanner = z.infer<typeof insertHomeBannerSchema>;
+export type PartnershipPoster = typeof partnershipPosters.$inferSelect;
+export type CreatePartnershipPoster = z.infer<typeof createPartnershipPosterSchema>;
+export type UpdatePartnershipPoster = z.infer<typeof updatePartnershipPosterSchema>;
+export type InsertPartnershipPoster = z.infer<typeof insertPartnershipPosterSchema>;
 export type EventLog = typeof eventLogs.$inferSelect;
 export type InsertEventLog = z.infer<typeof insertEventLogSchema>;
 export type BenefitVersion = typeof benefitVersions.$inferSelect;
