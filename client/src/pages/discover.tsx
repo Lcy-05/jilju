@@ -155,8 +155,13 @@ export default function Discover() {
   const benefits = searchResults?.benefits || [];
   const totalCount = searchResults?.total || 0;
 
-  // Use dynamic categories from API
-  const displayCategories = (categories as any)?.categories || [];
+  // Use dynamic categories from API with specific order
+  const categoryOrder = ['음식', '카페/바', '뷰티/패션', '문화생활', '스포츠'];
+  const allCategories = (categories as any)?.categories || [];
+  const displayCategories = categoryOrder
+    .map(name => allCategories.find((cat: Category) => cat.name === name))
+    .filter(Boolean);
+    
   const benefitTypes = [
     { value: 'PERCENT', label: '할인율' },
     { value: 'AMOUNT', label: '정액할인' },

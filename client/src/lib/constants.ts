@@ -224,10 +224,10 @@ export const SUCCESS_MESSAGES = {
 export const CATEGORY_ICONS = {
   '전체': '🏪',
   '음식': '🍽️',
-  '카페': '☕',
-  '쇼핑': '🛍️',
-  '뷰티': '💄',
-  '헬스': '💪',
+  '카페/바': '☕',
+  '뷰티/패션': '💄',
+  '문화생활': '🎨',
+  '스포츠': '⚽',
   '의료': '🏥',
   '교육': '📚',
   '오락': '🎮',
@@ -239,10 +239,10 @@ export const CATEGORY_ICONS = {
 // Category colors for map markers
 export const CATEGORY_COLORS = {
   '음식': '#FF6B35',    // Orange-red
-  '카페': '#8B5E3C',    // Coffee brown
-  '쇼핑': '#E63946',    // Red
-  '뷰티': '#FF006E',    // Pink
-  '헬스': '#06D6A0',    // Green
+  '카페/바': '#8B5E3C',    // Coffee brown
+  '뷰티/패션': '#FF006E',    // Pink
+  '문화생활': '#E63946',    // Red
+  '스포츠': '#06D6A0',    // Green
   '의료': '#118AB2',    // Blue
   '교육': '#073B4C',    // Dark blue
   '오락': '#FFD60A',    // Yellow

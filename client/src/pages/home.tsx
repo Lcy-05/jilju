@@ -93,7 +93,14 @@ export default function Home() {
     window.location.href = `/discover?categories=${category.id}`;
   };
 
-  const displayCategories = (categories as any)?.categories?.slice(0, 5) || [];
+  // Category display order
+  const categoryOrder = ['음식', '카페/바', '뷰티/패션', '문화생활', '스포츠'];
+  const allCategories = (categories as any)?.categories || [];
+  const displayCategories = categoryOrder
+    .map(name => allCategories.find((cat: Category) => cat.name === name))
+    .filter(Boolean)
+    .slice(0, 5);
+  
   const nearbyBenefits = (popularBenefits as any)?.benefits || [];
   const endingItems = (endingSoonBenefits as any)?.benefits || [];
   const banners = (bannersData as any)?.banners || [];
