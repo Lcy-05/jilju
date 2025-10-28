@@ -496,6 +496,20 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
+  async isBookmarked(userId: string, benefitId: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(userBookmarks)
+      .where(
+        and(
+          eq(userBookmarks.userId, userId),
+          eq(userBookmarks.benefitId, benefitId)
+        )
+      )
+      .limit(1);
+    return result.length > 0;
+  }
+
   async getUserBookmarks(userId: string): Promise<Benefit[]> {
     const results = await db
       .select({

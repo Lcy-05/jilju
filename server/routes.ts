@@ -359,6 +359,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/bookmarks/:benefitId/status", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const benefitId = req.params.benefitId;
+
+      const isBookmarked = await storage.isBookmarked(userId, benefitId);
+      res.json({ isBookmarked });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check bookmark status" });
+    }
+  });
+
   app.get("/api/users/:userId/bookmarks", authenticateToken, async (req, res) => {
     try {
       const userId = req.params.userId;
