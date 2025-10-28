@@ -526,9 +526,9 @@ export class DatabaseStorage implements IStorage {
 
   // Recent Views operations
   async getUserRecentViews(userId: string, limit: number = 10): Promise<Benefit[]> {
-    // Get distinct benefit IDs from event logs for click_detail events
-    const viewedBenefitIds = await db
-      .selectDistinct({
+    // Get distinct benefit IDs from event logs for click_detail events with their latest view time
+    const viewedBenefitIdsQuery = await db
+      .select({
         benefitId: eventLogs.benefitId,
         maxCreatedAt: sql<Date>`MAX(${eventLogs.createdAt})`.as('max_created_at')
       })
@@ -544,13 +544,16 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(sql`MAX(${eventLogs.createdAt})`))
       .limit(limit);
 
-    if (viewedBenefitIds.length === 0) {
+    if (viewedBenefitIdsQuery.length === 0) {
       return [];
     }
 
-    // Fetch full benefit details with merchant info
-    const benefitIdsArray = viewedBenefitIds.map(v => v.benefitId).filter((id): id is string => id !== null);
+    // Create ordered list of benefit IDs (already sorted by most recent view)
+    const benefitIdsArray = viewedBenefitIdsQuery
+      .map(v => v.benefitId)
+      .filter((id): id is string => id !== null);
     
+    // Fetch full benefit details with merchant info
     const results = await db
       .select({
         benefit: benefits,
@@ -567,9 +570,12 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    // Sort by the order in viewedBenefitIds
+    // Create lookup map for faster access
+    const resultsMap = new Map(results.map(r => [r.benefit.id, r]));
+
+    // Sort by the order in benefitIdsArray (most recent first)
     const sortedResults = benefitIdsArray
-      .map(id => results.find(r => r.benefit.id === id))
+      .map(id => resultsMap.get(id))
       .filter((r): r is NonNullable<typeof r> => r !== undefined)
       .map(row => ({
         ...row.benefit,
