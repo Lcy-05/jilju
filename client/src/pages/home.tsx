@@ -7,6 +7,8 @@ import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
@@ -18,6 +20,8 @@ export default function Home() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
   const [selectedBannerIndex, setSelectedBannerIndex] = useState(0);
+  const [selectedPoster, setSelectedPoster] = useState<any>(null);
+  const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
   const { location } = useLocation();
   const { user } = useAuth();
   
@@ -136,6 +140,18 @@ export default function Home() {
     if (banner.linkUrl) {
       window.location.href = banner.linkUrl;
     }
+  };
+
+  const handlePosterClick = (poster: any) => {
+    setSelectedPoster(poster);
+    setIsPosterModalOpen(true);
+  };
+
+  const handlePosterViewBenefits = () => {
+    if (selectedPoster?.linkUrl) {
+      window.location.href = selectedPoster.linkUrl;
+    }
+    setIsPosterModalOpen(false);
   };
 
   return (
@@ -280,10 +296,10 @@ export default function Home() {
               <div className="embla-partners" ref={partnersEmblaRef}>
                 <div className="embla__container-partners flex gap-4 pl-4 pr-4">
                   {partnershipPosters.map((poster: any) => (
-                    <Link
+                    <div
                       key={poster.id}
-                      href={poster.linkUrl || '#'}
-                      className="embla__slide-partners flex-shrink-0 w-[45%] min-w-[280px] cursor-pointer no-underline"
+                      onClick={() => handlePosterClick(poster)}
+                      className="embla__slide-partners flex-shrink-0 w-[45%] min-w-[280px] cursor-pointer"
                       data-testid={`partnership-poster-${poster.id}`}
                     >
                       <img
@@ -292,7 +308,7 @@ export default function Home() {
                         className="w-full aspect-[4/3] object-cover rounded-xl shadow-md pointer-events-none"
                         draggable="false"
                       />
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -350,6 +366,41 @@ export default function Home() {
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
       />
+
+      {/* Partnership Poster Modal */}
+      <Dialog open={isPosterModalOpen} onOpenChange={setIsPosterModalOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+          <DialogTitle className="sr-only">{selectedPoster?.title || '대형 제휴 포스터'}</DialogTitle>
+          <button
+            onClick={() => setIsPosterModalOpen(false)}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+            data-testid="button-close-poster-modal"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          {selectedPoster && (
+            <div className="relative flex flex-col items-center">
+              <img
+                src={selectedPoster.imageUrl}
+                alt={selectedPoster.title}
+                className="w-full h-auto max-h-[85vh] object-contain"
+              />
+              {selectedPoster.linkUrl && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                  <Button
+                    onClick={handlePosterViewBenefits}
+                    size="lg"
+                    className="shadow-lg"
+                    data-testid="button-view-benefits"
+                  >
+                    혜택 보러가기
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
