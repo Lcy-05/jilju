@@ -23,7 +23,7 @@ export default function Map() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [visibleBenefits, setVisibleBenefits] = useState<Benefit[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sheetState, setSheetState] = useState<SheetState>('collapsed');
 
   const { location, getCurrentLocation } = useLocation();
@@ -45,7 +45,7 @@ export default function Map() {
 
   // Get benefits in current map bounds (BBOX search)
   const { data: benefitsData, isLoading } = useQuery({
-    queryKey: [API_ENDPOINTS.BENEFITS.SEARCH, 'bbox', currentBounds, selectedCategories],
+    queryKey: [API_ENDPOINTS.BENEFITS.SEARCH, 'bbox', currentBounds, selectedCategory],
     queryFn: async () => {
       if (!currentBounds) return { benefits: [], total: 0 };
       
@@ -57,8 +57,10 @@ export default function Map() {
         limit: MAP_CONFIG.MARKER_LIMIT.toString()
       });
 
-      // Add category filters
-      selectedCategories.forEach(cat => params.append('cats', cat));
+      // Add category filter (single selection)
+      if (selectedCategory) {
+        params.append('cats', selectedCategory);
+      }
 
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
@@ -245,13 +247,10 @@ export default function Map() {
           benefits={visibleBenefits}
           totalCount={benefitsData?.total}
           categories={(categoriesData as any)?.categories || []}
-          selectedCategories={selectedCategories}
+          selectedCategories={selectedCategory ? [selectedCategory] : []}
           onCategoryToggle={(categoryId) => {
-            setSelectedCategories(prev => 
-              prev.includes(categoryId)
-                ? prev.filter(c => c !== categoryId)
-                : [...prev, categoryId]
-            );
+            // Toggle single selection: if already selected, deselect; otherwise select
+            setSelectedCategory(prev => prev === categoryId ? null : categoryId);
           }}
           onBenefitClick={handleBenefitClick}
           onViewList={handleViewList}

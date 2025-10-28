@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Link } from 'wouter';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
@@ -15,6 +15,8 @@ import { useAuth } from '@/lib/auth';
 import { Benefit, Category } from '@/types';
 import { API_ENDPOINTS, CATEGORY_ICONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
@@ -22,8 +24,10 @@ export default function Home() {
   const [selectedBannerIndex, setSelectedBannerIndex] = useState(0);
   const [selectedPoster, setSelectedPoster] = useState<any>(null);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
+  const [bookmarkedBenefits, setBookmarkedBenefits] = useState<Set<string>>(new Set());
   const { location } = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   // Initialize Embla Carousel for banners
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true });
@@ -69,6 +73,63 @@ export default function Home() {
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
 
+  // Get user bookmarks
+  const { data: bookmarksData } = useQuery<{ bookmarks: Benefit[] }>({
+    queryKey: [`/api/users/${user?.id}/bookmarks`],
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update bookmarked benefits set when data changes
+  useEffect(() => {
+    if (bookmarksData?.bookmarks) {
+      setBookmarkedBenefits(new Set(bookmarksData.bookmarks.map((b: Benefit) => b.id)));
+    }
+  }, [bookmarksData]);
+
+  // Bookmark mutation
+  const bookmarkMutation = useMutation({
+    mutationFn: async ({ benefitId, isBookmarked }: { benefitId: string; isBookmarked: boolean }) => {
+      if (isBookmarked) {
+        return apiRequest('DELETE', `/api/bookmarks/${benefitId}`);
+      } else {
+        return apiRequest('POST', '/api/bookmarks', { benefitId });
+      }
+    },
+    onMutate: async ({ benefitId, isBookmarked }) => {
+      // Optimistic update
+      setBookmarkedBenefits(prev => {
+        const newSet = new Set(prev);
+        if (isBookmarked) {
+          newSet.delete(benefitId);
+        } else {
+          newSet.add(benefitId);
+        }
+        return newSet;
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/bookmarks`] });
+    },
+    onError: (error, { benefitId, isBookmarked }) => {
+      // Revert on error
+      setBookmarkedBenefits(prev => {
+        const newSet = new Set(prev);
+        if (isBookmarked) {
+          newSet.add(benefitId);
+        } else {
+          newSet.delete(benefitId);
+        }
+        return newSet;
+      });
+      toast({
+        title: '오류',
+        description: '북마크 저장에 실패했습니다.',
+        variant: 'destructive'
+      });
+    }
+  });
+
   // Get ending soon benefits
   const { data: endingSoonBenefits } = useQuery({
     queryKey: [API_ENDPOINTS.BENEFITS.SEARCH, 'ending', location?.lat, location?.lng],
@@ -90,6 +151,21 @@ export default function Home() {
   const handleBenefitClick = (benefit: Benefit) => {
     setSelectedBenefit(benefit);
     setIsBenefitModalOpen(true);
+  };
+
+  const handleBookmark = (benefitId: string) => {
+    if (!user) {
+      toast({
+        title: '로그인 필요',
+        description: '북마크 기능을 사용하려면 로그인해주세요.',
+        variant: 'default'
+      });
+      window.location.href = '/auth';
+      return;
+    }
+    
+    const isBookmarked = bookmarkedBenefits.has(benefitId);
+    bookmarkMutation.mutate({ benefitId, isBookmarked });
   };
 
   const handleCategoryClick = (category: Category) => {
@@ -271,6 +347,8 @@ export default function Home() {
                       benefit={benefit}
                       variant="vertical"
                       onClick={() => handleBenefitClick(benefit)}
+                      onBookmark={() => handleBookmark(benefit.id)}
+                      isBookmarked={bookmarkedBenefits.has(benefit.id)}
                       className="h-full"
                     />
                   </div>
@@ -344,6 +422,8 @@ export default function Home() {
                   benefit={benefit}
                   variant="horizontal"
                   onClick={() => handleBenefitClick(benefit)}
+                  onBookmark={() => handleBookmark(benefit.id)}
+                  isBookmarked={bookmarkedBenefits.has(benefit.id)}
                   showMerchant={true}
                 />
               ))

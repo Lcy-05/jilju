@@ -45,15 +45,27 @@ export function useLocation(options: UseLocationOptions = {}) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const handleLocationSuccess = useCallback((position: GeolocationPosition) => {
+  const handleLocationSuccess = useCallback(async (position: GeolocationPosition) => {
     const { latitude: lat, longitude: lng, accuracy } = position.coords;
     
-    // Set location without address first - useQuery will fetch address
+    // Fetch region name from API
+    let regionName = '로딩 중...';
+    try {
+      const response = await fetch(`${API_ENDPOINTS.GEOGRAPHY.REVERSE_GEOCODE}/${lat}/${lng}`);
+      if (response.ok) {
+        const data = await response.json();
+        regionName = data.address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
+    } catch (error) {
+      console.error('Failed to fetch region:', error);
+    }
+    
+    // Set location with fetched address
     const locationState: LocationState = {
       lat,
       lng,
-      address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-      region: '알 수 없는 지역',
+      address: regionName,
+      region: regionName,
       accuracy
     };
 

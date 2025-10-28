@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation as useRouterLocation } from 'wouter';
 import { Header } from '@/components/layout/header';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
@@ -15,6 +15,8 @@ import { useAuth } from '@/lib/auth';
 import { Benefit, SearchOptions, Category, Region } from '@/types';
 import { API_ENDPOINTS, SORT_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Discover() {
   const [, setLocation] = useRouterLocation();
@@ -22,6 +24,8 @@ export default function Discover() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isRegionFilterOpen, setIsRegionFilterOpen] = useState(false);
+  const [bookmarkedBenefits, setBookmarkedBenefits] = useState<Set<string>>(new Set());
   
   // Search and filter state
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
@@ -36,6 +40,7 @@ export default function Discover() {
   
   const { location } = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   // Parse URL parameters on mount
   useEffect(() => {
@@ -70,6 +75,63 @@ export default function Discover() {
   const { data: regions } = useQuery({
     queryKey: [`${API_ENDPOINTS.GEOGRAPHY.REGIONS}?level=3`], // Level 3 (동/읍/면)
     staleTime: 30 * 60 * 1000,
+  });
+
+  // Get user bookmarks
+  const { data: bookmarksData } = useQuery<{ bookmarks: Benefit[] }>({
+    queryKey: [`/api/users/${user?.id}/bookmarks`],
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update bookmarked benefits set when data changes
+  useEffect(() => {
+    if (bookmarksData?.bookmarks) {
+      setBookmarkedBenefits(new Set(bookmarksData.bookmarks.map((b: Benefit) => b.id)));
+    }
+  }, [bookmarksData]);
+
+  // Bookmark mutation
+  const bookmarkMutation = useMutation({
+    mutationFn: async ({ benefitId, isBookmarked }: { benefitId: string; isBookmarked: boolean }) => {
+      if (isBookmarked) {
+        return apiRequest('DELETE', `/api/bookmarks/${benefitId}`);
+      } else {
+        return apiRequest('POST', '/api/bookmarks', { benefitId });
+      }
+    },
+    onMutate: async ({ benefitId, isBookmarked }) => {
+      // Optimistic update
+      setBookmarkedBenefits(prev => {
+        const newSet = new Set(prev);
+        if (isBookmarked) {
+          newSet.delete(benefitId);
+        } else {
+          newSet.add(benefitId);
+        }
+        return newSet;
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/bookmarks`] });
+    },
+    onError: (error, { benefitId, isBookmarked }) => {
+      // Revert on error
+      setBookmarkedBenefits(prev => {
+        const newSet = new Set(prev);
+        if (isBookmarked) {
+          newSet.add(benefitId);
+        } else {
+          newSet.delete(benefitId);
+        }
+        return newSet;
+      });
+      toast({
+        title: '오류',
+        description: '북마크 저장에 실패했습니다.',
+        variant: 'destructive'
+      });
+    }
   });
 
   // Search benefits
@@ -152,6 +214,21 @@ export default function Discover() {
     setIsBenefitModalOpen(true);
   };
 
+  const handleBookmark = (benefitId: string) => {
+    if (!user) {
+      toast({
+        title: '로그인 필요',
+        description: '북마크 기능을 사용하려면 로그인해주세요.',
+        variant: 'default'
+      });
+      window.location.href = '/auth';
+      return;
+    }
+    
+    const isBookmarked = bookmarkedBenefits.has(benefitId);
+    bookmarkMutation.mutate({ benefitId, isBookmarked });
+  };
+
   const benefits = searchResults?.benefits || [];
   const totalCount = searchResults?.total || 0;
 
@@ -176,6 +253,7 @@ export default function Discover() {
         <Header
           onSearchSubmit={handleSearchSubmit}
           onSearchChange={setSearchQuery}
+          onLocationClick={() => setIsRegionFilterOpen(true)}
           className="shadow-none border-b-0 !pb-0 !pt-2"
         />
         
@@ -377,6 +455,8 @@ export default function Discover() {
                 benefit={benefit}
                 variant="horizontal"
                 onClick={() => handleBenefitClick(benefit)}
+                onBookmark={() => handleBookmark(benefit.id)}
+                isBookmarked={bookmarkedBenefits.has(benefit.id)}
                 showMerchant={true}
               />
             ))
@@ -427,6 +507,46 @@ export default function Discover() {
         isOpen={isBenefitModalOpen}
         onClose={() => setIsBenefitModalOpen(false)}
       />
+
+      {/* Region Filter Sheet */}
+      <Sheet open={isRegionFilterOpen} onOpenChange={setIsRegionFilterOpen}>
+        <SheetContent side="bottom" className="h-[70vh]">
+          <SheetHeader>
+            <SheetTitle>지역 선택</SheetTitle>
+          </SheetHeader>
+          
+          <div className="py-4 space-y-2 overflow-y-auto max-h-[60vh]">
+            {/* Clear button */}
+            <Button
+              variant={!searchOptions.regionId ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => {
+                setSearchOptions(prev => ({ ...prev, regionId: undefined }));
+                setIsRegionFilterOpen(false);
+              }}
+              data-testid="button-region-all"
+            >
+              전체 지역
+            </Button>
+            
+            {/* Region list */}
+            {(regions as any)?.regions?.map((region: Region) => (
+              <Button
+                key={region.id}
+                variant={searchOptions.regionId === region.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setSearchOptions(prev => ({ ...prev, regionId: region.id }));
+                  setIsRegionFilterOpen(false);
+                }}
+                data-testid={`button-region-${region.name}`}
+              >
+                {region.name}
+              </Button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
