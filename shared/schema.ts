@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, decimal, uuid, jsonb, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, decimal, uuid, jsonb, index, primaryKey, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -342,7 +342,8 @@ export const userBookmarks = pgTable("user_bookmarks", {
   benefitId: uuid("benefit_id").references(() => benefits.id).notNull(),
   createdAt: timestamp("created_at").defaultNow()
 }, (table) => ({
-  userBenefitIdx: index("user_bookmarks_user_benefit_idx").on(table.userId, table.benefitId)
+  userBenefitIdx: index("user_bookmarks_user_benefit_idx").on(table.userId, table.benefitId),
+  userBenefitUnique: unique("user_bookmarks_user_benefit_unique").on(table.userId, table.benefitId)
 }));
 
 // User activity tracking
