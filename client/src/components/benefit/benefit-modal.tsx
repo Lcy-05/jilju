@@ -139,7 +139,7 @@ export function BenefitModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent hideCloseButton className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0">
         {/* Hero Image */}
         <div className="relative h-56 bg-muted flex items-center justify-center overflow-hidden">
           {benefit.images && benefit.images.length > 0 ? (

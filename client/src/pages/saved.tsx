@@ -68,7 +68,7 @@ export default function Saved() {
               즐겨찾기 ({bookmarks.length})
             </TabsTrigger>
             <TabsTrigger value="recent" data-testid="tab-recent">
-              최근 본
+              과거 조회
             </TabsTrigger>
           </TabsList>
 
@@ -111,9 +111,9 @@ export default function Saved() {
           <TabsContent value="recent" className="mt-6">
             <div className="text-center py-12">
               <div className="text-6xl mb-4">👁️</div>
-              <h3 className="text-lg font-semibold mb-2">최근 본 혜택</h3>
+              <h3 className="text-lg font-semibold mb-2">과거 조회 혜택</h3>
               <p className="text-sm text-muted-foreground">
-                곧 최근 본 혜택 기능이 추가됩니다
+                곧 과거 조회 혜택 기능이 추가됩니다
               </p>
             </div>
           </TabsContent>
