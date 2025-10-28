@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { MapPin, Phone, Clock, Calendar, AlertCircle, Bookmark, Share2, Navigation, Copy } from 'lucide-react';
 import { Benefit, Merchant } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -17,25 +17,26 @@ interface BenefitModalProps {
   merchant?: Merchant;
   isOpen: boolean;
   onClose: () => void;
-  isBookmarked?: boolean;
 }
 
 export function BenefitModal({ 
   benefit, 
   merchant, 
   isOpen, 
-  onClose, 
-  isBookmarked = false 
+  onClose
 }: BenefitModalProps) {
-  const [isBookmarkedState, setIsBookmarkedState] = useState(isBookmarked);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated, token } = useAuth();
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setIsBookmarkedState(isBookmarked);
-  }, [isBookmarked]);
+  // Fetch bookmark status dynamically
+  const { data: bookmarkStatus } = useQuery<{ isBookmarked: boolean }>({
+    queryKey: ['/api/bookmarks', benefit?.id, 'status'],
+    enabled: isOpen && !!benefit && isAuthenticated,
+  });
+
+  const isBookmarked = bookmarkStatus?.isBookmarked ?? false;
 
   // Log view event when modal opens
   useEffect(() => {
@@ -68,7 +69,7 @@ export function BenefitModal({
   // Bookmark mutation
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
-      if (isBookmarkedState) {
+      if (isBookmarked) {
         const response = await apiRequest('DELETE', `/api/bookmarks/${benefit?.id}`);
         return response.json();
       } else {
@@ -79,11 +80,12 @@ export function BenefitModal({
       }
     },
     onSuccess: () => {
-      setIsBookmarkedState(!isBookmarkedState);
       toast({
-        title: isBookmarkedState ? '즐겨찾기 제거됨' : '즐겨찾기 추가됨',
-        description: isBookmarkedState ? '즐겨찾기에서 제거되었습니다.' : '즐겨찾기에 추가되었습니다.',
+        title: isBookmarked ? '즐겨찾기 제거됨' : '즐겨찾기 추가됨',
+        description: isBookmarked ? '즐겨찾기에서 제거되었습니다.' : '즐겨찾기에 추가되었습니다.',
       });
+      // Invalidate bookmark status and bookmarks list
+      queryClient.invalidateQueries({ queryKey: ['/api/bookmarks', benefit?.id, 'status'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users', 'bookmarks'] });
     },
     onError: (error: any) => {
@@ -217,7 +219,7 @@ export function BenefitModal({
                 <Bookmark 
                   className={cn(
                     "w-7 h-7",
-                    isBookmarkedState ? "fill-primary text-primary" : "text-muted-foreground"
+                    isBookmarked ? "fill-primary text-primary" : "text-muted-foreground"
                   )}
                 />
               </Button>

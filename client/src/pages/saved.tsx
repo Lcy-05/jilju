@@ -126,7 +126,6 @@ export default function Saved() {
                     variant="horizontal"
                     onClick={() => handleBenefitClick(benefit)}
                     onBookmark={() => handleRemoveBookmark(benefit.id)}
-                    isBookmarked={true}
                     showMerchant={true}
                   />
                 ))}
