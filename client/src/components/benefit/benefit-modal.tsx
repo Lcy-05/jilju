@@ -11,6 +11,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { FullscreenMapModal } from '@/components/map/fullscreen-map-modal';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 interface BenefitModalProps {
   benefit: Benefit | null;
@@ -27,13 +28,14 @@ export function BenefitModal({
 }: BenefitModalProps) {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const { toast } = useToast();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch bookmark status dynamically
+  // Fetch bookmark status dynamically (only when benefit exists)
+  const benefitId = benefit?.id;
   const { data: bookmarkStatus } = useQuery<{ isBookmarked: boolean }>({
-    queryKey: ['/api/bookmarks', benefit?.id, 'status'],
-    enabled: isOpen && !!benefit && isAuthenticated,
+    queryKey: benefitId ? [`/api/bookmarks/${benefitId}/status`] : ['bookmark-status-placeholder'],
+    enabled: isOpen && !!benefitId && isAuthenticated,
   });
 
   const isBookmarked = bookmarkStatus?.isBookmarked ?? false;
@@ -85,8 +87,12 @@ export function BenefitModal({
         description: isBookmarked ? '즐겨찾기에서 제거되었습니다.' : '즐겨찾기에 추가되었습니다.',
       });
       // Invalidate bookmark status and bookmarks list
-      queryClient.invalidateQueries({ queryKey: ['/api/bookmarks', benefit?.id, 'status'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/users', 'bookmarks'] });
+      if (benefit) {
+        queryClient.invalidateQueries({ queryKey: [`/api/bookmarks/${benefit.id}/status`] });
+      }
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.BOOKMARKS.LIST.replace(':userId', user.id)] });
+      }
     },
     onError: (error: any) => {
       toast({
