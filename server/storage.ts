@@ -33,7 +33,7 @@ import {
   type MerchantHours
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql, or, desc, asc, gte, lte } from "drizzle-orm";
+import { eq, and, sql, or, desc, asc, gte, lte, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -72,6 +72,9 @@ export interface IStorage {
   bookmarkBenefit(userId: string, benefitId: string): Promise<void>;
   unbookmarkBenefit(userId: string, benefitId: string): Promise<void>;
   getUserBookmarks(userId: string): Promise<Benefit[]>;
+  
+  // Recent Views operations
+  getUserRecentViews(userId: string, limit?: number): Promise<Benefit[]>;
   
   // Activity tracking
   trackActivity(userId: string, type: string, resourceId: string, resourceType: string, metadata?: any): Promise<void>;
@@ -514,6 +517,7 @@ export class DatabaseStorage implements IStorage {
         geoRadiusM: benefits.geoRadiusM,
         status: benefits.status,
         rule: benefits.rule,
+        images: benefits.images,
         createdBy: benefits.createdBy,
         updatedBy: benefits.updatedBy,
         publishedAt: benefits.publishedAt,
@@ -525,6 +529,64 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userBookmarks.userId, userId))
       .orderBy(desc(userBookmarks.createdAt));
     return results;
+  }
+
+  // Recent Views operations
+  async getUserRecentViews(userId: string, limit: number = 10): Promise<Benefit[]> {
+    // Get distinct benefit IDs from event logs for click_detail events
+    const viewedBenefitIds = await db
+      .selectDistinct({
+        benefitId: eventLogs.benefitId,
+        maxCreatedAt: sql<Date>`MAX(${eventLogs.createdAt})`.as('max_created_at')
+      })
+      .from(eventLogs)
+      .where(
+        and(
+          eq(eventLogs.userId, userId),
+          eq(eventLogs.event, 'click_detail'),
+          sql`${eventLogs.benefitId} IS NOT NULL`
+        )
+      )
+      .groupBy(eventLogs.benefitId)
+      .orderBy(desc(sql`MAX(${eventLogs.createdAt})`))
+      .limit(limit);
+
+    if (viewedBenefitIds.length === 0) {
+      return [];
+    }
+
+    // Fetch full benefit details with merchant info
+    const benefitIdsArray = viewedBenefitIds.map(v => v.benefitId).filter((id): id is string => id !== null);
+    
+    const results = await db
+      .select({
+        benefit: benefits,
+        merchant: merchants,
+        category: categories
+      })
+      .from(benefits)
+      .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
+      .leftJoin(categories, eq(merchants.categoryId, categories.id))
+      .where(
+        and(
+          inArray(benefits.id, benefitIdsArray),
+          eq(benefits.status, 'ACTIVE')
+        )
+      );
+
+    // Sort by the order in viewedBenefitIds
+    const sortedResults = benefitIdsArray
+      .map(id => results.find(r => r.benefit.id === id))
+      .filter((r): r is NonNullable<typeof r> => r !== undefined)
+      .map(row => ({
+        ...row.benefit,
+        merchant: {
+          ...row.merchant,
+          category: row.category
+        } as any
+      }));
+
+    return sortedResults;
   }
 
   // Activity tracking

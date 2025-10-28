@@ -37,6 +37,20 @@ export function BenefitModal({
     setIsBookmarkedState(isBookmarked);
   }, [isBookmarked]);
 
+  // Log view event when modal opens
+  useEffect(() => {
+    if (isOpen && benefit && isAuthenticated) {
+      // Log click_detail event
+      apiRequest('POST', '/api/events', {
+        event: 'click_detail',
+        benefitId: benefit.id,
+        merchantId: merchant?.id,
+      }).catch((error) => {
+        console.error('Failed to log view event:', error);
+      });
+    }
+  }, [isOpen, benefit, merchant, isAuthenticated]);
+
   // Parse merchant coordinates safely (must be before early return)
   const merchantCoords = useMemo(() => {
     if (!merchant?.location) return null;

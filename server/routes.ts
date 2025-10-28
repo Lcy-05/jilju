@@ -375,6 +375,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/:userId/recent-views", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+      // Check if user can access these views
+      if (req.user.id !== userId && !req.user.roles?.includes('ADMIN')) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const recentViews = await storage.getUserRecentViews(userId, limit);
+      res.json({ benefits: recentViews });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get recent views" });
+    }
+  });
+
   // Geographic routes
   app.get("/api/regions", async (req, res) => {
     try {

@@ -32,6 +32,13 @@ export default function Saved() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Get user recent views
+  const { data: recentViewsData, isLoading: recentViewsLoading } = useQuery({
+    queryKey: [`/api/users/${user?.id}/recent-views`],
+    enabled: isAuthenticated && !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
   const handleBenefitClick = (benefit: Benefit) => {
     setSelectedBenefit(benefit);
     setIsBenefitModalOpen(true);
@@ -58,6 +65,7 @@ export default function Saved() {
   }
 
   const bookmarks = (bookmarksData as any)?.bookmarks || [];
+  const recentViews = (recentViewsData as any)?.benefits || [];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -109,13 +117,36 @@ export default function Saved() {
 
           {/* Recent Tab */}
           <TabsContent value="recent" className="mt-6">
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">👁️</div>
-              <h3 className="text-lg font-semibold mb-2">과거 조회 혜택</h3>
-              <p className="text-sm text-muted-foreground">
-                곧 과거 조회 혜택 기능이 추가됩니다
-              </p>
-            </div>
+            {recentViewsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="skeleton h-24 rounded-xl" />
+                ))}
+              </div>
+            ) : recentViews.length > 0 ? (
+              <div className="space-y-3">
+                {recentViews.map((benefit: Benefit) => (
+                  <BenefitCard
+                    key={benefit.id}
+                    benefit={benefit}
+                    variant="horizontal"
+                    onClick={() => handleBenefitClick(benefit)}
+                    showMerchant={true}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">👁️</div>
+                <h3 className="text-lg font-semibold mb-2">과거 조회 기록 없음</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  혜택을 조회하면 여기에 표시됩니다
+                </p>
+                <Button onClick={() => window.location.href = '/discover'}>
+                  혜택 둘러보기
+                </Button>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
