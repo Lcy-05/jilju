@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/auth';
 import { Benefit } from '@/types';
 import { API_ENDPOINTS } from '@/lib/constants';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Saved() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
@@ -15,6 +17,8 @@ export default function Saved() {
   const [activeTab, setActiveTab] = useState('bookmarks');
 
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Parse URL tab parameter
   useEffect(() => {
@@ -42,6 +46,31 @@ export default function Saved() {
   const handleBenefitClick = (benefit: Benefit) => {
     setSelectedBenefit(benefit);
     setIsBenefitModalOpen(true);
+  };
+
+  const removeBookmarkMutation = useMutation({
+    mutationFn: async (benefitId: string) => {
+      const response = await apiRequest('DELETE', `/api/bookmarks/${benefitId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '즐겨찾기 제거됨',
+        description: '즐겨찾기에서 제거되었습니다.',
+      });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.BOOKMARKS.LIST.replace(':userId', user?.id || '')] });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: 'destructive',
+        title: '오류 발생',
+        description: error.message || '처리 중 오류가 발생했습니다.',
+      });
+    }
+  });
+
+  const handleRemoveBookmark = (benefitId: string) => {
+    removeBookmarkMutation.mutate(benefitId);
   };
 
   if (!isAuthenticated) {
@@ -96,6 +125,7 @@ export default function Saved() {
                     benefit={benefit}
                     variant="horizontal"
                     onClick={() => handleBenefitClick(benefit)}
+                    onBookmark={() => handleRemoveBookmark(benefit.id)}
                     isBookmarked={true}
                     showMerchant={true}
                   />

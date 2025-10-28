@@ -499,36 +499,29 @@ export class DatabaseStorage implements IStorage {
   async getUserBookmarks(userId: string): Promise<Benefit[]> {
     const results = await db
       .select({
-        id: benefits.id,
-        merchantId: benefits.merchantId,
-        categoryId: benefits.categoryId,
-        title: benefits.title,
-        description: benefits.description,
-        type: benefits.type,
-        percent: benefits.percent,
-        amount: benefits.amount,
-        gift: benefits.gift,
-        membershipTier: benefits.membershipTier,
-        terms: benefits.terms,
-        studentOnly: benefits.studentOnly,
-        minOrder: benefits.minOrder,
-        validFrom: benefits.validFrom,
-        validTo: benefits.validTo,
-        geoRadiusM: benefits.geoRadiusM,
-        status: benefits.status,
-        rule: benefits.rule,
-        images: benefits.images,
-        createdBy: benefits.createdBy,
-        updatedBy: benefits.updatedBy,
-        publishedAt: benefits.publishedAt,
-        createdAt: benefits.createdAt,
-        updatedAt: benefits.updatedAt
+        benefit: benefits,
+        merchant: merchants,
+        category: categories
       })
       .from(userBookmarks)
       .innerJoin(benefits, eq(userBookmarks.benefitId, benefits.id))
-      .where(eq(userBookmarks.userId, userId))
+      .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
+      .leftJoin(categories, eq(merchants.categoryId, categories.id))
+      .where(
+        and(
+          eq(userBookmarks.userId, userId),
+          eq(benefits.status, 'ACTIVE')
+        )
+      )
       .orderBy(desc(userBookmarks.createdAt));
-    return results;
+    
+    return results.map(row => ({
+      ...row.benefit,
+      merchant: {
+        ...row.merchant,
+        category: row.category
+      } as any
+    }));
   }
 
   // Recent Views operations

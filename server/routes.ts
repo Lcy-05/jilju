@@ -785,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Event Logging routes
-  app.post("/api/events", async (req, res) => {
+  app.post("/api/events", authenticateToken, async (req, res) => {
     try {
       const { event, benefitId, merchantId, regionId, params } = req.body;
       
