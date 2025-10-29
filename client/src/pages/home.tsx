@@ -313,56 +313,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Popular Nearby Benefits */}
-        <section className="py-4">
-          <div className="px-4 flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">내 근처 인기 혜택</h3>
-            <Button 
-              variant="link" 
-              size="sm"
-              onClick={() => window.location.href = '/discover?sort=popularity'}
-              className="text-sm text-primary font-medium p-0"
-              data-testid="button-view-all-nearby"
-            >
-              전체보기
-            </Button>
-          </div>
-          
-          <div className="overflow-x-auto px-4 pb-2 scrollbar-hide">
-            <div className="flex gap-3">
-              {popularLoading ? (
-                // Skeleton loading
-                Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="flex-shrink-0 w-64">
-                    <div className="skeleton h-36 rounded-xl mb-3" />
-                    <div className="skeleton h-4 w-16 rounded mb-2" />
-                    <div className="skeleton h-4 w-full rounded mb-2" />
-                    <div className="skeleton h-3 w-32 rounded" />
-                  </div>
-                ))
-              ) : nearbyBenefits.length > 0 ? (
-                nearbyBenefits.map((benefit: Benefit) => (
-                  <div key={benefit.id} className="flex-shrink-0 w-64">
-                    <BenefitCard
-                      benefit={benefit}
-                      variant="vertical"
-                      onClick={() => handleBenefitClick(benefit)}
-                      onBookmark={() => handleBookmark(benefit.id)}
-                      isBookmarked={bookmarkedBenefits.has(benefit.id)}
-                      className="h-full"
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="flex-shrink-0 w-64 text-center py-8">
-                  <div className="text-4xl mb-4">🔍</div>
-                  <p className="text-sm text-muted-foreground">근처 혜택이 없습니다</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
         {/* Partnership Posters (대형 제휴) */}
         <section className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">
@@ -377,13 +327,13 @@ export default function Home() {
                     <div
                       key={poster.id}
                       onClick={() => handlePosterClick(poster)}
-                      className="embla__slide-partners flex-shrink-0 w-[45%] min-w-[280px] cursor-pointer"
+                      className="embla__slide-partners flex-shrink-0 w-[70%] min-w-[320px] cursor-pointer"
                       data-testid={`partnership-poster-${poster.id}`}
                     >
                       <img
                         src={poster.imageUrl}
                         alt={poster.title}
-                        className="w-full aspect-[4/3] object-cover rounded-xl shadow-md pointer-events-none"
+                        className="w-full aspect-[3/2] object-cover rounded-xl shadow-lg pointer-events-none"
                         draggable="false"
                       />
                     </div>
