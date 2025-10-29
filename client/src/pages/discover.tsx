@@ -24,6 +24,7 @@ export default function Discover() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
   const [isRegionFilterOpen, setIsRegionFilterOpen] = useState(false);
   const [bookmarkedBenefits, setBookmarkedBenefits] = useState<Set<string>>(new Set());
   
@@ -362,7 +363,7 @@ export default function Discover() {
         </div>
         
         <div className="flex items-center gap-2 mt-2">
-          <Sheet>
+          <Sheet open={isSortSheetOpen} onOpenChange={setIsSortSheetOpen}>
             <SheetTrigger asChild>
               <Button 
                 variant="outline" 
@@ -374,10 +375,10 @@ export default function Discover() {
                 <ChevronDown className="w-4 h-4" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-auto">
+            <SheetContent side="bottom" className="h-auto pb-24">
               <div className="py-4">
                 <h4 className="font-semibold mb-3">정렬</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 pb-4">
                   {SORT_OPTIONS.map(({ value, label }) => (
                     <Button
                       key={value}
@@ -385,7 +386,7 @@ export default function Discover() {
                       className="w-full justify-start"
                       onClick={() => {
                         handleSortChange(value);
-                        // URL will be updated by useEffect
+                        setIsSortSheetOpen(false);
                       }}
                       data-testid={`button-sort-${value}`}
                     >
