@@ -127,11 +127,12 @@ export default function Map() {
     return enrichedBenefits;
   }, [benefitsData, location, mapCenter]);
 
-  // Filter benefits by selected region
+  // Filter benefits by selected region and category
   useEffect(() => {
-    const filterBenefitsByRegion = async () => {
+    const filterBenefits = async () => {
       let filteredBenefits = normalizedBenefits;
       
+      // Filter by region if selected
       if (selectedRegion) {
         // Filter benefits asynchronously using region detection API
         const filteredResults = await Promise.all(
@@ -147,11 +148,18 @@ export default function Map() {
         filteredBenefits = filteredResults.filter((b): b is typeof normalizedBenefits[0] => b !== null);
       }
       
+      // Filter by category if selected
+      if (selectedCategory) {
+        filteredBenefits = filteredBenefits.filter((benefit: any) => 
+          benefit.categoryId === selectedCategory
+        );
+      }
+      
       setVisibleBenefits(filteredBenefits);
     };
     
-    filterBenefitsByRegion();
-  }, [normalizedBenefits, selectedRegion]);
+    filterBenefits();
+  }, [normalizedBenefits, selectedRegion, selectedCategory]);
 
   // Convert normalized benefits to map markers
   const markers: MapMarker[] = useMemo(() => {
@@ -245,7 +253,7 @@ export default function Map() {
         {/* Bottom Sheet with benefits list */}
         <BottomSheet
           benefits={visibleBenefits}
-          totalCount={benefitsData?.total}
+          totalCount={visibleBenefits.length}
           categories={(categoriesData as any)?.categories || []}
           selectedCategories={selectedCategory ? [selectedCategory] : []}
           onCategoryToggle={(categoryId) => {
