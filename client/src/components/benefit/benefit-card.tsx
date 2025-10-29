@@ -185,9 +185,25 @@ export function BenefitCard({
       onClick={onClick}
       data-testid={`card-benefit-${benefit.id}`}
     >
-      {/* Image placeholder - aspect ratio */}
-      <div className="w-full aspect-video bg-muted flex items-center justify-center">
-        <span className="text-4xl">🎁</span>
+      {/* Image - aspect ratio */}
+      <div className="w-full aspect-video bg-muted flex items-center justify-center overflow-hidden">
+        {benefit.images && benefit.images.length > 0 ? (
+          <img 
+            src={benefit.images[0]} 
+            alt={benefit.title}
+            className="w-full h-full object-cover"
+          />
+        ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
+          <img 
+            src={benefit.merchant.images[0]} 
+            alt={benefit.merchant.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+            <span className="text-4xl">🎁</span>
+          </div>
+        )}
       </div>
       
       <CardContent className="p-3">

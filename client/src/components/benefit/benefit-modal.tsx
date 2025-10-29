@@ -170,8 +170,16 @@ export function BenefitModal({
               alt={benefit.title}
               className="w-full h-full object-cover"
             />
+          ) : merchant?.images && merchant.images.length > 0 ? (
+            <img 
+              src={merchant.images[0]} 
+              alt={merchant.name}
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <span className="text-6xl">🎁</span>
+            <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+              <span className="text-6xl">🎁</span>
+            </div>
           )}
           <Button
             variant="secondary"
