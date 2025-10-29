@@ -49,15 +49,16 @@ export function useLocation(options: UseLocationOptions = {}) {
     const { latitude: lat, longitude: lng, accuracy } = position.coords;
     
     // Fetch region name from API
-    let regionName = '로딩 중...';
+    let regionName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;  // 기본값: 좌표
     try {
       const response = await fetch(`${API_ENDPOINTS.GEOGRAPHY.REVERSE_GEOCODE}/${lat}/${lng}`);
       if (response.ok) {
         const data = await response.json();
-        regionName = data.address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        regionName = data.address || regionName;
       }
     } catch (error) {
       console.error('Failed to fetch region:', error);
+      // 실패 시 좌표 사용 (기본값 유지)
     }
     
     // Set location with fetched address
