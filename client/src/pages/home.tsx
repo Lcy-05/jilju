@@ -333,7 +333,7 @@ export default function Home() {
                       <img
                         src={poster.imageUrl}
                         alt={poster.title}
-                        className="w-full aspect-[3/2] object-cover rounded-xl shadow-lg pointer-events-none"
+                        className="w-full aspect-square object-contain rounded-xl shadow-lg pointer-events-none"
                         draggable="false"
                       />
                     </div>
