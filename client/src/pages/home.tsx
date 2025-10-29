@@ -327,7 +327,7 @@ export default function Home() {
                     <div
                       key={poster.id}
                       onClick={() => handlePosterClick(poster)}
-                      className="embla__slide-partners flex-shrink-0 w-[70%] min-w-[320px] cursor-pointer"
+                      className="embla__slide-partners flex-shrink-0 w-[55%] min-w-[280px] cursor-pointer"
                       data-testid={`partnership-poster-${poster.id}`}
                     >
                       <img
@@ -415,18 +415,6 @@ export default function Home() {
                 alt={selectedPoster.title}
                 className="w-full h-auto max-h-[85vh] object-contain"
               />
-              {selectedPoster.linkUrl && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                  <Button
-                    onClick={handlePosterViewBenefits}
-                    size="lg"
-                    className="shadow-lg"
-                    data-testid="button-view-benefits"
-                  >
-                    혜택 보러가기
-                  </Button>
-                </div>
-              )}
             </div>
           )}
         </DialogContent>
