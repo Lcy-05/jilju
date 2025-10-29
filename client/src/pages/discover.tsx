@@ -139,7 +139,11 @@ export default function Discover() {
     queryKey: [
       API_ENDPOINTS.BENEFITS.SEARCH,
       searchQuery,
-      searchOptions,
+      JSON.stringify(searchOptions.categories),
+      JSON.stringify(searchOptions.types),
+      searchOptions.regionId,
+      searchOptions.sort,
+      searchOptions.nowOpen,
       location?.lat,
       location?.lng
     ],
@@ -150,8 +154,14 @@ export default function Discover() {
         params.set('q', searchQuery);
       }
       
+      // Always provide bbox or lat/lng so category filters work
       if (location?.lat && location?.lng) {
         params.set('bbox', `${location.lat-0.01},${location.lng-0.01},${location.lat+0.01},${location.lng+0.01}`);
+      } else {
+        // Default to Jeju Island coordinates if no location
+        const defaultLat = 33.4996;
+        const defaultLng = 126.5312;
+        params.set('bbox', `${defaultLat-0.1},${defaultLng-0.1},${defaultLat+0.1},${defaultLng+0.1}`);
       }
 
       searchOptions.categories?.forEach(cat => params.append('cats', cat));
@@ -166,7 +176,7 @@ export default function Discover() {
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 0, // No caching to ensure filters work immediately
   });
 
   const handleSearchSubmit = (query: string) => {
@@ -349,32 +359,6 @@ export default function Discover() {
             </SheetContent>
           </Sheet>
         </div>
-        
-        {/* Region Filters */}
-        {(regions as any)?.regions && (regions as any).regions.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
-            {(regions as any).regions.map((region: Region) => {
-              const isSelected = searchOptions.regionId === region.id;
-              return (
-                <Button
-                  key={region.id}
-                  variant={isSelected ? "default" : "secondary"}
-                  size="sm"
-                  onClick={() => {
-                    setSearchOptions(prev => ({
-                      ...prev,
-                      regionId: isSelected ? undefined : region.id
-                    }));
-                  }}
-                  className="flex-shrink-0 rounded-full"
-                  data-testid={`button-region-${region.name}`}
-                >
-                  {region.name}
-                </Button>
-              );
-            })}
-          </div>
-        )}
         
         <div className="flex items-center gap-2 mt-2">
           <Sheet>

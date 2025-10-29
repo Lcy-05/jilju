@@ -215,8 +215,14 @@ export class DatabaseStorage implements IStorage {
       eq(merchants.status, 'ACTIVE')
     ];
     
+    // Category filter
+    if (filters?.categories && filters.categories.length > 0) {
+      conditions.push(inArray(merchants.categoryId, filters.categories));
+    }
+    
+    // Type filter
     if (filters?.types && filters.types.length > 0) {
-      conditions.push(sql`${benefits.type} = ANY(${filters.types})`);
+      conditions.push(inArray(benefits.type, filters.types));
     }
     
     // Distance filter using PostGIS
