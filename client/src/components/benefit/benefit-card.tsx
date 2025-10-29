@@ -113,17 +113,17 @@ export function BenefitCard({
             </div>
             
             {/* Content - 우측 북마크 영역 예약됨 */}
-            <div className="min-w-0">
-              {/* 배지들 */}
-              <div className="flex items-center gap-1 md:gap-1.5 mb-1 flex-wrap">
+            <div className="min-w-0 flex-1">
+              {/* 배지들 - 겹침 방지 */}
+              <div className="flex items-start gap-1 md:gap-1.5 mb-1.5 flex-wrap max-w-[calc(100%-2rem)]">
                 {getBenefitBadge()}
                 {showNewBadge && (
-                  <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+                  <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap flex-shrink-0">
                     NEW
                   </Badge>
                 )}
                 {isNowOpen() && (
-                  <Badge className="bg-pink-500 text-white text-[10px] md:text-xs font-medium px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+                  <Badge className="bg-pink-500 text-white text-[10px] md:text-xs font-medium px-1.5 md:px-2 py-0.5 whitespace-nowrap flex-shrink-0">
                     바로 사용
                   </Badge>
                 )}
@@ -230,12 +230,12 @@ export function BenefitCard({
       <CardContent className="p-3">
         {/* Grid 2열 구조: 컨텐츠 | 북마크 */}
         <div className="grid grid-cols-[1fr_auto] gap-2 items-start mb-2">
-          <div className="min-w-0">
-            {/* 배지들 */}
-            <div className="flex items-center gap-1 md:gap-1.5 mb-1.5 flex-wrap">
+          <div className="min-w-0 flex-1">
+            {/* 배지들 - 겹침 방지 */}
+            <div className="flex items-start gap-1 md:gap-1.5 mb-1.5 flex-wrap max-w-[calc(100%-2rem)]">
               {getBenefitBadge()}
               {showNewBadge && (
-                <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap">
+                <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap flex-shrink-0">
                   NEW
                 </Badge>
               )}

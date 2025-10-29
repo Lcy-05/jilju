@@ -263,30 +263,46 @@ export function BottomSheet({
                 data-testid={`card-map-benefit-${benefit.id}`}
               >
                 <div className="flex gap-3">
-                  {/* Thumbnail */}
-                  <div className="w-20 h-20 bg-muted rounded-lg flex-shrink-0 flex items-center justify-center">
-                    <span className="text-2xl">🎁</span>
+                  {/* Thumbnail - Show merchant image */}
+                  <div className="w-20 h-20 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
+                    {benefit.images && benefit.images.length > 0 ? (
+                      <img 
+                        src={benefit.images[0]} 
+                        alt={benefit.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
+                      <img 
+                        src={benefit.merchant.images[0]} 
+                        alt={benefit.merchant.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                        <span className="text-2xl">🎁</span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start gap-1.5 mb-1 flex-wrap">
                       {benefit.type === 'PERCENT' && (
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap">
                           {benefit.percent}%
                         </span>
                       )}
                       {benefit.type === 'AMOUNT' && (
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap">
                           {benefit.amount?.toLocaleString()}원
                         </span>
                       )}
                       {benefit.type === 'GIFT' && (
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap">
                           증정
                         </span>
                       )}
                       {benefit.type === 'MEMBERSHIP' && (
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium rounded-full">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap">
                           멤버십
                         </span>
                       )}
