@@ -202,7 +202,9 @@ export default function Discover() {
     setSearchOptions(prev => ({
       ...prev,
       categories: checked 
-        ? [...(prev.categories || []), categoryId]
+        ? prev.categories?.includes(categoryId)
+          ? prev.categories  // 이미 있으면 그대로
+          : [...(prev.categories || []), categoryId]  // 없으면 추가
         : (prev.categories || []).filter(c => c !== categoryId)
     }));
   };
@@ -211,7 +213,9 @@ export default function Discover() {
     setSearchOptions(prev => ({
       ...prev,
       types: checked 
-        ? [...(prev.types || []), type]
+        ? prev.types?.includes(type)
+          ? prev.types  // 이미 있으면 그대로
+          : [...(prev.types || []), type]  // 없으면 추가
         : (prev.types || []).filter(t => t !== type)
     }));
   };
