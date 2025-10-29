@@ -276,7 +276,7 @@ export default function Discover() {
         />
         
         {/* Filter Bar - 헤더와 맞닿은 블록 */}
-        <section className="px-4 pt-0 pb-3">
+        <section className="px-4 pt-2 pb-3">
         {/* Category Filters with Filter Button */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
           {displayCategories.map((category: Category) => {
@@ -513,7 +513,10 @@ export default function Discover() {
               variant={!searchOptions.regionId ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => {
-                setSearchOptions(prev => ({ ...prev, regionId: undefined }));
+                setSearchOptions(prev => {
+                  const { regionId, ...rest } = prev;
+                  return { ...rest };
+                });
                 setIsRegionFilterOpen(false);
               }}
               data-testid="button-region-all"
@@ -521,21 +524,31 @@ export default function Discover() {
               전체 지역
             </Button>
             
-            {/* Region list */}
-            {(regions as any)?.regions?.map((region: Region) => (
-              <Button
-                key={region.id}
-                variant={searchOptions.regionId === region.id ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => {
-                  setSearchOptions(prev => ({ ...prev, regionId: region.id }));
-                  setIsRegionFilterOpen(false);
-                }}
-                data-testid={`button-region-${region.name}`}
-              >
-                {region.name}
-              </Button>
-            ))}
+            {/* Region list with loading state */}
+            {!regions ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">로딩중...</p>
+              </div>
+            ) : (regions as any)?.regions?.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">지역 정보가 없습니다</p>
+              </div>
+            ) : (
+              (regions as any)?.regions?.map((region: Region) => (
+                <Button
+                  key={region.id}
+                  variant={searchOptions.regionId === region.id ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setSearchOptions(prev => ({ ...prev, regionId: region.id }));
+                    setIsRegionFilterOpen(false);
+                  }}
+                  data-testid={`button-region-${region.name}`}
+                >
+                  {region.name}
+                </Button>
+              ))
+            )}
           </div>
         </SheetContent>
       </Sheet>
