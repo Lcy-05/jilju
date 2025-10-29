@@ -30,7 +30,7 @@ export default function Discover() {
   
   // Search and filter state
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
-    categories: [],
+    categoryId: undefined,
     types: [],
     sort: 'distance',
     nowOpen: false
@@ -47,7 +47,7 @@ export default function Discover() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const params: SearchOptions = {
-      categories: urlParams.getAll('cats'), // Map URL 'cats' to state 'categories'
+      categoryId: urlParams.get('cat') || undefined,  // 단일 카테고리
       types: urlParams.getAll('types'),
       sort: (urlParams.get('sort') as any) || 'distance',
       nowOpen: urlParams.get('nowOpen') === 'true',
@@ -140,7 +140,7 @@ export default function Discover() {
     queryKey: [
       API_ENDPOINTS.BENEFITS.SEARCH,
       searchQuery,
-      JSON.stringify(searchOptions.categories),
+      searchOptions.categoryId,  // 단일 카테고리
       JSON.stringify(searchOptions.types),
       searchOptions.regionId,
       searchOptions.sort,
@@ -165,7 +165,7 @@ export default function Discover() {
         params.set('bbox', `${defaultLat-0.1},${defaultLng-0.1},${defaultLat+0.1},${defaultLng+0.1}`);
       }
 
-      searchOptions.categories?.forEach(cat => params.append('cats', cat));
+      if (searchOptions.categoryId) params.append('cats', searchOptions.categoryId);  // 단일 카테고리
       searchOptions.types?.forEach(type => params.append('types', type));
       
       if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
@@ -191,22 +191,24 @@ export default function Discover() {
     if (searchOptions.sort) params.set('sort', searchOptions.sort);
     if (searchOptions.nowOpen) params.set('nowOpen', 'true');
     if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
-    searchOptions.categories?.forEach(cat => params.append('cats', cat));
+    if (searchOptions.categoryId) params.set('cat', searchOptions.categoryId);  // 단일 카테고리
     searchOptions.types?.forEach(type => params.append('types', type));
     
     const newUrl = `/discover${params.toString() ? '?' + params.toString() : ''}`;
     window.history.pushState({}, '', newUrl);
   };
 
-  const handleCategoryFilter = (categoryId: string, checked: boolean) => {
-    setSearchOptions(prev => ({
-      ...prev,
-      categories: checked 
-        ? prev.categories?.includes(categoryId)
-          ? prev.categories  // 이미 있으면 그대로
-          : [...(prev.categories || []), categoryId]  // 없으면 추가
-        : (prev.categories || []).filter(c => c !== categoryId)
-    }));
+  const handleCategoryFilter = (categoryId: string) => {
+    setSearchOptions(prev => {
+      if (prev.categoryId === categoryId) {
+        // 토글 해제 - categoryId 제거하고 새 객체 생성
+        const { categoryId: _, ...rest } = prev;
+        return { ...rest };
+      } else {
+        // 새 카테고리 선택
+        return { ...prev, categoryId };
+      }
+    });
   };
 
   const handleTypeFilter = (type: string, checked: boolean) => {
@@ -278,13 +280,13 @@ export default function Discover() {
         {/* Category Filters with Filter Button */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
           {displayCategories.map((category: Category) => {
-            const isSelected = searchOptions.categories?.includes(category.id);
+            const isSelected = searchOptions.categoryId === category.id;  // 단일 선택
             return (
               <Button
                 key={category.id}
                 variant={isSelected ? "default" : "secondary"}
                 size="sm"
-                onClick={() => handleCategoryFilter(category.id, !isSelected)}
+                onClick={() => handleCategoryFilter(category.id)}  // 토글 방식
                 className="flex-shrink-0 rounded-full"
                 data-testid={`button-category-${category.name}`}
               >

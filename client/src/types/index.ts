@@ -87,7 +87,7 @@ export interface LocationState {
 }
 
 export interface SearchOptions {
-  categories?: string[];
+  categoryId?: string;  // 단일 카테고리만 선택 가능
   regionId?: string;
   types?: string[];
   nowOpen?: boolean;
