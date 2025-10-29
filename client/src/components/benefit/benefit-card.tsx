@@ -89,10 +89,31 @@ export function BenefitCard({
         data-testid={`card-benefit-${benefit.id}`}
       >
         <CardContent className="p-3">
-          {/* Grid 2열 구조: 컨텐츠 | 북마크 (썸네일 제거로 완전한 auto 높이) */}
-          <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
+          {/* Grid 3열 구조: 이미지 | 컨텐츠 | 북마크 */}
+          <div className="grid grid-cols-[80px_1fr_auto] gap-3 items-start">
+            {/* Thumbnail Image */}
+            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+              {benefit.images && benefit.images.length > 0 ? (
+                <img 
+                  src={benefit.images[0]} 
+                  alt={benefit.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
+                <img 
+                  src={benefit.merchant.images[0]} 
+                  alt={benefit.merchant.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                  <span className="text-2xl">🎁</span>
+                </div>
+              )}
+            </div>
+            
             {/* Content - 우측 북마크 영역 예약됨 */}
-            <div className="min-w-0 pr-2">
+            <div className="min-w-0">
               {/* 배지들 */}
               <div className="flex items-center gap-1 md:gap-1.5 mb-1 flex-wrap">
                 {getBenefitBadge()}
