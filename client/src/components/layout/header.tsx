@@ -43,7 +43,7 @@ export function Header({ onLocationClick, onSearchChange, onSearchSubmit, classN
         >
           <MapPin className="w-3.5 h-3.5 text-primary" />
           <span className="text-xs font-medium" data-testid="text-location">
-            {selectedRegionName || (location?.region && location.region !== '로딩 중...' ? location.region : '위치')}
+            {selectedRegionName || (location?.region && location.region !== '로딩 중...' && location.region !== '위치 확인 중...' ? location.region : '위치')}
           </span>
           <ChevronDown className="w-3 h-3" />
         </Button>

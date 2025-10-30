@@ -48,34 +48,68 @@ export function useLocation(options: UseLocationOptions = {}) {
   const handleLocationSuccess = useCallback(async (position: GeolocationPosition) => {
     const { latitude: lat, longitude: lng, accuracy } = position.coords;
     
+    // 우선 "위치 확인 중..." 상태로 설정
+    const tempLocationState: LocationState = {
+      lat,
+      lng,
+      address: '위치 확인 중...',
+      region: '위치 확인 중...',
+      accuracy
+    };
+
+    setLocation(tempLocationState);
+    setIsLoading(false);
+
     // Fetch region name from API
-    let regionName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;  // 기본값: 좌표
     try {
       const response = await fetch(`${API_ENDPOINTS.GEOGRAPHY.REVERSE_GEOCODE}/${lat}/${lng}`);
       if (response.ok) {
         const data = await response.json();
-        regionName = data.address || regionName;
+        const regionName = data.address || '제주';
+        
+        // 주소를 가져왔으면 업데이트
+        const locationState: LocationState = {
+          lat,
+          lng,
+          address: regionName,
+          region: regionName,
+          accuracy
+        };
+
+        setLocation(locationState);
+        setError(null);
+
+        if (saveToStorage) {
+          localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(locationState));
+        }
+      } else {
+        // API 실패 시 기본값 사용
+        const fallbackLocation: LocationState = {
+          lat,
+          lng,
+          address: '제주',
+          region: '제주',
+          accuracy
+        };
+        setLocation(fallbackLocation);
+        if (saveToStorage) {
+          localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(fallbackLocation));
+        }
       }
     } catch (error) {
       console.error('Failed to fetch region:', error);
-      // 실패 시 좌표 사용 (기본값 유지)
-    }
-    
-    // Set location with fetched address
-    const locationState: LocationState = {
-      lat,
-      lng,
-      address: regionName,
-      region: regionName,
-      accuracy
-    };
-
-    setLocation(locationState);
-    setError(null);
-    setIsLoading(false);
-
-    if (saveToStorage) {
-      localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(locationState));
+      // 실패 시 기본값 사용
+      const fallbackLocation: LocationState = {
+        lat,
+        lng,
+        address: '제주',
+        region: '제주',
+        accuracy
+      };
+      setLocation(fallbackLocation);
+      if (saveToStorage) {
+        localStorage.setItem(STORAGE_KEYS.USER_LOCATION, JSON.stringify(fallbackLocation));
+      }
     }
   }, [saveToStorage]);
 
