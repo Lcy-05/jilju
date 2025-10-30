@@ -151,6 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         q // Search query
       } = req.query;
 
+      // Debug logging
+      console.log('[SEARCH] Request params:', { bbox, lat, lng, radius, cats, regionId, types, nowOpen, sort, limit, q });
+
       let results = [];
 
       const catArray = Array.isArray(cats) ? cats.filter((c): c is string => typeof c === 'string') : (cats ? [cats as string] : []);
@@ -197,6 +200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const paginatedResults = results.slice(Number(offset), Number(offset) + Number(limit));
+      
+      console.log('[SEARCH] Results:', { total: results.length, paginated: paginatedResults.length });
       
       res.json({
         benefits: paginatedResults,
