@@ -272,17 +272,17 @@ export default function Discover() {
   return (
     <div className="min-h-screen pb-20">
       {/* 통합 헤더 블록 - sticky 컨테이너 */}
-      <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md shadow-none border-b border-white/10">
+      <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md shadow-none border-b border-white/10 pt-4 pb-4">
         <Header
           onSearchSubmit={handleSearchSubmit}
           onSearchChange={setSearchQuery}
           onLocationClick={() => setIsRegionFilterOpen(true)}
-          className="shadow-none border-b-0 !pb-0 !pt-2"
+          className="shadow-none border-b-0 !pb-0 !pt-0 !bg-transparent"
           selectedRegionName={selectedRegionName}
         />
         
         {/* Filter Bar - 헤더와 맞닿은 블록 */}
-        <section className="px-4 pt-2 pb-3">
+        <section className="px-4 pt-3 pb-0">
         {/* Category Filters with Filter Button */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
           {displayCategories.map((category: Category) => {
