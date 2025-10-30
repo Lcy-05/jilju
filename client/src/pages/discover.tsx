@@ -257,6 +257,11 @@ export default function Discover() {
     .filter(Boolean)
     .filter((cat: Category) => cat.name !== '기타'); // Exclude "기타" category
     
+  // Get selected region name for header display
+  const selectedRegionName = searchOptions.regionId 
+    ? (regions as any)?.regions?.find((r: Region) => r.id === searchOptions.regionId)?.name 
+    : undefined;
+    
   const benefitTypes = [
     { value: 'PERCENT', label: '할인율' },
     { value: 'AMOUNT', label: '정액할인' },
@@ -273,6 +278,7 @@ export default function Discover() {
           onSearchChange={setSearchQuery}
           onLocationClick={() => setIsRegionFilterOpen(true)}
           className="shadow-none border-b-0 !pb-0 !pt-2"
+          selectedRegionName={selectedRegionName}
         />
         
         {/* Filter Bar - 헤더와 맞닿은 블록 */}
