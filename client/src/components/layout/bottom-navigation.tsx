@@ -31,10 +31,15 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
   const currentTab = getCurrentTab();
 
   return (
-    <nav className={cn(
-      "fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-card border-t border-border safe-bottom z-[1000]",
-      className
-    )}>
+    <nav 
+      className={cn(
+        "fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/50 backdrop-blur-[10px] border-t border-white/10 safe-bottom z-[1000]",
+        className
+      )}
+      style={{
+        WebkitBackdropFilter: 'blur(10px)'
+      }}
+    >
       <div className="flex items-center justify-around h-16">
         {tabs.map(({ id, path, label, icon: Icon }) => {
           const isActive = currentTab === id;
@@ -46,8 +51,8 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
               size="sm"
               onClick={() => setLocation(path)}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 h-full rounded-none",
-                isActive ? "text-primary" : "text-muted-foreground"
+                "flex-1 flex flex-col items-center justify-center gap-1 h-full rounded-none hover:bg-white/10",
+                isActive ? "text-primary" : "text-white/70"
               )}
               data-testid={`button-tab-${id}`}
             >

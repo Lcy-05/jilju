@@ -231,13 +231,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen pb-20">
       <main className="animate-fade-in pt-4">
         {/* Banner Carousel */}
         <section className="px-4 pt-4">
           {banners.length > 0 ? (
             <>
-              <div className="overflow-hidden rounded-xl" ref={emblaRef}>
+              <div className="overflow-hidden rounded-2xl shadow-[0_12px_24px_rgba(0,0,0,0.6)]" ref={emblaRef}>
                 <div className="flex">
                   {banners.map((banner: any, index: number) => (
                     <div 
@@ -264,7 +264,7 @@ export default function Home() {
                     onClick={() => emblaApi?.scrollTo(index)}
                     className={cn(
                       "w-2 h-2 rounded-full transition-colors",
-                      index === selectedBannerIndex ? "bg-primary" : "bg-muted"
+                      index === selectedBannerIndex ? "bg-primary" : "bg-white/30"
                     )}
                     data-testid={`button-banner-dot-${index}`}
                     aria-label={`배너 ${index + 1}번으로 이동`}
@@ -275,7 +275,7 @@ export default function Home() {
             </>
           ) : (
             // Fallback banner when no banners in database
-            <div className="overflow-hidden rounded-xl">
+            <div className="overflow-hidden rounded-2xl shadow-[0_12px_24px_rgba(0,0,0,0.6)]">
               <img 
                 src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400" 
                 alt="질주 배너" 
@@ -292,7 +292,7 @@ export default function Home() {
               <Button
                 key={category.id}
                 variant="ghost"
-                className="flex flex-col items-center gap-2 h-auto p-2"
+                className="flex flex-col items-center gap-2 h-auto p-2 hover:bg-white/10"
                 onClick={() => handleCategoryClick(category)}
                 data-testid={`button-category-${index}`}
               >
@@ -303,9 +303,8 @@ export default function Home() {
                 </div>
                 <span className={cn(
                   "text-xs",
-                  index === 0 ? "font-medium" : "text-muted-foreground"
-                )}
-                style={index === 0 ? { color: '#ff3366' } : undefined}>
+                  index === 0 ? "font-medium text-primary" : "text-white/70"
+                )}>
                   {category.name}
                 </span>
               </Button>
@@ -316,7 +315,7 @@ export default function Home() {
         {/* Partnership Posters (대형 제휴) */}
         <section className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">대형 제휴</h3>
+            <h3 className="text-lg font-semibold text-white">대형 제휴</h3>
           </div>
           
           {partnershipPosters.length > 0 ? (
@@ -333,7 +332,7 @@ export default function Home() {
                       <img
                         src={poster.imageUrl}
                         alt={poster.title}
-                        className="w-full aspect-square object-contain rounded-xl shadow-lg pointer-events-none"
+                        className="w-full aspect-square object-contain rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.6)] pointer-events-none"
                         draggable="false"
                       />
                     </div>
@@ -342,7 +341,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-white/50">
               <div className="text-4xl mb-4">🤝</div>
               <p className="text-sm">제휴 포스터가 없습니다</p>
             </div>
@@ -352,12 +351,12 @@ export default function Home() {
         {/* Black Friday */}
         <section className="px-4 py-4 pb-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold">블랙 프라이데이 (블프)</h3>
+            <h3 className="text-lg font-semibold text-white">블랙 프라이데이 (블프)</h3>
             <Button 
               variant="link" 
               size="sm"
               onClick={() => window.location.href = '/discover?sort=ending'}
-              className="text-sm text-primary font-medium p-0"
+              className="text-sm text-primary font-medium p-0 hover:text-primary/80"
               data-testid="button-view-all-ending"
             >
               전체보기
@@ -378,7 +377,7 @@ export default function Home() {
                 />
               ))
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-white/50">
                 <div className="text-4xl mb-4">🛍️</div>
                 <p className="text-sm">블랙 프라이데이 혜택이 없습니다</p>
               </div>
