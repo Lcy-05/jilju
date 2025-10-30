@@ -404,6 +404,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/:userId/stats", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.params.userId;
+
+      // Check if user can access these stats
+      if (req.user.id !== userId && !req.user.roles?.includes('ADMIN')) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const stats = await storage.getUserStats(userId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get user stats" });
+    }
+  });
+
   // Geographic routes
   app.get("/api/regions", async (req, res) => {
     try {

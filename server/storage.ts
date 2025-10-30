@@ -45,6 +45,7 @@ export interface IStorage {
   getUserRoles(userId: string): Promise<string[]>;
   getUserPermissions(userId: string): Promise<string[]>;
   getUserMerchantId(userId: string): Promise<string | null>;
+  getUserStats(userId: string): Promise<{ totalBenefits: number; bookmarks: number }>;
   
   // Benefit operations
   getBenefit(id: string): Promise<Benefit | undefined>;
@@ -190,6 +191,25 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return userRole?.merchantId || null;
+  }
+
+  async getUserStats(userId: string): Promise<{ totalBenefits: number; bookmarks: number }> {
+    // Get total active benefits count
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(benefits)
+      .where(eq(benefits.status, 'ACTIVE'));
+    
+    // Get user's bookmarks count
+    const [bookmarksResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(userBookmarks)
+      .where(eq(userBookmarks.userId, userId));
+    
+    return {
+      totalBenefits: totalResult?.count || 0,
+      bookmarks: bookmarksResult?.count || 0
+    };
   }
 
   // Benefit operations

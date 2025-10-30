@@ -4,6 +4,17 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
+**2025-10-30: Profile Page Simplification & User Stats Integration**
+- **Profile Page Redesign**: Simplified for regular users by removing merchant-specific features
+  - Removed "업주 전용" (Merchant-only) section and "권한 센터" (Permissions Center)
+  - Removed "발급 쿠폰" (Issued Coupons) and "사용 완료" (Used) stats
+  - Added real data integration: "전체 제휴" (Total Benefits) and "즐겨찾기" (Bookmarks) with live counts
+  - Reorganized support section: added "문의하기" (Inquiries), kept "고객센터" (Help Center), "약관 및 정책" (Terms & Policies), and "로그아웃" (Logout)
+- **New API Endpoint**: `GET /api/users/:userId/stats` returns `{ totalBenefits: number, bookmarks: number }`
+- **Storage Layer**: Added `getUserStats()` method to fetch active benefits count and user's bookmark count
+- **BenefitCard Typography**: Changed merchant name from `font-semibold` to `font-light` for Gmarket Sans Light 300 weight
+- **BenefitCard Layout Fix**: Converted horizontal layout from grid to flex to prevent text/image overlap in narrow viewports
+
 **2025-10-30: Custom Korean Typography & Design Refinements**
 - **Typography**: Gmarket Sans font family implemented with three weights (Light 300, Medium 500, Bold 700) for Korean text optimization
 - **Home Page**: Removed Black Friday (블프) section; partnership posters with reduced shadow (`shadow-[0_6px_12px_rgba(0,0,0,0.5)]`) and height limit (`max-h-[400px]`)
@@ -76,7 +87,7 @@ The application features a React 18 + Vite frontend and a Node.js + Express.js b
 - **New Database Tables:** `home_banners` (admin-editable carousel), `benefit_versions` (history), `event_logs` (analytics), `daily_merchant_kpis` (aggregated analytics).
 - **Updated Categories:** Simplified to 5 main categories (`뷰티`, `쇼핑`, `음식`, `카페`, `헬스`).
 - **Storage Layer Extensions:** CRUD for home banners, event logging, analytics retrieval.
-- **New Backend API Endpoints:** `/api/categories`, `/api/banners`, `/api/events`, `/api/analytics/merchant/:merchantId`.
+- **New Backend API Endpoints:** `/api/categories`, `/api/banners`, `/api/events`, `/api/analytics/merchant/:merchantId`, `/api/users/:userId/stats`.
 
 ## External Dependencies
 - **Database:** PostgreSQL (Neon-backed)
