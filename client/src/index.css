@@ -93,8 +93,11 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
     font-family: var(--font-sans);
+    background: linear-gradient(135deg, #000000 0%, #1a0a0a 25%, #2d1410 50%, #542712 75%, #7a3012 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 }
 
