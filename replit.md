@@ -8,11 +8,11 @@
 - **Typography**: Gmarket Sans font family implemented with three weights (Light 300, Medium 500, Bold 700) for Korean text optimization
 - **Home Page**: Removed Black Friday (블프) section; partnership posters with reduced shadow (`shadow-[0_6px_12px_rgba(0,0,0,0.5)]`) and height limit (`max-h-[400px]`)
 - **Discover Page**: Unified header/filter bar with shared dark background (`bg-black/40 backdrop-blur-md`), increased vertical padding (`pt-4 pb-4`)
-- **Global Background**: Black→reddish-brown gradient (`linear-gradient(135deg, #000000, #1a0a0a, #2d1410, #542712, #7a3012)`) applied to body with fixed attachment
+- **Global Background**: Solid dark brown color (#1a0a0a) applied to body for clean, minimalist aesthetic
 - **Primary Accent Color**: Changed from hot pink to pure red (#ff0000, `hsl(0, 100%, 50%)`) for all interactive elements, active tabs, and buttons
 - **Bottom Navigation**: Semi-transparent black background (`bg-black/50`) with backdrop-blur-[10px]; icons/text use red for active state, white/70 for inactive
-- **All Pages**: Consistent dark gradient background across all tabs (Home, Discover, Map, Saved, Profile)
-- **Design Goal**: "Dark floating cards on gradient" aesthetic with bold red accents and optimized Korean typography
+- **All Pages**: Consistent dark solid background across all tabs (Home, Discover, Map, Saved, Profile)
+- **Design Goal**: "Dark floating cards on solid background" aesthetic with bold red accents and optimized Korean typography
 
 **2025-10-17: BenefitCard Layout Refactor - Grid-Based Design**
 - **Absolute positioning eliminated**: Removed all absolute badge positioning (primary cause of overlap)
