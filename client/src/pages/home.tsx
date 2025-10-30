@@ -234,10 +234,10 @@ export default function Home() {
     <div className="min-h-screen pb-20">
       <main className="animate-fade-in pt-4">
         {/* Banner Carousel */}
-        <section className="px-4 pt-4">
+        <section className="px-2 pt-2">
           {banners.length > 0 ? (
             <>
-              <div className="overflow-hidden rounded-2xl shadow-[0_12px_24px_rgba(0,0,0,0.6)]" ref={emblaRef}>
+              <div className="overflow-hidden rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.7)]" ref={emblaRef}>
                 <div className="flex">
                   {banners.map((banner: any, index: number) => (
                     <div 
@@ -275,7 +275,7 @@ export default function Home() {
             </>
           ) : (
             // Fallback banner when no banners in database
-            <div className="overflow-hidden rounded-2xl shadow-[0_12px_24px_rgba(0,0,0,0.6)]">
+            <div className="overflow-hidden rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.7)]">
               <img 
                 src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400" 
                 alt="질주 배너" 
