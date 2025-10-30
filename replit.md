@@ -4,6 +4,16 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
+**2025-10-30: Splash Screen Launch Animation**
+- **SplashScreen Component**: Created dedicated splash screen for app launch
+  - Framer Motion animations: fade-in (0.5s) → display (2s) → fade-out (0.5s)
+  - Dark background (#1a0a0a) with red (#ff0000) "질주" logo
+  - Subtitle: "제주의 모든 혜택" with delayed fade-in
+  - Scale animation on logo (0.8 → 1.0) with custom easing curve
+  - z-index: 9999 to overlay entire app during launch
+- **App.tsx Integration**: useState-based splash visibility control with conditional rendering
+- **User Experience**: Smooth 2-second launch sequence before main router activation
+
 **2025-10-30: Profile Page Simplification & User Stats Integration**
 - **Profile Page Redesign**: Simplified for regular users by removing merchant-specific features
   - Removed "업주 전용" (Merchant-only) section and "권한 센터" (Permissions Center)
