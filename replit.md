@@ -4,14 +4,15 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
-**2025-10-30: Dark Gradient Theme Redesign**
+**2025-10-30: Dark Gradient Theme & Red Accent Color**
 - **Global Background**: Black→reddish-brown gradient (`linear-gradient(135deg, #000000, #1a0a0a, #2d1410, #542712, #7a3012)`) applied to body with fixed attachment
-- **Home Page**: Removed white/gray section boxes; banners with rounded-2xl + shadow; section titles in white; category labels in light tones
-- **Bottom Navigation**: Semi-transparent black background (`bg-black/50`) with backdrop-blur-[10px]; border-white/10; icons/text in white/70 (inactive) and primary color (active)
+- **Home Page Banners**: Full-width layout (px-2), rounded-2xl with enhanced shadow (0_16px_32px, 70% opacity) for floating card effect
+- **Primary Accent Color**: Changed from hot pink to pure red (#ff0000, `hsl(0, 100%, 50%)`) for all interactive elements, active tabs, and buttons
+- **Bottom Navigation**: Semi-transparent black background (`bg-black/50`) with backdrop-blur-[10px]; icons/text use red for active state, white/70 for inactive
 - **Discover Page**: Header with bg-black/40 + backdrop-blur-md; result count text in white; "지금 사용 가능" label in white/90
-- **Saved/Profile Pages**: Removed bg-background; login prompt titles in white, descriptions in white/60
+- **Saved/Profile Pages**: Removed bg-background; login prompt titles in white, descriptions in white/60; login buttons in red
 - **All Pages**: Consistent dark gradient background across all tabs (Home, Discover, Map, Saved, Profile)
-- **Design Goal**: "Dark floating cards on gradient" aesthetic; functionality/data flow unchanged (skin replacement)
+- **Design Goal**: "Dark floating cards on gradient" aesthetic with bold red accents; functionality/data flow unchanged (pure visual redesign)
 
 **2025-10-17: BenefitCard Layout Refactor - Grid-Based Design**
 - **Absolute positioning eliminated**: Removed all absolute badge positioning (primary cause of overlap)

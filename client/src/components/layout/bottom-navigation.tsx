@@ -50,19 +50,19 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
               variant="ghost"
               size="sm"
               onClick={() => setLocation(path)}
-              className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 h-full rounded-none hover:bg-white/10",
-                isActive ? "text-primary" : "text-white/70"
-              )}
+              className="flex-1 flex flex-col items-center justify-center gap-1 h-full rounded-none hover:bg-white/10"
               data-testid={`button-tab-${id}`}
             >
               <Icon 
-                className="w-6 h-6" 
+                className={cn(
+                  "w-6 h-6",
+                  isActive ? "text-primary" : "text-white/70"
+                )}
                 fill={isActive ? "currentColor" : "none"}
               />
               <span className={cn(
                 "text-xs",
-                isActive ? "font-medium" : ""
+                isActive ? "font-medium text-primary" : "text-white/70"
               )}>
                 {label}
               </span>
