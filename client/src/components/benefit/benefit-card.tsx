@@ -136,7 +136,7 @@ export function BenefitCard({
               
               {/* 상점명 */}
               {showMerchant && benefit.merchant && (
-                <p className="text-sm md:text-base font-semibold text-foreground mb-2" data-testid="text-merchant-name">
+                <p className="text-sm md:text-base font-light text-foreground mb-2" data-testid="text-merchant-name">
                   {benefit.merchant.name}
                 </p>
               )}
@@ -269,7 +269,7 @@ export function BenefitCard({
         
         {/* 상점명 */}
         {showMerchant && benefit.merchant && (
-          <p className="text-sm md:text-base font-semibold text-foreground mb-2" data-testid="text-merchant-name">
+          <p className="text-sm md:text-base font-light text-foreground mb-2" data-testid="text-merchant-name">
             {benefit.merchant.name}
           </p>
         )}
