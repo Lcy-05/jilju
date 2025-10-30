@@ -203,7 +203,8 @@
 
 /* Embla Carousel for Partnership Posters */
 .embla-partners {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .embla__container-partners {

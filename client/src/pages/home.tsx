@@ -231,7 +231,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-32">
       <main className="animate-fade-in pt-4">
         {/* Banner Carousel */}
         <section className="px-2 pt-2">
@@ -313,14 +313,14 @@ export default function Home() {
         </section>
 
         {/* Partnership Posters (대형 제휴) */}
-        <section className="px-4 py-4">
+        <section className="px-4 py-4 pb-32">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-white">대형 제휴</h3>
           </div>
           
           {partnershipPosters.length > 0 ? (
-            <div className="overflow-hidden -mx-4">
-              <div className="embla-partners" ref={partnersEmblaRef}>
+            <div className="overflow-visible -mx-4">
+              <div className="embla-partners pb-8" ref={partnersEmblaRef}>
                 <div className="embla__container-partners flex gap-4 pl-4 pr-4">
                   {partnershipPosters.map((poster: any) => (
                     <div
@@ -332,7 +332,7 @@ export default function Home() {
                       <img
                         src={poster.imageUrl}
                         alt={poster.title}
-                        className="w-full aspect-square object-contain rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.6)] pointer-events-none"
+                        className="w-full aspect-square object-contain rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.6)] pointer-events-none max-h-[400px]"
                         draggable="false"
                       />
                     </div>
@@ -346,43 +346,6 @@ export default function Home() {
               <p className="text-sm">제휴 포스터가 없습니다</p>
             </div>
           )}
-        </section>
-
-        {/* Black Friday */}
-        <section className="px-4 py-4 pb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-white">블랙 프라이데이 (블프)</h3>
-            <Button 
-              variant="link" 
-              size="sm"
-              onClick={() => window.location.href = '/discover?sort=ending'}
-              className="text-sm text-primary font-medium p-0 hover:text-primary/80"
-              data-testid="button-view-all-ending"
-            >
-              전체보기
-            </Button>
-          </div>
-          
-          <div className="space-y-3">
-            {endingItems.length > 0 ? (
-              endingItems.slice(0, 3).map((benefit: Benefit) => (
-                <BenefitCard
-                  key={benefit.id}
-                  benefit={benefit}
-                  variant="horizontal"
-                  onClick={() => handleBenefitClick(benefit)}
-                  onBookmark={() => handleBookmark(benefit.id)}
-                  isBookmarked={bookmarkedBenefits.has(benefit.id)}
-                  showMerchant={true}
-                />
-              ))
-            ) : (
-              <div className="text-center py-8 text-white/50">
-                <div className="text-4xl mb-4">🛍️</div>
-                <p className="text-sm">블랙 프라이데이 혜택이 없습니다</p>
-              </div>
-            )}
-          </div>
         </section>
       </main>
 
