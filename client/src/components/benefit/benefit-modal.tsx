@@ -40,6 +40,13 @@ export function BenefitModal({
 
   const isBookmarked = bookmarkStatus?.isBookmarked ?? false;
 
+  // Fetch merchant hours
+  const merchantId = merchant?.id;
+  const { data: merchantHoursData } = useQuery<{ hours: Array<{ dayOfWeek: number; openTime: string; closeTime: string; isOpen: boolean }> }>({
+    queryKey: merchantId ? [`/api/merchants/${merchantId}/hours`] : ['merchant-hours-placeholder'],
+    enabled: isOpen && !!merchantId,
+  });
+
   // Log view event when modal opens
   useEffect(() => {
     if (isOpen && benefit && isAuthenticated) {
@@ -245,7 +252,26 @@ export function BenefitModal({
                 <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <div>
                   <span className="font-medium">사용 가능 시간</span>
-                  <p className="text-muted-foreground">매일 09:00 - 22:00</p>
+                  <p className="text-muted-foreground">
+                    {merchantHoursData?.hours && merchantHoursData.hours.length > 0 ? (
+                      (() => {
+                        const hours = merchantHoursData.hours;
+                        const weekdayHours = hours.filter(h => h.dayOfWeek >= 1 && h.dayOfWeek <= 5 && h.isOpen);
+                        const weekendHours = hours.filter(h => (h.dayOfWeek === 0 || h.dayOfWeek === 6) && h.isOpen);
+                        
+                        // Check if all days have same hours
+                        const allSame = hours.every(h => h.isOpen && h.openTime === hours[0].openTime && h.closeTime === hours[0].closeTime);
+                        
+                        if (allSame && hours[0].isOpen) {
+                          return `매일 ${hours[0].openTime} - ${hours[0].closeTime}`;
+                        } else if (weekdayHours.length > 0 && weekdayHours.every(h => h.openTime === weekdayHours[0].openTime && h.closeTime === weekdayHours[0].closeTime)) {
+                          return `평일 ${weekdayHours[0].openTime} - ${weekdayHours[0].closeTime}`;
+                        } else {
+                          return '상점 정보 참조';
+                        }
+                      })()
+                    ) : '매일 09:00 - 22:00'}
+                  </p>
                 </div>
               </div>
               
