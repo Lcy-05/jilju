@@ -83,34 +83,34 @@ export default function Profile() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <Avatar className="w-20 h-20">
+              <Avatar className="w-20 h-20 shrink-0">
                 <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                   {user?.name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-xl font-bold" data-testid="text-user-name">
+                  <h3 className="text-xl font-bold truncate" data-testid="text-user-name">
                     {user?.name || '사용자'}
                   </h3>
                   {user?.roles?.includes('MERCHANT_OWNER') && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs shrink-0">
                       업주
                     </Badge>
                   )}
                   {user?.roles?.includes('OPERATOR') && (
-                    <Badge className="text-xs">
+                    <Badge className="text-xs shrink-0">
                       운영자
                     </Badge>
                   )}
                   {user?.roles?.includes('ADMIN') && (
-                    <Badge variant="destructive" className="text-xs">
+                    <Badge variant="destructive" className="text-xs shrink-0">
                       관리자
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground" data-testid="text-user-email">
+                <p className="text-sm text-muted-foreground truncate" data-testid="text-user-email">
                   {user?.email}
                 </p>
               </div>
@@ -119,7 +119,7 @@ export default function Profile() {
                 variant="ghost"
                 size="sm"
                 onClick={handleEditProfile}
-                className="p-2"
+                className="p-2 shrink-0"
                 data-testid="button-edit-profile"
               >
                 <Settings className="w-5 h-5" />
