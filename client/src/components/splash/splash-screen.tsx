@@ -10,10 +10,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // GIF 애니메이션 2.9초 후 페이드아웃 시작
+    // GIF 애니메이션 2.8초 후 페이드아웃 시작
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 2900);
+    }, 2800);
 
     return () => clearTimeout(timer);
   }, []);
