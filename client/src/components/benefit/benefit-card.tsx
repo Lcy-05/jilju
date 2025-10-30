@@ -89,10 +89,10 @@ export function BenefitCard({
         data-testid={`card-benefit-${benefit.id}`}
       >
         <CardContent className="p-3">
-          {/* Grid 3열 구조: 이미지 | 컨텐츠 | 북마크 */}
-          <div className="grid grid-cols-[80px_1fr_auto] gap-3 items-start">
+          {/* Flex 구조: 이미지 | 컨텐츠 | 북마크 */}
+          <div className="flex gap-3 items-start">
             {/* Thumbnail Image */}
-            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
               {benefit.images && benefit.images.length > 0 ? (
                 <img 
                   src={benefit.images[0]} 
@@ -113,9 +113,9 @@ export function BenefitCard({
             </div>
             
             {/* Content - 우측 북마크 영역 예약됨 */}
-            <div className="min-w-0 flex-1">
+            <div className="flex-1 min-w-0">
               {/* 배지들 - 겹침 방지 */}
-              <div className="flex items-start gap-1 md:gap-1.5 mb-1.5 flex-wrap max-w-[calc(100%-2rem)]">
+              <div className="flex items-start gap-1 md:gap-1.5 mb-1.5 flex-wrap">
                 {getBenefitBadge()}
                 {showNewBadge && (
                   <Badge className="bg-red-500 text-white text-[10px] md:text-xs font-semibold px-1.5 md:px-2 py-0.5 whitespace-nowrap flex-shrink-0">
@@ -183,7 +183,7 @@ export function BenefitCard({
                 e.stopPropagation();
                 onBookmark?.();
               }}
-              className="p-1 h-auto"
+              className="p-1 h-auto shrink-0"
               data-testid="button-bookmark"
             >
               <Bookmark 
