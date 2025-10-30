@@ -1,4 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('@assets/GmarketSansLight_1761826443380.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('@assets/GmarketSansMedium_1761826443384.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('@assets/GmarketSansBold_1761826443386.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,8 +57,8 @@
   --sidebar-border: hsl(45, 15%, 80%);
   --sidebar-ring: hsl(0, 100%, 50%);
   --radius: 0.8rem;
-  --font-sans: 'Poppins', sans-serif;
-  --font-serif: 'Poppins', sans-serif;
+  --font-sans: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-serif: 'Gmarket Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: Menlo, monospace;
   --spacing: 0.25rem;
   --tracking-normal: 0em;
