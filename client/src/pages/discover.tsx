@@ -270,9 +270,9 @@ export default function Discover() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen pb-20">
       {/* 통합 헤더 블록 - sticky 컨테이너 */}
-      <div className="sticky top-0 z-50 bg-card shadow-none border-b border-border">
+      <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-md shadow-none border-b border-white/10">
         <Header
           onSearchSubmit={handleSearchSubmit}
           onSearchChange={setSearchQuery}
@@ -410,7 +410,7 @@ export default function Discover() {
             </SheetContent>
           </Sheet>
 
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm text-white/90">
             <Checkbox
               id="now-open-quick"
               checked={searchOptions.nowOpen}
@@ -419,7 +419,7 @@ export default function Discover() {
                 // URL will be updated by useEffect
               }}
             />
-            <label htmlFor="now-open-quick">지금 사용 가능</label>
+            <label htmlFor="now-open-quick" className="text-white/90">지금 사용 가능</label>
           </div>
         </div>
       </section>
@@ -427,7 +427,7 @@ export default function Discover() {
 
       {/* Results */}
       <section className="px-4 pt-6 pb-4">
-        <div className="text-base font-medium text-foreground mb-4" data-testid="text-results-count">
+        <div className="text-base font-medium text-white mb-4" data-testid="text-results-count">
           총 {totalCount.toLocaleString()}개의 혜택
         </div>
         
@@ -461,8 +461,8 @@ export default function Discover() {
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-lg font-semibold mb-2">검색 결과가 없습니다</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <h3 className="text-lg font-semibold mb-2 text-white">검색 결과가 없습니다</h3>
+              <p className="text-sm text-white/60 mb-4">
                 다른 키워드나 필터로 다시 시도해보세요
               </p>
               <Button 

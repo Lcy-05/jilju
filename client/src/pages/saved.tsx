@@ -75,12 +75,12 @@ export default function Saved() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="min-h-screen pb-20">
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="text-6xl mb-4">🔐</div>
-            <h2 className="text-xl font-bold mb-2">로그인이 필요합니다</h2>
-            <p className="text-sm text-muted-foreground mb-4">
+            <h2 className="text-xl font-bold mb-2 text-white">로그인이 필요합니다</h2>
+            <p className="text-sm text-white/60 mb-4">
               저장된 혜택을 보려면 로그인하세요
             </p>
             <Button onClick={() => window.location.href = '/login'}>
@@ -97,7 +97,7 @@ export default function Saved() {
   const recentViews = (recentViewsData as any)?.benefits || [];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen pb-20">
       <div className="px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">

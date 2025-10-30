@@ -67,12 +67,12 @@ export default function Profile() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="min-h-screen pb-20">
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="text-6xl mb-4">👋</div>
-            <h2 className="text-xl font-bold mb-2">로그인이 필요합니다</h2>
-            <p className="text-sm text-muted-foreground mb-4">
+            <h2 className="text-xl font-bold mb-2 text-white">로그인이 필요합니다</h2>
+            <p className="text-sm text-white/60 mb-4">
               프로필을 보려면 로그인하세요
             </p>
             <Button onClick={() => window.location.href = '/login'}>
@@ -88,7 +88,7 @@ export default function Profile() {
   const stats = (userStats as any) || { bookmarks: 0, coupons: 0, used: 0 };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen pb-20">
       <main className="px-4 py-6 space-y-6">
         {/* Profile Header */}
         <Card>
