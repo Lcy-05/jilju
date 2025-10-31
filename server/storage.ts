@@ -240,6 +240,11 @@ export class DatabaseStorage implements IStorage {
       conditions.push(inArray(merchants.categoryId, filters.categories));
     }
     
+    // Region filter
+    if (filters?.regionId) {
+      conditions.push(eq(merchants.regionId, filters.regionId));
+    }
+    
     // Type filter
     if (filters?.types && filters.types.length > 0) {
       conditions.push(inArray(benefits.type, filters.types));
@@ -670,6 +675,27 @@ export class DatabaseStorage implements IStorage {
 
   async searchBenefits(query: string, options?: any): Promise<Benefit[]> {
     // Simple text search with merchant info
+    const conditions = [
+      eq(benefits.status, 'ACTIVE'),
+      eq(merchants.status, 'ACTIVE'),
+      sql`${benefits.title} ILIKE ${`%${query}%`}`
+    ];
+    
+    // Add region filter if provided
+    if (options?.regionId) {
+      conditions.push(eq(merchants.regionId, options.regionId));
+    }
+    
+    // Add category filter if provided
+    if (options?.categories && options.categories.length > 0) {
+      conditions.push(inArray(merchants.categoryId, options.categories));
+    }
+    
+    // Add type filter if provided
+    if (options?.types && options.types.length > 0) {
+      conditions.push(inArray(benefits.type, options.types));
+    }
+    
     const results = await db
       .select({
         benefit: benefits,
@@ -677,13 +703,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(benefits)
       .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
-      .where(
-        and(
-          eq(benefits.status, 'ACTIVE'),
-          eq(merchants.status, 'ACTIVE'),
-          sql`${benefits.title} ILIKE ${`%${query}%`}`
-        )
-      )
+      .where(and(...conditions))
       .limit(100);
     
     // Flatten the results
