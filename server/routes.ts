@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertUserSchema, insertBenefitSchema, insertMerchantSchema, createPartnershipPosterSchema, updatePartnershipPosterSchema } from "@shared/schema";
+import { insertUserSchema, insertBenefitSchema, insertMerchantSchema, createPartnershipPosterSchema, updatePartnershipPosterSchema, insertInquirySchema } from "@shared/schema";
 import { authenticateToken, requireRole, hashPassword, comparePassword, generateToken } from "./auth";
 import { searchService } from "./services/search";
 import { naverMapsService } from "./services/naver-maps";
@@ -850,6 +850,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ error: "Failed to get analytics" });
+    }
+  });
+
+  // Inquiry routes
+  app.post("/api/inquiries", authenticateToken, async (req, res) => {
+    try {
+      const inquiryData = insertInquirySchema.parse({
+        ...req.body,
+        userId: req.user?.id
+      });
+      
+      const inquiry = await storage.createInquiry(inquiryData);
+      res.status(201).json({ inquiry });
+    } catch (error) {
+      console.error("Create inquiry error:", error);
+      res.status(400).json({ error: "Invalid inquiry data", details: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/inquiries", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const { status } = req.query;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const inquiries = await storage.getUserInquiries(userId);
+      res.json({ inquiries });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get inquiries" });
+    }
+  });
+
+  app.get("/api/inquiries/:id", authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const inquiry = await storage.getInquiry(id);
+      
+      if (!inquiry) {
+        return res.status(404).json({ error: "Inquiry not found" });
+      }
+      
+      // Check if user owns the inquiry or is admin
+      if (inquiry.userId !== req.user?.id && !req.user?.roles?.includes('ADMIN')) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      res.json({ inquiry });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get inquiry" });
+    }
+  });
+
+  // Admin inquiry management routes
+  app.get("/api/admin/inquiries", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { status, userId } = req.query;
+      const filters: any = {};
+      
+      if (status && typeof status === 'string') {
+        filters.status = status;
+      }
+      if (userId && typeof userId === 'string') {
+        filters.userId = userId;
+      }
+      
+      const inquiries = await storage.getAllInquiries(filters);
+      res.json({ inquiries });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get inquiries" });
+    }
+  });
+
+  app.patch("/api/admin/inquiries/:id/response", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { response, status } = req.body;
+      
+      if (!response) {
+        return res.status(400).json({ error: "Response is required" });
+      }
+      
+      const responderId = req.user?.id;
+      if (!responderId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const inquiry = await storage.updateInquiryResponse(
+        id, 
+        response, 
+        responderId,
+        status || 'RESOLVED'
+      );
+      
+      res.json({ inquiry });
+    } catch (error) {
+      console.error("Update inquiry response error:", error);
+      res.status(500).json({ error: "Failed to update inquiry response" });
+    }
+  });
+
+  app.patch("/api/admin/inquiries/:id/status", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ error: "Status is required" });
+      }
+      
+      const inquiry = await storage.updateInquiryStatus(id, status);
+      res.json({ inquiry });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update inquiry status" });
     }
   });
 

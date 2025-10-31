@@ -390,6 +390,24 @@ export const merchantInvites = pgTable("merchant_invites", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// User inquiries (customer support)
+export const inquiries = pgTable("inquiries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  status: text("status").notNull().default("PENDING"), // PENDING, IN_PROGRESS, RESOLVED, CLOSED
+  response: text("response"),
+  responderId: uuid("responder_id").references(() => users.id),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  userIdx: index("inquiries_user_idx").on(table.userId),
+  statusIdx: index("inquiries_status_idx").on(table.status),
+  createdAtIdx: index("inquiries_created_at_idx").on(table.createdAt)
+}));
+
 // Admin audit logs
 export const adminAuditLogs = pgTable("admin_audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -413,7 +431,13 @@ export const usersRelations = relations(users, ({ many }) => ({
   bookmarks: many(userBookmarks),
   activities: many(userActivity),
   leads: many(leads),
-  auditLogs: many(adminAuditLogs)
+  auditLogs: many(adminAuditLogs),
+  inquiries: many(inquiries)
+}));
+
+export const inquiriesRelations = relations(inquiries, ({ one }) => ({
+  user: one(users, { fields: [inquiries.userId], references: [users.id] }),
+  responder: one(users, { fields: [inquiries.responderId], references: [users.id] })
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -456,6 +480,8 @@ export const insertPartnershipPosterSchema = createInsertSchema(partnershipPoste
 export const insertEventLogSchema = createInsertSchema(eventLogs).omit({ id: true, createdAt: true });
 export const insertBenefitVersionSchema = createInsertSchema(benefitVersions).omit({ id: true, createdAt: true, publishedAt: true });
 export const insertMerchantHoursSchema = createInsertSchema(merchantHours).omit({ id: true });
+export const insertInquirySchema = createInsertSchema(inquiries).omit({ id: true, createdAt: true, updatedAt: true, respondedAt: true });
+export const updateInquiryResponseSchema = createInsertSchema(inquiries).pick({ response: true, responderId: true, status: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -482,3 +508,6 @@ export type InsertBenefitVersion = z.infer<typeof insertBenefitVersionSchema>;
 export type DailyMerchantKpi = typeof dailyMerchantKpis.$inferSelect;
 export type MerchantHours = typeof merchantHours.$inferSelect;
 export type InsertMerchantHours = z.infer<typeof insertMerchantHoursSchema>;
+export type Inquiry = typeof inquiries.$inferSelect;
+export type InsertInquiry = z.infer<typeof insertInquirySchema>;
+export type UpdateInquiryResponse = z.infer<typeof updateInquiryResponseSchema>;

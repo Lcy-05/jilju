@@ -357,39 +357,94 @@ function AdminConsole() {
             </Card>
           </div>
 
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>최근 활동</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">강남 카페 모카 승인 완료</p>
-                    <p className="text-xs text-muted-foreground">2시간 전</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>최근 활동</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">강남 카페 모카 승인 완료</p>
+                      <p className="text-xs text-muted-foreground">2시간 전</p>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center gap-4">
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">신사 베이커리 보완 요청</p>
+                      <p className="text-xs text-muted-foreground">4시간 전</p>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center gap-4">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">청담 헤어살롱 신규 신청</p>
+                      <p className="text-xs text-muted-foreground">6시간 전</p>
+                    </div>
                   </div>
                 </div>
-                <Separator />
-                <div className="flex items-center gap-4">
-                  <AlertCircle className="w-5 h-5 text-yellow-500" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">신사 베이커리 보완 요청</p>
-                    <p className="text-xs text-muted-foreground">4시간 전</p>
-                  </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Access */}
+            <Card>
+              <CardHeader>
+                <CardTitle>빠른 접근</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-4"
+                    onClick={() => window.location.href = '/admin/inquiries'}
+                    data-testid="button-inquiries-quick-access"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <MessageSquare className="w-5 h-5 text-primary" />
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium">문의 관리</p>
+                        <p className="text-xs text-muted-foreground">사용자 문의 확인 및 답변</p>
+                      </div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-4"
+                    onClick={() => setActiveTab('applications')}
+                    data-testid="button-applications-quick-access"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium">신청서 관리</p>
+                        <p className="text-xs text-muted-foreground">매장 신청서 검토 및 승인</p>
+                      </div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-4"
+                    onClick={() => setActiveTab('benefits')}
+                    data-testid="button-benefits-quick-access"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <Gift className="w-5 h-5 text-green-600" />
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium">혜택 관리</p>
+                        <p className="text-xs text-muted-foreground">등록된 혜택 확인 및 관리</p>
+                      </div>
+                    </div>
+                  </Button>
                 </div>
-                <Separator />
-                <div className="flex items-center gap-4">
-                  <FileText className="w-5 h-5 text-blue-500" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">청담 헤어살롱 신규 신청</p>
-                    <p className="text-xs text-muted-foreground">6시간 전</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Applications Kanban Tab */}

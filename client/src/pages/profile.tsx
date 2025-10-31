@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { 
   User, 
   Settings, 
@@ -25,6 +31,13 @@ import { useAuth } from '@/lib/auth';
 import { API_ENDPOINTS, APP_CONFIG } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+
+// Form schema for inquiry
+const inquirySchema = z.object({
+  title: z.string().min(1, '제목을 입력해주세요').max(200, '제목은 200자 이하로 입력해주세요'),
+  content: z.string().min(10, '내용은 최소 10자 이상 입력해주세요').max(2000, '내용은 2000자 이하로 입력해주세요'),
+});
 
 export default function Profile() {
   const { user, logout, isAuthenticated, hasRole } = useAuth();
@@ -32,6 +45,7 @@ export default function Profile() {
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [isCreatorsModalOpen, setIsCreatorsModalOpen] = useState(false);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
+  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
   // Get user stats
@@ -39,6 +53,39 @@ export default function Profile() {
     queryKey: [`/api/users/${user?.id}/stats`],
     enabled: isAuthenticated && !!user,
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Inquiry form
+  const inquiryForm = useForm<z.infer<typeof inquirySchema>>({
+    resolver: zodResolver(inquirySchema),
+    defaultValues: {
+      title: '',
+      content: '',
+    },
+  });
+
+  // Create inquiry mutation
+  const createInquiryMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof inquirySchema>) => {
+      const response = await apiRequest('POST', '/api/inquiries', data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '문의 접수 완료',
+        description: '문의가 성공적으로 접수되었습니다. 빠른 시일 내에 답변드리겠습니다.',
+      });
+      setIsInquiryModalOpen(false);
+      inquiryForm.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/inquiries'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: '문의 접수 실패',
+        description: error.message || '문의를 접수하는 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    },
   });
 
   // Check notification permission on mount
@@ -122,7 +169,7 @@ export default function Profile() {
   };
 
   const handleOpenInquiry = () => {
-    console.log('Open inquiry - to be implemented');
+    setIsInquiryModalOpen(true);
   };
 
   const handleOpenHelp = () => {
@@ -458,6 +505,79 @@ export default function Profile() {
               <p className="text-sm text-muted-foreground">제주대학교 58대 총학생회 선거운동본부</p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inquiry Modal */}
+      <Dialog open={isInquiryModalOpen} onOpenChange={setIsInquiryModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>문의하기</DialogTitle>
+          <DialogDescription>
+            궁금한 사항이나 문의 내용을 남겨주세요. 빠르게 답변드리겠습니다.
+          </DialogDescription>
+          
+          <Form {...inquiryForm}>
+            <form 
+              onSubmit={inquiryForm.handleSubmit((data) => createInquiryMutation.mutate(data))}
+              className="space-y-4"
+            >
+              <FormField
+                control={inquiryForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>제목</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="문의 제목을 입력하세요" 
+                        {...field}
+                        data-testid="input-inquiry-title"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={inquiryForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>내용</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="문의 내용을 자세히 작성해주세요 (최소 10자)" 
+                        className="min-h-[150px] resize-none"
+                        {...field}
+                        data-testid="textarea-inquiry-content"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex gap-2 justify-end pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsInquiryModalOpen(false)}
+                  disabled={createInquiryMutation.isPending}
+                  data-testid="button-cancel-inquiry"
+                >
+                  취소
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createInquiryMutation.isPending}
+                  data-testid="button-submit-inquiry"
+                >
+                  {createInquiryMutation.isPending ? '접수 중...' : '문의 접수'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

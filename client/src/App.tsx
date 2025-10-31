@@ -19,6 +19,7 @@ import MerchantDashboard from "@/pages/merchant/dashboard";
 import MerchantStore from "@/pages/merchant/store";
 import MerchantBenefits from "@/pages/merchant/benefits";
 import AdminConsole from "@/pages/admin/console";
+import AdminInquiries from "@/pages/admin-inquiries";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/merchant/store" component={MerchantStore} />
       <Route path="/merchant/benefits" component={MerchantBenefits} />
       <Route path="/admin" component={AdminConsole} />
+      <Route path="/admin/inquiries" component={AdminInquiries} />
       <Route component={NotFound} />
     </Switch>
   );

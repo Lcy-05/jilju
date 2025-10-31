@@ -14,6 +14,7 @@ import {
   dailyMerchantKpis,
   benefitVersions,
   merchantHours,
+  inquiries,
   type User,
   type InsertUser,
   type Merchant,
@@ -30,7 +31,10 @@ import {
   type InsertEventLog,
   type DailyMerchantKpi,
   type BenefitVersion,
-  type MerchantHours
+  type MerchantHours,
+  type Inquiry,
+  type InsertInquiry,
+  type UpdateInquiryResponse
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte, inArray } from "drizzle-orm";
@@ -124,6 +128,14 @@ export interface IStorage {
   getMerchantApplicationsByStatus(status: string): Promise<MerchantApplication[]>;
   approveMerchantApplication(applicationId: string, reviewerId: string): Promise<void>;
   rejectMerchantApplication(applicationId: string, reviewerId: string, notes: string): Promise<void>;
+  
+  // Inquiry operations
+  createInquiry(data: InsertInquiry): Promise<Inquiry>;
+  getInquiry(id: string): Promise<Inquiry | undefined>;
+  getAllInquiries(filters?: { status?: string; userId?: string }): Promise<Inquiry[]>;
+  getUserInquiries(userId: string): Promise<Inquiry[]>;
+  updateInquiryResponse(id: string, response: string, responderId: string, status?: string): Promise<Inquiry>;
+  updateInquiryStatus(id: string, status: string): Promise<Inquiry>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1051,6 +1063,81 @@ export class DatabaseStorage implements IStorage {
       ctr,
       conversionRate
     };
+  }
+
+  // Inquiry operations
+  async createInquiry(data: InsertInquiry): Promise<Inquiry> {
+    const [inquiry] = await db
+      .insert(inquiries)
+      .values(data)
+      .returning();
+    return inquiry;
+  }
+
+  async getInquiry(id: string): Promise<Inquiry | undefined> {
+    const [inquiry] = await db
+      .select()
+      .from(inquiries)
+      .where(eq(inquiries.id, id));
+    return inquiry || undefined;
+  }
+
+  async getAllInquiries(filters?: { status?: string; userId?: string }): Promise<Inquiry[]> {
+    const conditions = [];
+    
+    if (filters?.status) {
+      conditions.push(eq(inquiries.status, filters.status));
+    }
+    if (filters?.userId) {
+      conditions.push(eq(inquiries.userId, filters.userId));
+    }
+    
+    const query = conditions.length > 0
+      ? db.select().from(inquiries).where(and(...conditions))
+      : db.select().from(inquiries);
+    
+    const results = await query.orderBy(desc(inquiries.createdAt));
+    return results;
+  }
+
+  async getUserInquiries(userId: string): Promise<Inquiry[]> {
+    const results = await db
+      .select()
+      .from(inquiries)
+      .where(eq(inquiries.userId, userId))
+      .orderBy(desc(inquiries.createdAt));
+    return results;
+  }
+
+  async updateInquiryResponse(id: string, response: string, responderId: string, status?: string): Promise<Inquiry> {
+    const updateData: any = {
+      response,
+      responderId,
+      respondedAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (status) {
+      updateData.status = status;
+    }
+
+    const [inquiry] = await db
+      .update(inquiries)
+      .set(updateData)
+      .where(eq(inquiries.id, id))
+      .returning();
+    
+    return inquiry;
+  }
+
+  async updateInquiryStatus(id: string, status: string): Promise<Inquiry> {
+    const [inquiry] = await db
+      .update(inquiries)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(inquiries.id, id))
+      .returning();
+    
+    return inquiry;
   }
 }
 
