@@ -323,8 +323,8 @@ export function BenefitModal({
                       />
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                         <div className="bg-white/90 px-4 py-2 rounded-lg flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          <span className="text-sm font-medium">지도에서 보기</span>
+                          <MapPin className="w-4 h-4 text-black/90" />
+                          <span className="text-sm font-medium text-black/90">지도에서 보기</span>
                         </div>
                       </div>
                     </>
