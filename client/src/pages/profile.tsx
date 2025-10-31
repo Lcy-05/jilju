@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { Button } from '@/components/ui/button';
@@ -24,12 +24,15 @@ import {
 import { useAuth } from '@/lib/auth';
 import { API_ENDPOINTS, APP_CONFIG } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Profile() {
   const { user, logout, isAuthenticated, hasRole } = useAuth();
+  const { toast } = useToast();
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [isCreatorsModalOpen, setIsCreatorsModalOpen] = useState(false);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
   // Get user stats
   const { data: userStats } = useQuery({
@@ -37,6 +40,13 @@ export default function Profile() {
     enabled: isAuthenticated && !!user,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Check notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -47,8 +57,68 @@ export default function Profile() {
     console.log('Edit profile - to be implemented');
   };
 
-  const handleOpenNotifications = () => {
-    console.log('Open notifications - to be implemented');
+  const handleOpenNotifications = async () => {
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+      toast({
+        title: '알림 기능 미지원',
+        description: '현재 브라우저에서는 알림 기능을 지원하지 않습니다.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // If already granted, show success message
+    if (Notification.permission === 'granted') {
+      toast({
+        title: '알림이 이미 허용되어 있습니다',
+        description: '질주의 새로운 혜택과 소식을 받아보실 수 있습니다.',
+      });
+      return;
+    }
+
+    // If already denied, inform user
+    if (Notification.permission === 'denied') {
+      toast({
+        title: '알림이 차단되어 있습니다',
+        description: '브라우저 설정에서 알림 권한을 허용해주세요.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Request permission
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+
+      if (permission === 'granted') {
+        toast({
+          title: '알림 설정 완료',
+          description: '질주의 새로운 혜택과 소식을 받아보실 수 있습니다.',
+        });
+
+        // Send a test notification
+        new Notification('질주 알림 설정 완료', {
+          body: '제주의 모든 혜택을 놓치지 마세요!',
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+        });
+      } else if (permission === 'denied') {
+        toast({
+          title: '알림 설정 거부됨',
+          description: '나중에 브라우저 설정에서 변경할 수 있습니다.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Notification permission error:', error);
+      toast({
+        title: '알림 설정 실패',
+        description: '알림 권한을 요청하는 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenInquiry = () => {
