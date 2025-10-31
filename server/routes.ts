@@ -253,12 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Track view activity if user is authenticated
       if (req.user?.id) {
-        await storage.trackActivity(
-          req.user.id,
-          'VIEW',
-          benefit.id,
-          'BENEFIT'
-        );
+        await storage.recordView(req.user.id, benefit.id, 'BENEFIT');
       }
 
       res.json({ benefit });
@@ -273,6 +268,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ stats });
     } catch (error) {
       res.status(500).json({ error: "Failed to get benefit stats" });
+    }
+  });
+
+  // View tracking route
+  app.post("/api/views", authenticateToken, async (req, res) => {
+    try {
+      const { resourceId, resourceType } = req.body;
+      
+      if (!resourceId || !resourceType) {
+        return res.status(400).json({ error: "resourceId and resourceType are required" });
+      }
+      
+      if (resourceType !== 'BENEFIT' && resourceType !== 'MERCHANT') {
+        return res.status(400).json({ error: "resourceType must be BENEFIT or MERCHANT" });
+      }
+      
+      const userId = req.user?.id || null;
+      await storage.recordView(userId, resourceId, resourceType);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("View tracking error:", error);
+      res.status(500).json({ error: "Failed to record view" });
     }
   });
 

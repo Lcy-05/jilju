@@ -4,6 +4,7 @@ import {
   benefits,
   userBookmarks,
   userActivity,
+  viewCountAggregates,
   regions,
   categories,
   merchantApplications,
@@ -34,7 +35,10 @@ import {
   type MerchantHours,
   type Inquiry,
   type InsertInquiry,
-  type UpdateInquiryResponse
+  type UpdateInquiryResponse,
+  type InsertUserActivity,
+  type ViewCountAggregate,
+  type InsertViewCountAggregate
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte, inArray } from "drizzle-orm";
@@ -136,6 +140,14 @@ export interface IStorage {
   getUserInquiries(userId: string): Promise<Inquiry[]>;
   updateInquiryResponse(id: string, response: string, responderId: string, status?: string): Promise<Inquiry>;
   updateInquiryStatus(id: string, status: string): Promise<Inquiry>;
+  
+  // View tracking operations
+  recordView(userId: string | null, resourceId: string, resourceType: 'BENEFIT' | 'MERCHANT'): Promise<void>;
+  getViewCountsForResource(resourceId: string, resourceType: string): Promise<{ daily: number; weekly: number; monthly: number }>;
+  aggregateViewCounts(): Promise<void>;
+  cleanupOldViewData(): Promise<number>;
+  getMerchantPopularityScore(merchantId: string): Promise<number>;
+  getBenefitPopularityScore(benefitId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -288,6 +300,25 @@ export class DatabaseStorage implements IStorage {
       )
     `);
     
+    let orderByClause;
+    if (filters?.sort === 'newest') {
+      orderByClause = [desc(benefits.createdAt)];
+    } else if (filters?.sort === 'popularity') {
+      // Will sort by popularity in JavaScript after fetching
+      orderByClause = [desc(benefits.createdAt)];
+    } else {
+      // Default: sort by distance
+      orderByClause = [sql`
+        ST_Distance(
+          ST_MakePoint(
+            CAST(${merchants.location}->>'lng' AS FLOAT),
+            CAST(${merchants.location}->>'lat' AS FLOAT)
+          )::geography,
+          ST_MakePoint(${lng}, ${lat})::geography
+        ) ASC
+      `];
+    }
+
     const results = await db
       .select({
         benefit: benefits,
@@ -315,19 +346,11 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(merchants, eq(benefits.merchantId, merchants.id))
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
       .where(and(...conditions))
-      .orderBy(sql`
-        ST_Distance(
-          ST_MakePoint(
-            CAST(${merchants.location}->>'lng' AS FLOAT),
-            CAST(${merchants.location}->>'lat' AS FLOAT)
-          )::geography,
-          ST_MakePoint(${lng}, ${lat})::geography
-        ) ASC
-      `)
+      .orderBy(...orderByClause)
       .limit(200);
     
     // Flatten the results and add distance info
-    return results.map(row => ({
+    let mappedResults = results.map(row => ({
       ...row.benefit,
       merchant: {
         ...row.merchant,
@@ -335,11 +358,51 @@ export class DatabaseStorage implements IStorage {
         distance: row.distance
       } as any
     }));
+
+    // If sorting by popularity, fetch view counts and sort
+    if (filters?.sort === 'popularity') {
+      const benefitIds = mappedResults.map(b => b.id);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Get view counts for all benefits
+      const viewCounts = await db
+        .select({
+          resourceId: userActivity.resourceId,
+          count: sql<number>`count(*)`
+        })
+        .from(userActivity)
+        .where(
+          and(
+            inArray(userActivity.resourceId, benefitIds),
+            eq(userActivity.resourceType, 'BENEFIT'),
+            eq(userActivity.type, 'VIEW'),
+            gte(userActivity.createdAt, thirtyDaysAgo)
+          )
+        )
+        .groupBy(userActivity.resourceId);
+
+      // Create a map of benefitId -> viewCount
+      const viewCountMap = new Map<string, number>();
+      for (const vc of viewCounts) {
+        if (vc.resourceId) {
+          viewCountMap.set(vc.resourceId, Number(vc.count));
+        }
+      }
+
+      // Sort by view count (descending)
+      mappedResults.sort((a, b) => {
+        const aViews = viewCountMap.get(a.id) || 0;
+        const bViews = viewCountMap.get(b.id) || 0;
+        return bViews - aViews;
+      });
+    }
+
+    return mappedResults;
   }
 
   async getPopularBenefits(limit: number = 20): Promise<Benefit[]> {
-    // Return active benefits with merchant info ordered by creation date for now
-    // TODO: Implement popularity scoring
+    // Get all active benefits
     const results = await db
       .select({
         benefit: benefits,
@@ -353,17 +416,60 @@ export class DatabaseStorage implements IStorage {
         eq(benefits.status, 'ACTIVE'),
         eq(merchants.status, 'ACTIVE')
       ))
-      .orderBy(desc(benefits.createdAt))
-      .limit(limit);
+      .limit(200);
     
-    // Flatten the results
-    return results.map(row => ({
+    // Get view counts for the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const benefitIds = results.map(row => row.benefit.id);
+    
+    if (benefitIds.length === 0) {
+      return [];
+    }
+    
+    const viewCounts = await db
+      .select({
+        resourceId: userActivity.resourceId,
+        count: sql<number>`count(*)`
+      })
+      .from(userActivity)
+      .where(
+        and(
+          inArray(userActivity.resourceId, benefitIds),
+          eq(userActivity.resourceType, 'BENEFIT'),
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, thirtyDaysAgo)
+        )
+      )
+      .groupBy(userActivity.resourceId);
+    
+    // Create a map of benefitId -> viewCount
+    const viewCountMap = new Map<string, number>();
+    for (const vc of viewCounts) {
+      if (vc.resourceId) {
+        viewCountMap.set(vc.resourceId, Number(vc.count));
+      }
+    }
+    
+    // Flatten the results and add view counts
+    let mappedResults = results.map(row => ({
       ...row.benefit,
       merchant: {
         ...row.merchant,
         category: row.category
       } as any
     }));
+    
+    // Sort by view count (descending)
+    mappedResults.sort((a, b) => {
+      const aViews = viewCountMap.get(a.id) || 0;
+      const bViews = viewCountMap.get(b.id) || 0;
+      return bViews - aViews;
+    });
+    
+    // Return top N results
+    return mappedResults.slice(0, limit);
   }
 
   async getRecommendedBenefits(userId: string, lat?: number, lng?: number): Promise<Benefit[]> {
@@ -1138,6 +1244,192 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return inquiry;
+  }
+
+  // View tracking operations
+  async recordView(userId: string | null, resourceId: string, resourceType: 'BENEFIT' | 'MERCHANT'): Promise<void> {
+    // Only record views for authenticated users
+    if (!userId) {
+      return;
+    }
+    
+    // Record to userActivity table
+    await db.insert(userActivity).values({
+      userId,
+      type: 'VIEW',
+      resourceId,
+      resourceType,
+      metadata: {}
+    });
+  }
+
+  async getViewCountsForResource(resourceId: string, resourceType: string): Promise<{ daily: number; weekly: number; monthly: number }> {
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Get daily views
+    const [dailyResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userActivity)
+      .where(
+        and(
+          eq(userActivity.resourceId, resourceId),
+          eq(userActivity.resourceType, resourceType),
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, oneDayAgo)
+        )
+      );
+
+    // Get weekly views
+    const [weeklyResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userActivity)
+      .where(
+        and(
+          eq(userActivity.resourceId, resourceId),
+          eq(userActivity.resourceType, resourceType),
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, oneWeekAgo)
+        )
+      );
+
+    // Get monthly views
+    const [monthlyResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userActivity)
+      .where(
+        and(
+          eq(userActivity.resourceId, resourceId),
+          eq(userActivity.resourceType, resourceType),
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, oneMonthAgo)
+        )
+      );
+
+    return {
+      daily: Number(dailyResult?.count || 0),
+      weekly: Number(weeklyResult?.count || 0),
+      monthly: Number(monthlyResult?.count || 0)
+    };
+  }
+
+  async aggregateViewCounts(): Promise<void> {
+    // This method aggregates view counts into the viewCountAggregates table
+    // It should be run periodically (e.g., daily via cron job)
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Get all resources that have views
+    const resourceViews = await db
+      .select({
+        resourceId: userActivity.resourceId,
+        resourceType: userActivity.resourceType,
+        count: sql<number>`count(*)`,
+        uniqueUsers: sql<number>`count(distinct ${userActivity.userId})`
+      })
+      .from(userActivity)
+      .where(
+        and(
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, today)
+        )
+      )
+      .groupBy(userActivity.resourceId, userActivity.resourceType);
+
+    // Upsert into viewCountAggregates
+    for (const view of resourceViews) {
+      if (!view.resourceId) continue;
+      
+      await db
+        .insert(viewCountAggregates)
+        .values({
+          resourceId: view.resourceId,
+          resourceType: view.resourceType,
+          period: 'DAILY',
+          periodStart: today,
+          viewCount: Number(view.count),
+          uniqueUsers: Number(view.uniqueUsers)
+        })
+        .onConflictDoUpdate({
+          target: [
+            viewCountAggregates.resourceId,
+            viewCountAggregates.resourceType,
+            viewCountAggregates.period,
+            viewCountAggregates.periodStart
+          ],
+          set: {
+            viewCount: sql`${viewCountAggregates.viewCount} + ${Number(view.count)}`,
+            uniqueUsers: Number(view.uniqueUsers),
+            updatedAt: new Date()
+          }
+        });
+    }
+  }
+
+  async cleanupOldViewData(): Promise<number> {
+    // Delete data older than 90 days
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    // Delete from userActivity
+    const deletedActivity = await db
+      .delete(userActivity)
+      .where(
+        and(
+          eq(userActivity.type, 'VIEW'),
+          lte(userActivity.createdAt, ninetyDaysAgo)
+        )
+      );
+
+    // Delete from viewCountAggregates
+    const deletedAggregates = await db
+      .delete(viewCountAggregates)
+      .where(lte(viewCountAggregates.periodStart, ninetyDaysAgo));
+
+    return 0; // Return count of deleted rows if needed
+  }
+
+  async getMerchantPopularityScore(merchantId: string): Promise<number> {
+    // Calculate popularity score based on 30-day view count
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userActivity)
+      .where(
+        and(
+          eq(userActivity.resourceId, merchantId),
+          eq(userActivity.resourceType, 'MERCHANT'),
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, thirtyDaysAgo)
+        )
+      );
+
+    return Number(result?.count || 0);
+  }
+
+  async getBenefitPopularityScore(benefitId: string): Promise<number> {
+    // Calculate popularity score based on 30-day view count
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userActivity)
+      .where(
+        and(
+          eq(userActivity.resourceId, benefitId),
+          eq(userActivity.resourceType, 'BENEFIT'),
+          eq(userActivity.type, 'VIEW'),
+          gte(userActivity.createdAt, thirtyDaysAgo)
+        )
+      );
+
+    return Number(result?.count || 0);
   }
 }
 

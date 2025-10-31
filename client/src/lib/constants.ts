@@ -263,8 +263,7 @@ export const CATEGORY_COLORS = {
 export const SORT_OPTIONS = [
   { value: 'distance', label: '거리순' },
   { value: 'popularity', label: '인기순' },
-  { value: 'newest', label: '신규순' },
-  { value: 'ending', label: '마감임박순' }
+  { value: 'newest', label: '신규순' }
 ];
 
 // Time constants

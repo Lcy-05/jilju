@@ -228,7 +228,17 @@ export default function Discover() {
     setSearchOptions(prev => ({ ...prev, sort: sort as any }));
   };
 
-  const handleBenefitClick = (benefit: Benefit) => {
+  const handleBenefitClick = async (benefit: Benefit) => {
+    // Record view (fire and forget - don't wait for response)
+    if (user) {
+      apiRequest('POST', '/api/views', {
+        resourceId: benefit.id,
+        resourceType: 'BENEFIT'
+      }).catch(err => {
+        console.error('Failed to record view:', err);
+      });
+    }
+    
     setSelectedBenefit(benefit);
     setIsBenefitModalOpen(true);
   };

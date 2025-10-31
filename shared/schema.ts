@@ -358,7 +358,27 @@ export const userActivity = pgTable("user_activity", {
 }, (table) => ({
   userIdx: index("user_activity_user_idx").on(table.userId),
   typeIdx: index("user_activity_type_idx").on(table.type),
-  createdAtIdx: index("user_activity_created_at_idx").on(table.createdAt)
+  createdAtIdx: index("user_activity_created_at_idx").on(table.createdAt),
+  resourceIdx: index("user_activity_resource_idx").on(table.resourceId, table.resourceType)
+}));
+
+// View count aggregates (for efficient popularity sorting)
+// Auto-cleanup after 90 days
+export const viewCountAggregates = pgTable("view_count_aggregates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  resourceId: uuid("resource_id").notNull(), // benefit_id or merchant_id
+  resourceType: text("resource_type").notNull(), // BENEFIT, MERCHANT
+  period: text("period").notNull(), // DAILY, WEEKLY, MONTHLY
+  periodStart: timestamp("period_start").notNull(), // Start of the period
+  viewCount: integer("view_count").default(0).notNull(),
+  uniqueUsers: integer("unique_users").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  uniqueKey: unique("view_count_aggregates_unique").on(table.resourceId, table.resourceType, table.period, table.periodStart),
+  resourceIdx: index("view_count_aggregates_resource_idx").on(table.resourceId, table.resourceType),
+  periodIdx: index("view_count_aggregates_period_idx").on(table.period, table.periodStart),
+  periodStartIdx: index("view_count_aggregates_period_start_idx").on(table.periodStart)
 }));
 
 // Leads (user suggestions for new partnerships)
@@ -482,6 +502,8 @@ export const insertBenefitVersionSchema = createInsertSchema(benefitVersions).om
 export const insertMerchantHoursSchema = createInsertSchema(merchantHours).omit({ id: true });
 export const insertInquirySchema = createInsertSchema(inquiries).omit({ id: true, createdAt: true, updatedAt: true, respondedAt: true });
 export const updateInquiryResponseSchema = createInsertSchema(inquiries).pick({ response: true, responderId: true, status: true });
+export const insertUserActivitySchema = createInsertSchema(userActivity).omit({ id: true, createdAt: true });
+export const insertViewCountAggregateSchema = createInsertSchema(viewCountAggregates).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -511,3 +533,7 @@ export type InsertMerchantHours = z.infer<typeof insertMerchantHoursSchema>;
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
 export type UpdateInquiryResponse = z.infer<typeof updateInquiryResponseSchema>;
+export type UserActivity = typeof userActivity.$inferSelect;
+export type InsertUserActivity = z.infer<typeof insertUserActivitySchema>;
+export type ViewCountAggregate = typeof viewCountAggregates.$inferSelect;
+export type InsertViewCountAggregate = z.infer<typeof insertViewCountAggregateSchema>;
