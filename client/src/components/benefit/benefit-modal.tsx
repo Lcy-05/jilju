@@ -205,8 +205,8 @@ export function BenefitModal({
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1">
                 {getBenefitBadge()}
-                <DialogHeader className="mt-2 p-0">
-                  <DialogTitle className="text-2xl font-bold" data-testid="text-benefit-title">
+                <DialogHeader className="mt-2 p-0 text-left">
+                  <DialogTitle className="text-2xl font-bold text-left" data-testid="text-benefit-title">
                     {benefit.title}
                   </DialogTitle>
                   <DialogDescription className="sr-only">
