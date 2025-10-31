@@ -192,7 +192,7 @@ export function BenefitModal({
             variant="secondary"
             size="sm"
             onClick={onClose}
-            className="absolute top-4 right-4 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white"
+            className="absolute top-4 right-4 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white text-black"
             data-testid="button-close-modal"
           >
             ✕

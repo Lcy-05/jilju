@@ -159,10 +159,11 @@ export default function Discover() {
       if (location?.lat && location?.lng) {
         params.set('bbox', `${location.lat-0.01},${location.lng-0.01},${location.lat+0.01},${location.lng+0.01}`);
       } else {
-        // Default to Jeju Island coordinates if no location
+        // Default to Jeju Island coordinates - wide bbox to cover entire island
         const defaultLat = 33.4996;
         const defaultLng = 126.5312;
-        params.set('bbox', `${defaultLat-0.1},${defaultLng-0.1},${defaultLat+0.1},${defaultLng+0.1}`);
+        // Wider range to include all of Jeju (±0.3 degrees ≈ 33km radius)
+        params.set('bbox', `${defaultLat-0.3},${defaultLng-0.3},${defaultLat+0.3},${defaultLng+0.3}`);
       }
 
       if (searchOptions.categoryId) params.append('cats', searchOptions.categoryId);  // 단일 카테고리

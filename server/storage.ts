@@ -312,7 +312,7 @@ export class DatabaseStorage implements IStorage {
           ST_MakePoint(${lng}, ${lat})::geography
         ) ASC
       `)
-      .limit(50);
+      .limit(200);
     
     // Flatten the results and add distance info
     return results.map(row => ({

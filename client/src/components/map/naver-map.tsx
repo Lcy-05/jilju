@@ -130,30 +130,30 @@ export function NaverMap({
             size="sm"
             onClick={handleCurrentLocation}
             disabled={locationLoading}
-            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
+            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50 text-black"
             data-testid="button-current-location"
           >
-            <MyLocationTwoTone className="w-5 h-5" />
+            <MyLocationTwoTone className="w-5 h-5 text-black" />
           </Button>
           
           <Button
             variant="secondary"
             size="sm"
             onClick={handleZoomIn}
-            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
+            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50 text-black"
             data-testid="button-zoom-in"
           >
-            <Add className="w-6 h-6" />
+            <Add className="w-6 h-6 text-black" />
           </Button>
           
           <Button
             variant="secondary"
             size="sm"
             onClick={handleZoomOut}
-            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50"
+            className="w-11 h-11 p-0 rounded-lg shadow-lg bg-white hover:bg-gray-50 text-black"
             data-testid="button-zoom-out"
           >
-            <Remove className="w-6 h-6" />
+            <Remove className="w-6 h-6 text-black" />
           </Button>
         </div>
       )}
