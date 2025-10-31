@@ -262,7 +262,7 @@ export default function Discover() {
   // Get selected region name for header display
   const selectedRegionName = searchOptions.regionId 
     ? (regions as any)?.regions?.find((r: Region) => r.id === searchOptions.regionId)?.name 
-    : undefined;
+    : '전체';
     
   const benefitTypes = [
     { value: 'PERCENT', label: '할인율' },
