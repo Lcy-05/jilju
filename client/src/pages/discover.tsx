@@ -157,7 +157,8 @@ export default function Discover() {
       
       // Always provide bbox or lat/lng so category filters work
       if (location?.lat && location?.lng) {
-        params.set('bbox', `${location.lat-0.01},${location.lng-0.01},${location.lat+0.01},${location.lng+0.01}`);
+        // Wide bbox to cover entire island (±0.3 degrees ≈ 33km radius)
+        params.set('bbox', `${location.lat-0.3},${location.lng-0.3},${location.lat+0.3},${location.lng+0.3}`);
       } else {
         // Default to Jeju Island coordinates - wide bbox to cover entire island
         const defaultLat = 33.4996;
