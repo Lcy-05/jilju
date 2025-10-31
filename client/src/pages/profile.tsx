@@ -300,7 +300,7 @@ export default function Profile() {
 
       {/* PDF Agreement Modal */}
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0">
+        <DialogContent className="max-w-full w-screen h-screen p-0 m-0 rounded-none">
           <VisuallyHidden>
             <DialogTitle>제주대학교 58대 총학생회 선거운동본부 협력 업체 제휴협약서</DialogTitle>
             <DialogDescription>
@@ -324,13 +324,20 @@ export default function Profile() {
             <p className="font-semibold text-sm">제휴협약서</p>
           </div>
 
-          {/* PDF Viewer */}
-          <div className="w-full h-full pt-16">
-            <iframe
-              src="/jeju-university-agreement.pdf"
-              className="w-full h-full border-0"
+          {/* PDF Viewer - Full Screen */}
+          <div className="w-full h-full">
+            <object
+              data="/jeju-university-agreement.pdf#view=FitH"
+              type="application/pdf"
+              className="w-full h-full"
               title="제주대학교 58대 총학생회 선거운동본부 협력 업체 제휴협약서"
-            />
+            >
+              <iframe
+                src="/jeju-university-agreement.pdf#view=FitH"
+                className="w-full h-full border-0"
+                title="제주대학교 58대 총학생회 선거운동본부 협력 업체 제휴협약서"
+              />
+            </object>
           </div>
         </DialogContent>
       </Dialog>
