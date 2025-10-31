@@ -297,9 +297,17 @@ export default function Home() {
                 data-testid={`button-category-${index}`}
               >
                 <div className="w-14 h-14 flex items-center justify-center">
-                  <span className="text-3xl">
-                    {(CATEGORY_ICONS as any)[category.name] || '📱'}
-                  </span>
+                  {(CATEGORY_ICONS as any)[category.name]?.startsWith?.('/') || (CATEGORY_ICONS as any)[category.name]?.startsWith?.('data:') ? (
+                    <img 
+                      src={(CATEGORY_ICONS as any)[category.name]} 
+                      alt={category.name}
+                      className="w-12 h-12 object-contain"
+                    />
+                  ) : (
+                    <span className="text-3xl">
+                      {(CATEGORY_ICONS as any)[category.name] || '📱'}
+                    </span>
+                  )}
                 </div>
                 <span className={cn(
                   "text-xs",

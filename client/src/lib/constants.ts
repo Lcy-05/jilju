@@ -1,3 +1,10 @@
+// Import category icon images
+import foodIcon from '@assets/음식_1761894547757.png';
+import cafeIcon from '@assets/카페 디저트_1761894547757.png';
+import beautyIcon from '@assets/뷰티 패션_1761894547756.png';
+import cultureIcon from '@assets/문화생활_1761894547752.png';
+import sportsIcon from '@assets/스포츠_1761894547755.png';
+
 // Service URLs for Naver Maps API registration
 // 환경별 URL 자동 설정
 const isExplicitProduction = import.meta.env.PROD;
@@ -220,14 +227,14 @@ export const SUCCESS_MESSAGES = {
   APPLICATION_REJECTED: '신청이 반려되었습니다.'
 };
 
-// Category icons mapping
-export const CATEGORY_ICONS = {
+// Category icons mapping (image paths)
+export const CATEGORY_ICONS: Record<string, string> = {
   '전체': '🏪',
-  '음식': '🍽️',
-  '카페/바': '☕',
-  '뷰티/패션': '💄',
-  '문화생활': '🎨',
-  '스포츠': '⚽',
+  '음식': foodIcon,
+  '카페/바': cafeIcon,
+  '뷰티/패션': beautyIcon,
+  '문화생활': cultureIcon,
+  '스포츠': sportsIcon,
   '의료': '🏥',
   '교육': '📚',
   '오락': '🎮',
