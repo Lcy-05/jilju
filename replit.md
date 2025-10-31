@@ -4,6 +4,21 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
+**2025-10-31: Region-Dong Mapping System & Data Correction**
+- **Region-Dong Mapping**: Implemented comprehensive mapping system for 8 Jeju regions with all administrative dong variations
+  - Mapping stored in `server/storage.ts` as `REGION_DONG_MAPPING` constant
+  - Each region includes all official dong/eup variants (e.g., 화북일동, 화북이동)
+- **Helper Methods**: Added three public methods to DatabaseStorage class:
+  - `getRegionCodeFromAddress(address: string)`: Extracts region code from merchant address
+  - `getRegionIdByCode(regionCode: string)`: Retrieves region ID from code
+  - `autoAssignRegionId(address: string)`: Combined method for automatic region assignment
+- **Data Correction**: Fixed 9 merchants with incorrect region assignments:
+  - 건입동 → 시청권 (1), 연동 → 노형권 (1), 외도일동 → 공항연안권 (2)
+  - 용담일동 → 공항연안권 (1), 이도동 → 시청권 (2), 일도동 → 시청권 (1), 조천읍 → 동부권 (1)
+- **Final Distribution**: 시청권 (16), 노형권 (9), 아라권 (8), 공항연안권 (3), 삼화권 (3), 동부권 (2), 서부권 (2), 서귀포권 (0)
+- **E2E Testing**: All region filters verified working correctly with accurate counts
+- **Note**: Helper methods are available but not yet integrated into merchant creation/update flows (requires additional implementation)
+
 **2025-10-30: Splash Screen Launch Animation**
 - **SplashScreen Component**: Created dedicated splash screen for app launch
   - Framer Motion animations: fade-in (0.5s) → display (2s) → fade-out (0.5s)

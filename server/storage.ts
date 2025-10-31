@@ -35,12 +35,12 @@ import {
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte, inArray } from "drizzle-orm";
 
-// 권역별 동(洞) 매핑
+// 권역별 동(洞) 매핑 - 모든 행정동 변형 포함
 const REGION_DONG_MAPPING: Record<string, string[]> = {
   'ZONE_ARA': ['아라동', '아라일동', '아라이동', '오등동', '영평동', '월평동', '용강동'],
-  'ZONE_SAMHWA': ['화북동', '화북일동', '봉개동', '도련동', '도련일동', '삼양동', '삼양일동', '삼양이동', '삼양삼동', '회천동'],
+  'ZONE_SAMHWA': ['화북동', '화북일동', '화북이동', '봉개동', '도련동', '도련일동', '도련이동', '삼양동', '삼양일동', '삼양이동', '삼양삼동', '회천동'],
   'ZONE_CITY_HALL': ['일도동', '일도일동', '일도이동', '이도동', '이도일동', '이도이동', '삼도동', '삼도일동', '삼도이동', '건입동', '도남동'],
-  'ZONE_AIRPORT_COAST': ['용담동', '용담일동', '용담이동', '이호동', '이호일동', '도두동', '도두일동', '외도동', '외도일동', '내도동'],
+  'ZONE_AIRPORT_COAST': ['용담동', '용담일동', '용담이동', '이호동', '이호일동', '이호이동', '도두동', '도두일동', '도두이동', '외도동', '외도일동', '외도이동', '내도동'],
   'ZONE_NOHYEONG': ['오라동', '오라일동', '오라이동', '오라삼동', '연동', '노형동', '해안동', '도평동'],
   'ZONE_EAST': ['조천읍', '구좌읍'],
   'ZONE_WEST': ['한림읍', '한경면', '애월읍'],
@@ -790,7 +790,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Helper method: Extract region code from address
-  private getRegionCodeFromAddress(address: string): string | null {
+  async getRegionCodeFromAddress(address: string): Promise<string | null> {
     if (!address) return null;
     
     // Check each region's dong list
@@ -806,7 +806,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Helper method: Get region ID by region code
-  private async getRegionIdByCode(regionCode: string): Promise<string | null> {
+  async getRegionIdByCode(regionCode: string): Promise<string | null> {
     const [region] = await db
       .select()
       .from(regions)
@@ -814,6 +814,14 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return region?.id || null;
+  }
+  
+  // Helper method: Auto-assign region ID based on merchant address
+  async autoAssignRegionId(address: string): Promise<string | null> {
+    const regionCode = await this.getRegionCodeFromAddress(address);
+    if (!regionCode) return null;
+    
+    return await this.getRegionIdByCode(regionCode);
   }
 
   // Merchant Application operations
