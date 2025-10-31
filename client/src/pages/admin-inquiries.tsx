@@ -37,7 +37,7 @@ const responseSchema = z.object({
 });
 
 export default function AdminInquiries() {
-  const { user, hasRole } = useAuth();
+  const { user, hasAnyRole } = useAuth();
   const { toast } = useToast();
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
@@ -58,16 +58,10 @@ export default function AdminInquiries() {
       const url = statusFilter === 'ALL' 
         ? '/api/admin/inquiries'
         : `/api/admin/inquiries?status=${statusFilter}`;
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jilju_auth_token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch inquiries');
+      const response = await apiRequest('GET', url);
       const data = await response.json();
       return data.inquiries as Inquiry[];
     },
-    enabled: hasRole(['ADMIN', 'OPERATOR']),
   });
 
   // Update inquiry response mutation
@@ -116,7 +110,7 @@ export default function AdminInquiries() {
     });
   };
 
-  if (!hasRole(['ADMIN', 'OPERATOR'])) {
+  if (!hasAnyRole(['ADMIN', 'OPERATOR'])) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

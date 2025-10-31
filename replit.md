@@ -4,6 +4,23 @@
 질주 (Jilju) is a Korean location-based platform designed to connect users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to be a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals.
 
 ## Recent Changes
+**2025-10-31: Inquiry Management System**
+- **Database Schema**: Added `inquiries` table with fields: id, userId, title, content, status (PENDING/IN_PROGRESS/RESOLVED/CLOSED), response, respondedBy, respondedAt, createdAt, updatedAt
+- **Storage Layer**: Implemented inquiry CRUD operations: `createInquiry`, `getInquiry`, `getAllInquiries`, `getUserInquiries`, `updateInquiryResponse`, `updateInquiryStatus`, `respondToInquiry`
+- **API Endpoints**:
+  - `POST /api/inquiries` - Create new inquiry (authenticated users)
+  - `GET /api/inquiries` - List user's own inquiries
+  - `GET /api/inquiries/:id` - Get inquiry details
+  - `GET /api/admin/inquiries` - List all inquiries with optional status filter (ADMIN/OPERATOR)
+  - `PATCH /api/admin/inquiries/:id/response` - Respond to inquiry (ADMIN/OPERATOR)
+  - `PATCH /api/admin/inquiries/:id/status` - Update inquiry status (ADMIN/OPERATOR)
+- **User Interface**:
+  - Profile page: Added "문의하기" button that opens inquiry submission modal with Zod validation
+  - Admin inquiries page (`/admin/inquiries`): Full inquiry management interface with status filtering (전체, 대기중, 처리중, 답변완료, 종료), inquiry detail view, and response submission
+  - Admin console: Added "빠른 접근" (Quick Access) section with link to inquiry management
+- **Authorization**: Uses `hasAnyRole(['ADMIN', 'OPERATOR'])` for admin pages; inquiry response and status update endpoints protected by `requireRole` middleware
+- **Bug Fixes**: Fixed hasRole vs hasAnyRole usage throughout admin pages; apiRequest used for authenticated API calls to ensure proper token handling
+
 **2025-10-31: Region-Dong Mapping System & Data Correction**
 - **Region-Dong Mapping**: Implemented comprehensive mapping system for 8 Jeju regions with all administrative dong variations
   - Mapping stored in `server/storage.ts` as `REGION_DONG_MAPPING` constant
