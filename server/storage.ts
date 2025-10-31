@@ -35,6 +35,18 @@ import {
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte, inArray } from "drizzle-orm";
 
+// 권역별 동(洞) 매핑
+const REGION_DONG_MAPPING: Record<string, string[]> = {
+  'ZONE_ARA': ['아라동', '아라일동', '아라이동', '오등동', '영평동', '월평동', '용강동'],
+  'ZONE_SAMHWA': ['화북동', '화북일동', '봉개동', '도련동', '도련일동', '삼양동', '삼양일동', '삼양이동', '삼양삼동', '회천동'],
+  'ZONE_CITY_HALL': ['일도동', '일도일동', '일도이동', '이도동', '이도일동', '이도이동', '삼도동', '삼도일동', '삼도이동', '건입동', '도남동'],
+  'ZONE_AIRPORT_COAST': ['용담동', '용담일동', '용담이동', '이호동', '이호일동', '도두동', '도두일동', '외도동', '외도일동', '내도동'],
+  'ZONE_NOHYEONG': ['오라동', '오라일동', '오라이동', '오라삼동', '연동', '노형동', '해안동', '도평동'],
+  'ZONE_EAST': ['조천읍', '구좌읍'],
+  'ZONE_WEST': ['한림읍', '한경면', '애월읍'],
+  'ZONE_SEOGWIPO': ['서귀포시']
+};
+
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
@@ -775,6 +787,33 @@ export class DatabaseStorage implements IStorage {
     // TODO: Implement reverse geocoding
     // For now, return default
     return "서울특별시";
+  }
+
+  // Helper method: Extract region code from address
+  private getRegionCodeFromAddress(address: string): string | null {
+    if (!address) return null;
+    
+    // Check each region's dong list
+    for (const [regionCode, dongList] of Object.entries(REGION_DONG_MAPPING)) {
+      for (const dong of dongList) {
+        if (address.includes(dong)) {
+          return regionCode;
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  // Helper method: Get region ID by region code
+  private async getRegionIdByCode(regionCode: string): Promise<string | null> {
+    const [region] = await db
+      .select()
+      .from(regions)
+      .where(eq(regions.code, regionCode))
+      .limit(1);
+    
+    return region?.id || null;
   }
 
   // Merchant Application operations
