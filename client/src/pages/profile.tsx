@@ -327,7 +327,7 @@ export default function Profile() {
           {/* PDF Viewer */}
           <div className="w-full h-full pt-16">
             <iframe
-              src="/attached_assets/Image to PDF 20251031 20.14.17_1761913409351.pdf"
+              src="/jeju-university-agreement.pdf"
               className="w-full h-full border-0"
               title="제주대학교 58대 총학생회 선거운동본부 협력 업체 제휴협약서"
             />
