@@ -356,7 +356,19 @@ function getMarkerIcon(type: 'benefit' | 'merchant', categoryName?: string): str
     border: 3px solid white;
     background: ${color};
     transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   `;
+
+  // Check if icon is an image path (string starting with /)
+  const isImagePath = typeof icon === 'string' && icon.startsWith('/');
+  
+  if (isImagePath) {
+    return `
+      <div style="${baseStyle}">
+        <img src="${icon}" alt="${categoryName}" style="width: 24px; height: 24px; object-fit: contain;" />
+      </div>
+    `;
+  }
 
   return `<div style="${baseStyle}">${icon}</div>`;
 }
