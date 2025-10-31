@@ -319,11 +319,6 @@ export default function Profile() {
             <X className="w-5 h-5 text-black" />
           </Button>
 
-          {/* Title */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white/95 px-4 py-2 rounded-full shadow-lg pointer-events-none">
-            <p className="font-semibold text-sm">제휴협약서</p>
-          </div>
-
           {/* PDF Viewer - Full Screen */}
           <div className="w-full h-full">
             <object
