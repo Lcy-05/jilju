@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { 
   User, 
   Settings, 
@@ -13,7 +15,11 @@ import {
   FileText, 
   LogOut,
   ChevronRight,
-  MessageCircle
+  MessageCircle,
+  Info,
+  Users,
+  BookOpen,
+  X
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { API_ENDPOINTS, APP_CONFIG } from '@/lib/constants';
@@ -21,6 +27,9 @@ import { cn } from '@/lib/utils';
 
 export default function Profile() {
   const { user, logout, isAuthenticated, hasRole } = useAuth();
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isCreatorsModalOpen, setIsCreatorsModalOpen] = useState(false);
+  const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
 
   // Get user stats
   const { data: userStats } = useQuery({
@@ -51,7 +60,15 @@ export default function Profile() {
   };
 
   const handleOpenTerms = () => {
-    console.log('Open terms - to be implemented');
+    setIsPdfModalOpen(true);
+  };
+
+  const handleOpenCreators = () => {
+    setIsCreatorsModalOpen(true);
+  };
+
+  const handleOpenSource = () => {
+    setIsSourceModalOpen(true);
   };
 
   if (!isAuthenticated) {
@@ -218,6 +235,43 @@ export default function Profile() {
           </Card>
         </div>
 
+        {/* Info Section */}
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase px-4 py-2">정보</h4>
+          
+          <Card>
+            <CardContent className="p-0">
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-auto p-4"
+                onClick={handleOpenCreators}
+                data-testid="button-creators"
+              >
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">제작자</span>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </Button>
+              
+              <div className="border-t border-border" />
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-auto p-4"
+                onClick={handleOpenSource}
+                data-testid="button-source"
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">출처</span>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Logout */}
         <Card>
           <CardContent className="p-0">
@@ -243,6 +297,97 @@ export default function Profile() {
       </main>
 
       <BottomNavigation />
+
+      {/* PDF Agreement Modal */}
+      <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0">
+          <VisuallyHidden>
+            <DialogTitle>제주대학교 58대 총학생회 선거운동본부 협력 업체 제휴협약서</DialogTitle>
+            <DialogDescription>
+              제주대학교 58대 총학생회 선거운동본부와 협력 업체 간의 제휴협약서를 확인하실 수 있습니다.
+            </DialogDescription>
+          </VisuallyHidden>
+
+          {/* Close Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsPdfModalOpen(false)}
+            className="absolute top-4 right-4 z-50 bg-white hover:bg-white/90 rounded-full w-10 h-10 shadow-lg"
+            data-testid="button-close-pdf-modal"
+          >
+            <X className="w-5 h-5 text-black" />
+          </Button>
+
+          {/* Title */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white/95 px-4 py-2 rounded-full shadow-lg pointer-events-none">
+            <p className="font-semibold text-sm">제휴협약서</p>
+          </div>
+
+          {/* PDF Viewer */}
+          <div className="w-full h-full pt-16">
+            <iframe
+              src="/attached_assets/Image to PDF 20251031 20.14.17_1761913409351.pdf"
+              className="w-full h-full border-0"
+              title="제주대학교 58대 총학생회 선거운동본부 협력 업체 제휴협약서"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Creators Modal */}
+      <Dialog open={isCreatorsModalOpen} onOpenChange={setIsCreatorsModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>제작자</DialogTitle>
+          <DialogDescription>
+            질주 플랫폼 제작팀
+          </DialogDescription>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <h4 className="font-semibold mb-2">개발팀</h4>
+              <p className="text-sm text-muted-foreground">제주대학교 58대 총학생회</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">디자인</h4>
+              <p className="text-sm text-muted-foreground">제주대학교 58대 총학생회</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">기획</h4>
+              <p className="text-sm text-muted-foreground">제주대학교 58대 총학생회 선거운동본부</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Source Modal */}
+      <Dialog open={isSourceModalOpen} onOpenChange={setIsSourceModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>출처</DialogTitle>
+          <DialogDescription>
+            질주 플랫폼에서 사용된 리소스 출처
+          </DialogDescription>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <h4 className="font-semibold mb-2">지도 서비스</h4>
+              <p className="text-sm text-muted-foreground">Naver Maps API</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">아이콘</h4>
+              <p className="text-sm text-muted-foreground">Lucide React Icons</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">폰트</h4>
+              <p className="text-sm text-muted-foreground">Gmarket Sans</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">제휴 업체 정보</h4>
+              <p className="text-sm text-muted-foreground">제주대학교 58대 총학생회 선거운동본부</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

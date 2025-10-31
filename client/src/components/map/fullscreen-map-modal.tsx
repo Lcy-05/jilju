@@ -37,6 +37,17 @@ export function FullscreenMapModal({
           </DialogDescription>
         </VisuallyHidden>
 
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute top-4 right-4 z-[10001] bg-white hover:bg-white/90 rounded-full w-10 h-10 shadow-lg"
+          data-testid="button-close-map-modal"
+        >
+          <X className="w-5 h-5 text-black" />
+        </Button>
+
         {/* Merchant Name Overlay */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[10001] bg-white/95 px-4 py-2 rounded-full shadow-lg pointer-events-none">
           <p className="font-semibold text-sm">{merchantName}</p>
