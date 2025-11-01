@@ -428,6 +428,45 @@ export const inquiries = pgTable("inquiries", {
   createdAtIdx: index("inquiries_created_at_idx").on(table.createdAt)
 }));
 
+// Chat rooms (1:1 support chat between user and admin)
+export const chatRooms = pgTable("chat_rooms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull().unique(), // One room per user
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE, CLOSED
+  lastMessageAt: timestamp("last_message_at"),
+  unreadCount: integer("unread_count").notNull().default(0), // Unread messages for admin
+  metadata: jsonb("metadata"), // Additional room info
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  userIdx: index("chat_rooms_user_idx").on(table.userId),
+  statusIdx: index("chat_rooms_status_idx").on(table.status),
+  lastMessageAtIdx: index("chat_rooms_last_message_at_idx").on(table.lastMessageAt)
+}));
+
+// Chat messages
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roomId: uuid("room_id").references(() => chatRooms.id, { onDelete: 'cascade' }).notNull(),
+  senderType: text("sender_type").notNull(), // USER, ADMIN
+  senderId: uuid("sender_id").references(() => users.id).notNull(),
+  messageType: text("message_type").notNull().default("TEXT"), // TEXT, IMAGE
+  textContent: text("text_content"), // For TEXT type
+  imageUrl: text("image_url"), // For IMAGE type
+  replyToMessageId: uuid("reply_to_message_id"), // For threaded replies - self-reference handled in relations
+  isEdited: boolean("is_edited").default(false),
+  deletedAt: timestamp("deleted_at"), // Soft delete (admin only)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  roomIdx: index("chat_messages_room_idx").on(table.roomId),
+  createdAtIdx: index("chat_messages_created_at_idx").on(table.createdAt),
+  deletedAtIdx: index("chat_messages_deleted_at_idx").on(table.deletedAt),
+  roomCreatedIdx: index("chat_messages_room_created_idx").on(table.roomId, table.createdAt),
+  // Index for 90-day cleanup
+  retentionIdx: index("chat_messages_retention_idx").on(table.createdAt).where(sql`deleted_at IS NULL`)
+}));
+
 // Admin audit logs
 export const adminAuditLogs = pgTable("admin_audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -452,12 +491,25 @@ export const usersRelations = relations(users, ({ many }) => ({
   activities: many(userActivity),
   leads: many(leads),
   auditLogs: many(adminAuditLogs),
-  inquiries: many(inquiries)
+  inquiries: many(inquiries),
+  chatRoom: many(chatRooms),
+  sentMessages: many(chatMessages)
 }));
 
 export const inquiriesRelations = relations(inquiries, ({ one }) => ({
   user: one(users, { fields: [inquiries.userId], references: [users.id] }),
   responder: one(users, { fields: [inquiries.responderId], references: [users.id] })
+}));
+
+export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
+  user: one(users, { fields: [chatRooms.userId], references: [users.id] }),
+  messages: many(chatMessages)
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  room: one(chatRooms, { fields: [chatMessages.roomId], references: [chatRooms.id] }),
+  sender: one(users, { fields: [chatMessages.senderId], references: [users.id] }),
+  replyTo: one(chatMessages, { fields: [chatMessages.replyToMessageId], references: [chatMessages.id] })
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -504,6 +556,9 @@ export const insertInquirySchema = createInsertSchema(inquiries).omit({ id: true
 export const updateInquiryResponseSchema = createInsertSchema(inquiries).pick({ response: true, responderId: true, status: true });
 export const insertUserActivitySchema = createInsertSchema(userActivity).omit({ id: true, createdAt: true });
 export const insertViewCountAggregateSchema = createInsertSchema(viewCountAggregates).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertChatRoomSchema = createInsertSchema(chatRooms).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true, updatedAt: true });
+export const updateChatMessageSchema = createInsertSchema(chatMessages).pick({ textContent: true, imageUrl: true, isEdited: true }).partial();
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -537,3 +592,8 @@ export type UserActivity = typeof userActivity.$inferSelect;
 export type InsertUserActivity = z.infer<typeof insertUserActivitySchema>;
 export type ViewCountAggregate = typeof viewCountAggregates.$inferSelect;
 export type InsertViewCountAggregate = z.infer<typeof insertViewCountAggregateSchema>;
+export type ChatRoom = typeof chatRooms.$inferSelect;
+export type InsertChatRoom = z.infer<typeof insertChatRoomSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type UpdateChatMessage = z.infer<typeof updateChatMessageSchema>;
