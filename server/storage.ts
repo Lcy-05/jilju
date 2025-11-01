@@ -16,6 +16,8 @@ import {
   benefitVersions,
   merchantHours,
   inquiries,
+  chatRooms,
+  chatMessages,
   type User,
   type InsertUser,
   type Merchant,
@@ -38,7 +40,12 @@ import {
   type UpdateInquiryResponse,
   type InsertUserActivity,
   type ViewCountAggregate,
-  type InsertViewCountAggregate
+  type InsertViewCountAggregate,
+  type ChatRoom,
+  type InsertChatRoom,
+  type ChatMessage,
+  type InsertChatMessage,
+  type UpdateChatMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, or, desc, asc, gte, lte, inArray } from "drizzle-orm";
@@ -148,6 +155,17 @@ export interface IStorage {
   cleanupOldViewData(): Promise<number>;
   getMerchantPopularityScore(merchantId: string): Promise<number>;
   getBenefitPopularityScore(benefitId: string): Promise<number>;
+  
+  // Chat operations
+  getOrCreateChatRoom(userId: string): Promise<ChatRoom>;
+  getChatRoomByUserId(userId: string): Promise<ChatRoom | undefined>;
+  getAllChatRooms(status?: string): Promise<ChatRoom[]>;
+  sendMessage(roomId: string, senderId: string, senderType: 'USER' | 'ADMIN', messageType: 'TEXT' | 'IMAGE', content: string, replyToMessageId?: string): Promise<ChatMessage>;
+  getMessages(roomId: string, limit?: number, offset?: number): Promise<ChatMessage[]>;
+  updateMessage(messageId: string, textContent: string): Promise<ChatMessage>;
+  deleteMessage(messageId: string): Promise<void>;
+  markRoomAsRead(roomId: string): Promise<void>;
+  cleanupOldChatMessages(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1430,6 +1448,123 @@ export class DatabaseStorage implements IStorage {
       );
 
     return Number(result?.count || 0);
+  }
+
+  // Chat operations
+  async getOrCreateChatRoom(userId: string): Promise<ChatRoom> {
+    const existing = await this.getChatRoomByUserId(userId);
+    if (existing) return existing;
+
+    const [room] = await db.insert(chatRooms).values({
+      userId,
+      status: 'ACTIVE'
+    }).returning();
+    
+    return room;
+  }
+
+  async getChatRoomByUserId(userId: string): Promise<ChatRoom | undefined> {
+    const [room] = await db
+      .select()
+      .from(chatRooms)
+      .where(eq(chatRooms.userId, userId));
+    
+    return room;
+  }
+
+  async getAllChatRooms(status?: string): Promise<ChatRoom[]> {
+    const query = db.select().from(chatRooms);
+    
+    if (status) {
+      return query.where(eq(chatRooms.status, status)).orderBy(desc(chatRooms.lastMessageAt));
+    }
+    
+    return query.orderBy(desc(chatRooms.lastMessageAt));
+  }
+
+  async sendMessage(
+    roomId: string,
+    senderId: string,
+    senderType: 'USER' | 'ADMIN',
+    messageType: 'TEXT' | 'IMAGE',
+    content: string,
+    replyToMessageId?: string
+  ): Promise<ChatMessage> {
+    const [message] = await db.insert(chatMessages).values({
+      roomId,
+      senderId,
+      senderType,
+      messageType,
+      textContent: messageType === 'TEXT' ? content : null,
+      imageUrl: messageType === 'IMAGE' ? content : null,
+      replyToMessageId
+    }).returning();
+
+    // Update room's lastMessageAt and increment unread count if message from user
+    await db.update(chatRooms)
+      .set({
+        lastMessageAt: new Date(),
+        unreadCount: senderType === 'USER' ? sql`${chatRooms.unreadCount} + 1` : chatRooms.unreadCount,
+        updatedAt: new Date()
+      })
+      .where(eq(chatRooms.id, roomId));
+
+    return message;
+  }
+
+  async getMessages(roomId: string, limit: number = 50, offset: number = 0): Promise<ChatMessage[]> {
+    return db
+      .select()
+      .from(chatMessages)
+      .where(
+        and(
+          eq(chatMessages.roomId, roomId),
+          sql`${chatMessages.deletedAt} IS NULL`
+        )
+      )
+      .orderBy(desc(chatMessages.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async updateMessage(messageId: string, textContent: string): Promise<ChatMessage> {
+    const [message] = await db.update(chatMessages)
+      .set({
+        textContent,
+        isEdited: true,
+        updatedAt: new Date()
+      })
+      .where(eq(chatMessages.id, messageId))
+      .returning();
+
+    return message;
+  }
+
+  async deleteMessage(messageId: string): Promise<void> {
+    await db.update(chatMessages)
+      .set({ deletedAt: new Date() })
+      .where(eq(chatMessages.id, messageId));
+  }
+
+  async markRoomAsRead(roomId: string): Promise<void> {
+    await db.update(chatRooms)
+      .set({
+        unreadCount: 0,
+        updatedAt: new Date()
+      })
+      .where(eq(chatRooms.id, roomId));
+  }
+
+  async cleanupOldChatMessages(): Promise<number> {
+    // Delete messages older than 90 days
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const result = await db
+      .delete(chatMessages)
+      .where(lte(chatMessages.createdAt, ninetyDaysAgo));
+
+    return 0; // Return count if needed
   }
 }
 
