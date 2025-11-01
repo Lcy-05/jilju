@@ -12,6 +12,7 @@ import Discover from "@/pages/discover";
 import Map from "@/pages/map";
 import Saved from "@/pages/saved";
 import Profile from "@/pages/profile";
+import Chat from "@/pages/chat";
 import Auth from "@/pages/auth";
 import BenefitDetail from "@/pages/benefit-detail";
 import MerchantWizard from "@/pages/merchant/wizard";
@@ -20,6 +21,7 @@ import MerchantStore from "@/pages/merchant/store";
 import MerchantBenefits from "@/pages/merchant/benefits";
 import AdminConsole from "@/pages/admin/console";
 import AdminInquiries from "@/pages/admin-inquiries";
+import AdminChat from "@/pages/admin-chat";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +32,7 @@ function Router() {
       <Route path="/map" component={Map} />
       <Route path="/saved" component={Saved} />
       <Route path="/profile" component={Profile} />
+      <Route path="/chat" component={Chat} />
       <Route path="/login" component={Auth} />
       <Route path="/register" component={Auth} />
       <Route path="/benefits/:id" component={BenefitDetail} />
@@ -39,6 +42,7 @@ function Router() {
       <Route path="/merchant/benefits" component={MerchantBenefits} />
       <Route path="/admin" component={AdminConsole} />
       <Route path="/admin/inquiries" component={AdminInquiries} />
+      <Route path="/admin/chat" component={AdminChat} />
       <Route component={NotFound} />
     </Switch>
   );

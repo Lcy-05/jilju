@@ -32,6 +32,7 @@ import { API_ENDPOINTS, APP_CONFIG } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { Link } from 'wouter';
 
 // Form schema for inquiry
 const inquirySchema = z.object({
@@ -309,14 +310,16 @@ export default function Profile() {
               <Button
                 variant="ghost"
                 className="w-full justify-between h-auto p-4"
-                onClick={handleOpenInquiry}
+                asChild
                 data-testid="button-inquiry"
               >
-                <div className="flex items-center gap-3">
-                  <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">문의하기</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <Link href="/chat">
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">문의하기</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </Link>
               </Button>
               
               <div className="border-t border-border" />

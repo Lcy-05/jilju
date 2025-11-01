@@ -402,6 +402,20 @@ function AdminConsole() {
                   <Button
                     variant="outline"
                     className="w-full justify-start h-auto py-4"
+                    onClick={() => window.location.href = '/admin/chat'}
+                    data-testid="button-chat-quick-access"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <MessageSquare className="w-5 h-5 text-red-500" />
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium">채팅 관리</p>
+                        <p className="text-xs text-muted-foreground">실시간 1:1 채팅 응답</p>
+                      </div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-4"
                     onClick={() => window.location.href = '/admin/inquiries'}
                     data-testid="button-inquiries-quick-access"
                   >
