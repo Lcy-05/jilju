@@ -409,7 +409,7 @@ export default function Profile() {
         {/* App Version */}
         <div className="text-center text-xs text-muted-foreground space-y-1 py-6">
           <p>{APP_CONFIG.NAME} v{APP_CONFIG.VERSION}</p>
-          <p>© 2024 Jilju. All rights reserved.</p>
+          <p>@JNU_for_run</p>
         </div>
       </main>
 
