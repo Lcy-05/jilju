@@ -987,6 +987,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat routes - User endpoints
+  app.get("/api/chat/room", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const room = await storage.getOrCreateChatRoom(userId);
+      res.json({ room });
+    } catch (error) {
+      console.error("Get chat room error:", error);
+      res.status(500).json({ error: "Failed to get chat room" });
+    }
+  });
+
+  app.get("/api/chat/rooms/:roomId/messages", authenticateToken, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const { limit = '50', offset = '0' } = req.query;
+      
+      const messages = await storage.getMessages(roomId, parseInt(limit as string), parseInt(offset as string));
+      res.json({ messages });
+    } catch (error) {
+      console.error("Get messages error:", error);
+      res.status(500).json({ error: "Failed to get messages" });
+    }
+  });
+
+  app.post("/api/chat/rooms/:roomId/messages", authenticateToken, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const userId = req.user!.id;
+      const { messageType = 'TEXT', content, replyToMessageId } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ error: "Content is required" });
+      }
+
+      // Determine sender type based on user roles
+      const roles = await storage.getUserRoles(userId);
+      const senderType = roles.includes('ADMIN') || roles.includes('OPERATOR') ? 'ADMIN' : 'USER';
+      
+      const message = await storage.sendMessage(
+        roomId,
+        userId,
+        senderType,
+        messageType,
+        content,
+        replyToMessageId
+      );
+      
+      res.json({ message });
+    } catch (error) {
+      console.error("Send message error:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Chat routes - Admin endpoints
+  app.get("/api/admin/chat/rooms", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { status } = req.query;
+      const rooms = await storage.getAllChatRooms(status as string);
+      res.json({ rooms });
+    } catch (error) {
+      console.error("Get all chat rooms error:", error);
+      res.status(500).json({ error: "Failed to get chat rooms" });
+    }
+  });
+
+  app.patch("/api/admin/chat/messages/:messageId", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { textContent } = req.body;
+      
+      if (!textContent) {
+        return res.status(400).json({ error: "Text content is required" });
+      }
+      
+      const message = await storage.updateMessage(messageId, textContent);
+      res.json({ message });
+    } catch (error) {
+      console.error("Update message error:", error);
+      res.status(500).json({ error: "Failed to update message" });
+    }
+  });
+
+  app.delete("/api/admin/chat/messages/:messageId", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      await storage.deleteMessage(messageId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete message error:", error);
+      res.status(500).json({ error: "Failed to delete message" });
+    }
+  });
+
+  app.post("/api/chat/rooms/:roomId/read", requireRole(['ADMIN', 'OPERATOR']), async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      await storage.markRoomAsRead(roomId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Mark room as read error:", error);
+      res.status(500).json({ error: "Failed to mark room as read" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
