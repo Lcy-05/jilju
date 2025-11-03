@@ -6,7 +6,6 @@ import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Filter, ChevronDown } from 'lucide-react';
@@ -32,9 +31,7 @@ export default function Discover() {
   // Search and filter state
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
     categoryId: undefined,
-    types: [],
-    sort: 'distance',
-    nowOpen: false
+    sort: 'distance'
   });
   
   // Track if component has mounted to skip initial URL update
@@ -49,9 +46,7 @@ export default function Discover() {
     const urlParams = new URLSearchParams(window.location.search);
     const params: SearchOptions = {
       categoryId: urlParams.get('cat') || undefined,  // 단일 카테고리
-      types: urlParams.getAll('types'),
       sort: (urlParams.get('sort') as any) || 'distance',
-      nowOpen: urlParams.get('nowOpen') === 'true',
       regionId: urlParams.get('regionId') || undefined
     };
     setSearchOptions(params);
@@ -147,10 +142,8 @@ export default function Discover() {
       API_ENDPOINTS.BENEFITS.SEARCH,
       searchQuery,
       searchOptions.categoryId,  // 단일 카테고리
-      JSON.stringify(searchOptions.types),
       searchOptions.regionId,
       searchOptions.sort,
-      searchOptions.nowOpen,
       location?.lat,
       location?.lng
     ],
@@ -174,11 +167,9 @@ export default function Discover() {
       }
 
       if (searchOptions.categoryId) params.append('cats', searchOptions.categoryId);  // 단일 카테고리
-      searchOptions.types?.forEach(type => params.append('types', type));
       
       if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
       if (searchOptions.sort) params.set('sort', searchOptions.sort);
-      if (searchOptions.nowOpen) params.set('nowOpen', 'true');
       
       params.set('limit', '200');
 
@@ -197,10 +188,8 @@ export default function Discover() {
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
     if (searchOptions.sort) params.set('sort', searchOptions.sort);
-    if (searchOptions.nowOpen) params.set('nowOpen', 'true');
     if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
     if (searchOptions.categoryId) params.set('cat', searchOptions.categoryId);  // 단일 카테고리
-    searchOptions.types?.forEach(type => params.append('types', type));
     
     const newUrl = `/discover${params.toString() ? '?' + params.toString() : ''}`;
     window.history.pushState({}, '', newUrl);
@@ -217,17 +206,6 @@ export default function Discover() {
         return { ...prev, categoryId };
       }
     });
-  };
-
-  const handleTypeFilter = (type: string, checked: boolean) => {
-    setSearchOptions(prev => ({
-      ...prev,
-      types: checked 
-        ? prev.types?.includes(type)
-          ? prev.types  // 이미 있으면 그대로
-          : [...(prev.types || []), type]  // 없으면 추가
-        : (prev.types || []).filter(t => t !== type)
-    }));
   };
 
   const handleSortChange = (sort: string) => {
@@ -279,13 +257,6 @@ export default function Discover() {
   const selectedRegionName = searchOptions.regionId 
     ? (regions as any)?.regions?.find((r: Region) => r.id === searchOptions.regionId)?.name 
     : '전체';
-    
-  const benefitTypes = [
-    { value: 'PERCENT', label: '할인율' },
-    { value: 'AMOUNT', label: '정액할인' },
-    { value: 'GIFT', label: '증정' },
-    { value: 'MEMBERSHIP', label: '멤버십' }
-  ];
 
   return (
     <div className="min-h-screen pb-20">
