@@ -4,29 +4,38 @@
 질주 (Jilju) is a Korean location-based platform connecting users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to serve as a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals, ultimately fostering local commerce in Jeju.
 
 ## Recent Changes
-**2025-11-03: Complete Database Replacement (1,063 Merchants, 1,009 Benefits)**
-- **Data Import**: Successfully imported 1,063 merchants and 1,009 benefits from Excel file (제휴 업체 완료 최종_1104개)
+**2025-11-03: Latest Database Update (1,062 Merchants, 1,013 Benefits)**
+- **Data Import**: Successfully imported 1,062 merchants and 1,013 benefits from Excel file (제휴_업체_완료_통합_1110개_3)
 - **Import Script**: `scripts/import-new-excel.ts` - automated data migration tool
-  - Reads 1,104 rows from Excel (1,063 successfully imported, 46 rows skipped due to missing name/address)
+  - Reads 1,103 rows from Excel (1,062 successfully imported, 41 rows skipped due to missing name/address)
   - Deletes all existing merchant and benefit data before import to ensure clean state
   - Maps 권역 (regions) to 8 Jeju zone codes (시청권, 노형권, 아라권, etc.)
   - Intelligent category mapping based on description keywords
   - Automatic benefit type extraction (PERCENT/AMOUNT/GIFT) from partnership content text
+  - Fixed type handling: Converts all benefit content to String to handle numeric values
 - **Merchant Data Fields**: Each merchant includes:
   - Name, description (with business hours appended), category, address, phone
   - Region classification with proper region_id mapping
-  - Precise location coordinates (latitude 경도, longitude 위도 from Excel)
+  - Precise location coordinates (latitude 위도, longitude 경도 from Excel)
   - Website URL, representative image URL stored in images array
-- **Benefits Generated**: 1,009 benefits automatically created from "제휴 내용" column
+- **Benefits Generated**: 1,013 benefits automatically created from "제휴 내용" column
   - Percentage discounts: regex extraction of "XX%" → PERCENT type with decimal value
   - Fixed amount discounts: regex extraction of "X,XXX원" → AMOUNT type with integer value
   - Service/gift benefits: remaining text → GIFT type with full description
   - All benefits valid from 2024-01-01 to 2025-12-31 with 150m geofencing radius
-- **Display Limits Removed**: All pages now display up to 2,000 items
-  - Discover page: Initial display count increased from 20 to 2,000
-  - Map page: Total count now shows API-returned total instead of filtered count
+- **Category Distribution**: 
+  - 음식: 500 merchants
+  - 카페/바: 231 merchants
+  - 문화생활: 162 merchants
+  - 뷰티/패션: 89 merchants
+  - 스포츠: 71 merchants
+  - 기타: 9 merchants
+- **Display Limits**: All pages display up to 2,000 items
+  - Discover page: Initial display count set to 2,000
+  - Map page: Total count shows API-returned total
   - Constants: MARKER_LIMIT, MAX_SEARCH_RESULTS, PAGINATION_LIMIT all set to 2,000
-- **Data Quality**: All merchants have coordinates, addresses, and phone numbers ready for map integration
+- **Data Quality**: All 1,062 merchants have valid Jeju coordinates, addresses, and phone numbers
+- **Image URL Security**: Updated HTTP image URLs to HTTPS for blogfiles.naver.net (18 merchants affected)
 
 ## User Preferences
 I prefer clear, concise, and direct instructions. When suggesting code changes, provide the exact code snippets or file modifications needed. For new features, outline the steps required for implementation, from schema definition to API routes and frontend integration. Always prioritize security best practices, especially concerning user data and authentication. When making changes, avoid modifying primary key ID column types in existing tables. Use `npm run db:push --force` only when absolutely necessary.
