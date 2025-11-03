@@ -4,29 +4,35 @@
 질주 (Jilju) is a Korean location-based platform connecting users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to serve as a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals, ultimately fostering local commerce in Jeju.
 
 ## Recent Changes
-**2025-11-03: Complete Database Replacement (1,063 Merchants, 1,009 Benefits)**
-- **Data Import**: Successfully imported 1,063 merchants and 1,009 benefits from Excel file (제휴 업체 완료 최종_1104개)
-- **Import Script**: `scripts/import-new-excel.ts` - automated data migration tool
-  - Reads 1,104 rows from Excel (1,063 successfully imported, 46 rows skipped due to missing name/address)
-  - Deletes all existing merchant and benefit data before import to ensure clean state
-  - Maps 권역 (regions) to 8 Jeju zone codes (시청권, 노형권, 아라권, etc.)
+**2025-11-03: Latest Updates (1,057 Merchants, 1,003 Benefits)**
+
+### Naver Maps API Integration Fixed
+- **API Parameter Update**: Changed from deprecated `ncpClientId` to new `ncpKeyId` parameter
+  - Updated script loading in `client/src/hooks/use-naver-maps.ts`
+  - Maps now load successfully without authentication errors
+  - Compatible with Naver Cloud Platform's upgraded Maps API service
+- **Error Handling**: Added `MapErrorBoundary` component to gracefully handle map loading failures
+  - Shows fallback UI if map fails to load
+  - Bottom sheet continues to function independently
+
+### Database Update & Data Management
+- **Latest Data Import**: Successfully imported 1,057 merchants and 1,003 benefits from Excel file (제휴_업체_완료_통합_1110개_3)
+- **Import Script**: `scripts/import-new-excel.ts` - automated Excel-based data migration tool
+  - Reads 1,096 rows from Excel (1,057 successfully imported, 44 rows skipped due to missing name/address)
+  - Correctly handles coordinate mapping: 위도 (latitude), 경도 (longitude)
+  - Maps 권역 (regions) to 8 Jeju zone codes
   - Intelligent category mapping based on description keywords
-  - Automatic benefit type extraction (PERCENT/AMOUNT/GIFT) from partnership content text
-- **Merchant Data Fields**: Each merchant includes:
-  - Name, description (with business hours appended), category, address, phone
-  - Region classification with proper region_id mapping
-  - Precise location coordinates (latitude 경도, longitude 위도 from Excel)
-  - Website URL, representative image URL stored in images array
-- **Benefits Generated**: 1,009 benefits automatically created from "제휴 내용" column
-  - Percentage discounts: regex extraction of "XX%" → PERCENT type with decimal value
-  - Fixed amount discounts: regex extraction of "X,XXX원" → AMOUNT type with integer value
-  - Service/gift benefits: remaining text → GIFT type with full description
-  - All benefits valid from 2024-01-01 to 2025-12-31 with 150m geofencing radius
-- **Display Limits Removed**: All pages now display up to 2,000 items
-  - Discover page: Initial display count increased from 20 to 2,000
-  - Map page: Total count now shows API-returned total instead of filtered count
-  - Constants: MARKER_LIMIT, MAX_SEARCH_RESULTS, PAGINATION_LIMIT all set to 2,000
-- **Data Quality**: All merchants have coordinates, addresses, and phone numbers ready for map integration
+  - Automatic benefit type extraction (PERCENT/AMOUNT/GIFT) from partnership content
+- **Merchant Data Fields**: All merchants include name, description, category, address, phone, region, precise coordinates, website URL, and images
+- **Benefits**: 1,003 benefits automatically created with geofencing radius of 150m, valid from 2024-01-01 to 2025-12-31
+- **Display Limits**: All pages display up to 2,000 items (Discover, Map pages)
+- **Data Source**: Database-driven (Excel import only), Google Sheets integration removed
+
+### Google Sheets Integration Removed
+- **Scripts Removed**: Deleted `scripts/import-from-sheets.ts` and `scripts/export-to-sheets.ts`
+- **Package Cleanup**: Removed `googleapis` dependency from package.json
+- **Data Source**: Application now exclusively uses PostgreSQL database with Excel-based imports
+- **Environment Variables**: GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_SPREADSHEET_ID secrets no longer used
 
 ## User Preferences
 I prefer clear, concise, and direct instructions. When suggesting code changes, provide the exact code snippets or file modifications needed. For new features, outline the steps required for implementation, from schema definition to API routes and frontend integration. Always prioritize security best practices, especially concerning user data and authentication. When making changes, avoid modifying primary key ID column types in existing tables. Use `npm run db:push --force` only when absolutely necessary.
