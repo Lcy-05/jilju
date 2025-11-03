@@ -434,7 +434,7 @@ export class DatabaseStorage implements IStorage {
         eq(benefits.status, 'ACTIVE'),
         eq(merchants.status, 'ACTIVE')
       ))
-      .limit(200);
+      .limit(2000); // Increased to show all benefits
     
     // Get view counts for the last 30 days
     const thirtyDaysAgo = new Date();
