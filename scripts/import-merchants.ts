@@ -122,8 +122,9 @@ async function importMerchants() {
       const categoryExcel = row['가게 카테고리 (category_name) *'] || '';
       const subDescription = row['가게 설명 (description) *'] || '';
       const partnershipContent = String(row['제휴 내용'] || '');
-      const longitude = row['경도(px)'];
-      const latitude = row['위도(py)'];
+      // Note: Excel column names are reversed - "경도(px)" contains latitude, "위도(py)" contains longitude
+      const latitude = row['경도(px)'];   // "경도(px)" column actually contains latitude values (33.xxx)
+      const longitude = row['위도(py)'];  // "위도(py)" column actually contains longitude values (126.xxx)
 
       if (!name || !address) {
         console.log(`  ⚠️  Skipping row ${i + 1}: Missing name or address`);
