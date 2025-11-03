@@ -219,15 +219,15 @@ async function importFromSheets() {
       if (partnershipContent && partnershipContent.trim()) {
         // Parse benefit type from partnership content
         let benefitType = 'GIFT';
-        let percent = null;
-        let amount = null;
-        let gift = partnershipContent;
+        let percent: string | null = null;
+        let amount: number | null = null;
+        let gift: string | null = partnershipContent;
         
         // Check for percentage discount
         const percentMatch = partnershipContent.match(/(\d+)%/);
         if (percentMatch) {
           benefitType = 'PERCENT';
-          percent = parseFloat(percentMatch[1]) / 100;
+          percent = (parseFloat(percentMatch[1]) / 100).toString();
           amount = null;
           gift = null;
         } else {
