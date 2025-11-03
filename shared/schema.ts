@@ -168,6 +168,7 @@ export const merchants = pgTable("merchants", {
   website: text("website"),
   socialLinks: jsonb("social_links"), // Instagram, Facebook, etc.
   images: text("images").array(),
+  closedDays: text("closed_days"), // 휴무일 (e.g., "매주 월요일", "연중무휴")
   status: text("status").notNull().default("ACTIVE"), // ACTIVE, INACTIVE, SUSPENDED
   badges: text("badges").array(), // Special badges like "VERIFIED", "PREMIUM"
   createdBy: uuid("created_by").references(() => users.id),
