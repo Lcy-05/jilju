@@ -62,7 +62,7 @@ async function importMerchants() {
   
   // 1. Read Excel file
   console.log('Step 1: Reading Excel file...');
-  const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762178396453.xlsx';
+  const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762178916089.xlsx';
   const file = fs.readFileSync(filePath);
   const workbook = xlsx.read(file, { type: 'buffer' });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -128,10 +128,16 @@ async function importMerchants() {
       const latitude = row['경도'];  // '경도' column actually has latitude (33.x)
       const longitude = row['위도']; // '위도' column actually has longitude (126.x)
 
-      if (!name || !address) {
-        console.log(`  ⚠️  Skipping row ${i + 1}: Missing name or address`);
+      // Skip only if name is missing (address can be empty)
+      if (!name) {
+        console.log(`  ⚠️  Skipping row ${i + 1}: Missing name`);
         errorCount++;
         continue;
+      }
+      
+      // Warn if address is missing but continue
+      if (!address) {
+        console.log(`  ⚠️  Warning row ${i + 1}: Missing address for "${name}"`);
       }
 
       // Map region
@@ -164,12 +170,12 @@ async function importMerchants() {
         : '';
       const images = secureImageUrl ? [secureImageUrl] : [];
 
-      // Insert merchant
+      // Insert merchant (use empty string for address if missing)
       const [newMerchant] = await db.insert(merchants).values({
         name,
         description,
         categoryId: categoryId || null,
-        address,
+        address: address || '',
         phone,
         regionId: regionId || null,
         location,
