@@ -156,14 +156,14 @@ export default function Discover() {
       
       // Always provide bbox or lat/lng so category filters work
       if (location?.lat && location?.lng) {
-        // Wide bbox to cover entire island (±0.3 degrees ≈ 33km radius)
-        params.set('bbox', `${location.lat-0.3},${location.lng-0.3},${location.lat+0.3},${location.lng+0.3}`);
+        // Very wide bbox to cover entire Jeju island (±0.5 degrees)
+        params.set('bbox', `${location.lat-0.5},${location.lng-0.5},${location.lat+0.5},${location.lng+0.5}`);
       } else {
-        // Default to Jeju Island coordinates - wide bbox to cover entire island
-        const defaultLat = 33.4996;
-        const defaultLng = 126.5312;
-        // Wider range to include all of Jeju (±0.3 degrees ≈ 33km radius)
-        params.set('bbox', `${defaultLat-0.3},${defaultLng-0.3},${defaultLat+0.3},${defaultLng+0.3}`);
+        // Default to Jeju Island coordinates - bbox covering entire island
+        const defaultLat = 33.4;
+        const defaultLng = 126.5;
+        // Jeju: lat 33.1~33.6, lng 126.1~126.9 (±0.5 degrees covers all)
+        params.set('bbox', `${defaultLat-0.5},${defaultLng-0.5},${defaultLat+0.5},${defaultLng+0.5}`);
       }
 
       if (searchOptions.categoryId) params.append('cats', searchOptions.categoryId);  // 단일 카테고리
@@ -171,7 +171,7 @@ export default function Discover() {
       if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
       if (searchOptions.sort) params.set('sort', searchOptions.sort);
       
-      params.set('limit', '200');
+      params.set('limit', '2000'); // Increased limit to show all benefits
 
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
