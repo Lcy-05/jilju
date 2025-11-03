@@ -86,7 +86,7 @@ export const MAP_CONFIG = {
   MIN_ZOOM: 10,
   MAX_ZOOM: 18,
   CLUSTER_MIN_ZOOM: 14,
-  MARKER_LIMIT: 600,
+  MARKER_LIMIT: 2000, // Increased to show all benefits
   SEARCH_RADIUS_KM: 5,
   GEOFENCE_MAX_RADIUS: 1000 // meters
 };
