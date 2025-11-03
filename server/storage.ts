@@ -365,7 +365,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
       .where(and(...conditions))
       .orderBy(...orderByClause)
-      .limit(2000); // Increased limit to show all benefits
+      .limit(600);
     
     // Flatten the results and add distance info
     let mappedResults = results.map(row => ({
@@ -434,7 +434,7 @@ export class DatabaseStorage implements IStorage {
         eq(benefits.status, 'ACTIVE'),
         eq(merchants.status, 'ACTIVE')
       ))
-      .limit(2000); // Increased to show all benefits
+      .limit(200);
     
     // Get view counts for the last 30 days
     const thirtyDaysAgo = new Date();

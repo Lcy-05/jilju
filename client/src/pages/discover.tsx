@@ -6,6 +6,7 @@ import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { BenefitCard } from '@/components/benefit/benefit-card';
 import { BenefitModal } from '@/components/benefit/benefit-modal';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Filter, ChevronDown } from 'lucide-react';
@@ -31,7 +32,9 @@ export default function Discover() {
   // Search and filter state
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
     categoryId: undefined,
-    sort: 'distance'
+    types: [],
+    sort: 'distance',
+    nowOpen: false
   });
   
   // Track if component has mounted to skip initial URL update
@@ -46,7 +49,9 @@ export default function Discover() {
     const urlParams = new URLSearchParams(window.location.search);
     const params: SearchOptions = {
       categoryId: urlParams.get('cat') || undefined,  // 단일 카테고리
+      types: urlParams.getAll('types'),
       sort: (urlParams.get('sort') as any) || 'distance',
+      nowOpen: urlParams.get('nowOpen') === 'true',
       regionId: urlParams.get('regionId') || undefined
     };
     setSearchOptions(params);
@@ -142,8 +147,10 @@ export default function Discover() {
       API_ENDPOINTS.BENEFITS.SEARCH,
       searchQuery,
       searchOptions.categoryId,  // 단일 카테고리
+      JSON.stringify(searchOptions.types),
       searchOptions.regionId,
       searchOptions.sort,
+      searchOptions.nowOpen,
       location?.lat,
       location?.lng
     ],
@@ -156,22 +163,24 @@ export default function Discover() {
       
       // Always provide bbox or lat/lng so category filters work
       if (location?.lat && location?.lng) {
-        // Very wide bbox to cover entire Jeju island (±0.5 degrees)
-        params.set('bbox', `${location.lat-0.5},${location.lng-0.5},${location.lat+0.5},${location.lng+0.5}`);
+        // Wide bbox to cover entire island (±0.3 degrees ≈ 33km radius)
+        params.set('bbox', `${location.lat-0.3},${location.lng-0.3},${location.lat+0.3},${location.lng+0.3}`);
       } else {
-        // Default to Jeju Island coordinates - bbox covering entire island
-        const defaultLat = 33.4;
-        const defaultLng = 126.5;
-        // Jeju: lat 33.1~33.6, lng 126.1~126.9 (±0.5 degrees covers all)
-        params.set('bbox', `${defaultLat-0.5},${defaultLng-0.5},${defaultLat+0.5},${defaultLng+0.5}`);
+        // Default to Jeju Island coordinates - wide bbox to cover entire island
+        const defaultLat = 33.4996;
+        const defaultLng = 126.5312;
+        // Wider range to include all of Jeju (±0.3 degrees ≈ 33km radius)
+        params.set('bbox', `${defaultLat-0.3},${defaultLng-0.3},${defaultLat+0.3},${defaultLng+0.3}`);
       }
 
       if (searchOptions.categoryId) params.append('cats', searchOptions.categoryId);  // 단일 카테고리
+      searchOptions.types?.forEach(type => params.append('types', type));
       
       if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
       if (searchOptions.sort) params.set('sort', searchOptions.sort);
+      if (searchOptions.nowOpen) params.set('nowOpen', 'true');
       
-      params.set('limit', '2000'); // Increased limit to show all benefits
+      params.set('limit', '200');
 
       const response = await fetch(`${API_ENDPOINTS.BENEFITS.SEARCH}?${params}`);
       return response.json();
@@ -188,8 +197,10 @@ export default function Discover() {
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
     if (searchOptions.sort) params.set('sort', searchOptions.sort);
+    if (searchOptions.nowOpen) params.set('nowOpen', 'true');
     if (searchOptions.regionId) params.set('regionId', searchOptions.regionId);
     if (searchOptions.categoryId) params.set('cat', searchOptions.categoryId);  // 단일 카테고리
+    searchOptions.types?.forEach(type => params.append('types', type));
     
     const newUrl = `/discover${params.toString() ? '?' + params.toString() : ''}`;
     window.history.pushState({}, '', newUrl);
@@ -206,6 +217,17 @@ export default function Discover() {
         return { ...prev, categoryId };
       }
     });
+  };
+
+  const handleTypeFilter = (type: string, checked: boolean) => {
+    setSearchOptions(prev => ({
+      ...prev,
+      types: checked 
+        ? prev.types?.includes(type)
+          ? prev.types  // 이미 있으면 그대로
+          : [...(prev.types || []), type]  // 없으면 추가
+        : (prev.types || []).filter(t => t !== type)
+    }));
   };
 
   const handleSortChange = (sort: string) => {
@@ -257,6 +279,13 @@ export default function Discover() {
   const selectedRegionName = searchOptions.regionId 
     ? (regions as any)?.regions?.find((r: Region) => r.id === searchOptions.regionId)?.name 
     : '전체';
+    
+  const benefitTypes = [
+    { value: 'PERCENT', label: '할인율' },
+    { value: 'AMOUNT', label: '정액할인' },
+    { value: 'GIFT', label: '증정' },
+    { value: 'MEMBERSHIP', label: '멤버십' }
+  ];
 
   return (
     <div className="min-h-screen pb-20">
@@ -308,6 +337,39 @@ export default function Discover() {
               </SheetHeader>
               
               <div className="py-4 space-y-6">
+                {/* Benefit Types */}
+                <div>
+                  <h4 className="font-semibold mb-3">혜택 종류</h4>
+                  <div className="space-y-2">
+                    {benefitTypes.map(({ value, label }) => (
+                      <div key={value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`type-${value}`}
+                          checked={searchOptions.types?.includes(value)}
+                          onCheckedChange={(checked) => handleTypeFilter(value, !!checked)}
+                        />
+                        <label htmlFor={`type-${value}`} className="text-sm">
+                          {label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Now Open */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="now-open"
+                    checked={searchOptions.nowOpen}
+                    onCheckedChange={(checked) => 
+                      setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }))
+                    }
+                  />
+                  <label htmlFor="now-open" className="text-sm">
+                    지금 사용 가능
+                  </label>
+                </div>
+
                 <div className="flex gap-2">
                   <Button 
                     className="flex-1" 
@@ -365,6 +427,18 @@ export default function Discover() {
               </div>
             </SheetContent>
           </Sheet>
+
+          <div className="flex items-center gap-2 text-sm text-white/90">
+            <Checkbox
+              id="now-open-quick"
+              checked={searchOptions.nowOpen}
+              onCheckedChange={(checked) => {
+                setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }));
+                // URL will be updated by useEffect
+              }}
+            />
+            <label htmlFor="now-open-quick" className="text-white/90">지금 사용 가능</label>
+          </div>
         </div>
       </section>
       </div>

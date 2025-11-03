@@ -197,11 +197,6 @@ async function importFromSheets() {
       ? `${description} | 영업시간: ${businessHours}`
       : description;
     
-    // Convert HTTP to HTTPS for image URLs (security fix)
-    const secureImageUrl = imageUrl 
-      ? imageUrl.replace(/^http:\/\//i, 'https://') 
-      : '';
-    
     try {
       // Insert merchant
       const [newMerchant] = await db.insert(merchants).values({
@@ -213,7 +208,7 @@ async function importFromSheets() {
         regionId: regionId || null,
         location: { lat: latitude, lng: longitude },
         website: website || null,
-        images: secureImageUrl ? [secureImageUrl] : [],
+        images: imageUrl ? [imageUrl] : [],
         closedDays: closedDays || null,
         status: 'ACTIVE',
         createdBy: createdById,

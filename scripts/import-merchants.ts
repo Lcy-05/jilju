@@ -9,16 +9,14 @@ interface ExcelRow {
   '가게 대표 이미지 URL (image_url) *': string;
   '가게 전화번호 (phone) *': string;
   '가게 주소 (address) *': string;
-  '지역': string;
+  '권역': string;
   '가게 URL (website) *': string;
-  '가게 영업 시간 (business_hours) *': string;
-  '가게 카테고리 (category_name) *'?: string;
-  '가게 설명 (description) *'?: string;
-  '제휴 내용': string;
-  '경도(px)'?: number;
-  '위도(py)'?: number;
-  '경도': number;
-  '위도': number;
+  '가게 영업 시간 (business_hours) *'?: string;
+  '가게 카테고리 (category_name) *': string;
+  '가게 설명 (description) *': string;
+  '제휴 내용'?: string;
+  '경도(px)': number;
+  '위도(py)': number;
 }
 
 // Region mapping
@@ -58,11 +56,11 @@ function getCategoryName(excelCategory: string, description: string): string {
 }
 
 async function importMerchants() {
-  console.log('=== Starting merchant import (1104 merchants) ===\n');
+  console.log('=== Starting merchant import (605 merchants) ===\n');
   
   // 1. Read Excel file
   console.log('Step 1: Reading Excel file...');
-  const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762178916089.xlsx';
+  const filePath = 'attached_assets/제휴 업체 완료 (최종_610개) (2)_1762132202188.xlsx';
   const file = fs.readFileSync(filePath);
   const workbook = xlsx.read(file, { type: 'buffer' });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -105,7 +103,7 @@ async function importMerchants() {
   console.log('All existing data deleted.\n');
   
   // 5. Process each row
-  console.log(`Step 4: Importing ${data.length} merchants...`);
+  console.log('Step 4: Importing 605 merchants...');
   let successCount = 0;
   let errorCount = 0;
   const errors: any[] = [];
@@ -115,29 +113,23 @@ async function importMerchants() {
     
     try {
       const name = row['상호명'];
-      const imageUrl = row['가게 대표 이미지 URL (image_url) *'] || '';
+      const imageUrl = row['가게 대표 이미지 URL (image_url) *'];
       const phone = row['가게 전화번호 (phone) *'] || '';
       const address = row['가게 주소 (address) *'];
-      const regionName = (row['지역'] || '').trim();
+      const regionName = (row['권역'] || '').trim();
       const website = row['가게 URL (website) *'] || null;
       const businessHours = row['가게 영업 시간 (business_hours) *'] || '';
       const categoryExcel = row['가게 카테고리 (category_name) *'] || '';
       const subDescription = row['가게 설명 (description) *'] || '';
       const partnershipContent = String(row['제휴 내용'] || '');
-      // Note: Excel columns are mislabeled - '경도' contains lat, '위도' contains lng
-      const latitude = row['경도'];  // '경도' column actually has latitude (33.x)
-      const longitude = row['위도']; // '위도' column actually has longitude (126.x)
+      // Note: Excel column names are reversed - "경도(px)" contains latitude, "위도(py)" contains longitude
+      const latitude = row['경도(px)'];   // "경도(px)" column actually contains latitude values (33.xxx)
+      const longitude = row['위도(py)'];  // "위도(py)" column actually contains longitude values (126.xxx)
 
-      // Skip only if name is missing (address can be empty)
-      if (!name) {
-        console.log(`  ⚠️  Skipping row ${i + 1}: Missing name`);
+      if (!name || !address) {
+        console.log(`  ⚠️  Skipping row ${i + 1}: Missing name or address`);
         errorCount++;
         continue;
-      }
-      
-      // Warn if address is missing but continue
-      if (!address) {
-        console.log(`  ⚠️  Warning row ${i + 1}: Missing address for "${name}"`);
       }
 
       // Map region
@@ -164,24 +156,20 @@ async function importMerchants() {
         lng: longitude || 126.5
       };
 
-      // Convert HTTP to HTTPS for image URLs (security fix)
-      const secureImageUrl = imageUrl 
-        ? imageUrl.replace(/^http:\/\//i, 'https://') 
-        : '';
-      const images = secureImageUrl ? [secureImageUrl] : [];
+      // Prepare images
+      const images = imageUrl ? [imageUrl] : [];
 
-      // Insert merchant (use empty string for address if missing)
+      // Insert merchant
       const [newMerchant] = await db.insert(merchants).values({
         name,
         description,
         categoryId: categoryId || null,
-        address: address || '',
+        address,
         phone,
         regionId: regionId || null,
         location,
         website,
         images,
-        closedDays: null,
         status: 'ACTIVE',
         createdBy: createdById,
         updatedBy: createdById,
