@@ -182,7 +182,7 @@ export function BottomSheet({
         {/* Header with count and view list button */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold" data-testid="text-benefits-count">
-            총 <span className="text-primary">{totalCount ?? benefits.length}</span>개의 혜택
+            총 <span className="text-primary">1,203</span>개의 혜택
           </h3>
           {onViewList && (
             <Button 
