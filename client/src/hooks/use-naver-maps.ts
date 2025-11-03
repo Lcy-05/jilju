@@ -86,8 +86,8 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
         // Create script element for NCP Maps API
         const script = document.createElement('script');
         script.type = 'text/javascript';
-        // Use new NCP Maps API URL with ncpClientId parameter
-        script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${import.meta.env.VITE_NAVER_MAPS_CLIENT_ID}`;
+        // Use new NCP Maps API URL with ncpKeyId parameter (updated API)
+        script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_MAPS_CLIENT_ID}`;
         
         script.onload = () => {
           setIsLoaded(true);
