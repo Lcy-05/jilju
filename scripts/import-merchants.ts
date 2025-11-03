@@ -1,7 +1,7 @@
 import xlsx from 'xlsx';
 import * as fs from 'fs';
 import { db } from '../server/db';
-import { merchants, benefits, categories, regions, users, coupons, couponRedemptions, userBookmarks, benefitTimeWindows, benefitBlackouts, benefitQuota, benefitAssets, benefitVersions, merchantHours, merchantHourExceptions, dailyMerchantKpis } from '../shared/schema';
+import { merchants, benefits, categories, regions, users, userBookmarks, benefitTimeWindows, benefitBlackouts, benefitQuota, benefitAssets, benefitVersions, merchantHours, merchantHourExceptions, dailyMerchantKpis, eventLogs, userActivity, viewCountAggregates } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 
 interface ExcelRow {
@@ -86,8 +86,9 @@ async function importMerchants() {
   
   // 4. DELETE ALL EXISTING DATA
   console.log('Step 3: Deleting existing merchants and benefits...');
-  await db.delete(coupons);
-  await db.delete(couponRedemptions);
+  await db.delete(userActivity);
+  await db.delete(viewCountAggregates);
+  await db.delete(eventLogs);
   await db.delete(userBookmarks);
   await db.delete(benefitTimeWindows);
   await db.delete(benefitBlackouts);
@@ -120,7 +121,7 @@ async function importMerchants() {
       const businessHours = row['가게 영업 시간 (business_hours) *'] || '';
       const categoryExcel = row['가게 카테고리 (category_name) *'] || '';
       const subDescription = row['가게 설명 (description) *'] || '';
-      const partnershipContent = row['제휴 내용'] || '';
+      const partnershipContent = String(row['제휴 내용'] || '');
       const longitude = row['경도(px)'];
       const latitude = row['위도(py)'];
 
@@ -176,15 +177,15 @@ async function importMerchants() {
       // Create benefit if partnership content exists
       if (partnershipContent && partnershipContent.trim()) {
         let benefitType = 'GIFT';
-        let percent = null;
-        let amount = null;
-        let gift = partnershipContent;
+        let percent: string | null = null;
+        let amount: number | null = null;
+        let gift: string | null = partnershipContent;
 
         // Extract percentage
         const percentMatch = partnershipContent.match(/(\d+)%/);
         if (percentMatch) {
           benefitType = 'PERCENT';
-          percent = percentMatch[1];
+          percent = percentMatch[1] + '.00';
           gift = null;
         } else {
           // Extract amount (KRW)
