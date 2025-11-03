@@ -45,6 +45,7 @@ export interface Merchant {
   website?: string;
   socialLinks?: Record<string, string>;
   images?: string[];
+  closedDays?: string; // 휴무일 (e.g., "매주 월요일", "연중무휴")
   status: string;
   badges?: string[];
   hours?: MerchantHour[];

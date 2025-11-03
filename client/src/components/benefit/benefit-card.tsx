@@ -6,7 +6,7 @@ import { Benefit } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface BenefitCardProps {
-  benefit: Benefit & { merchant?: { name: string; address: string } };
+  benefit: Benefit & { merchant?: { name: string; address: string; closedDays?: string; description?: string } };
   onClick?: () => void;
   onBookmark?: () => void;
   onDirections?: () => void;
@@ -28,6 +28,16 @@ export function BenefitCard({
   className,
   showNewBadge = false
 }: BenefitCardProps) {
+  // Extract business hours from merchant description
+  const getBusinessHours = () => {
+    if (!benefit.merchant?.description) return null;
+    const match = benefit.merchant.description.match(/영업시간:\s*(.+?)(?:\||$)/);
+    return match ? match[1].trim() : null;
+  };
+
+  const businessHours = getBusinessHours();
+  const closedDays = benefit.merchant?.closedDays;
+
   const getBenefitBadge = () => {
     switch (benefit.type) {
       case 'PERCENT':
@@ -136,9 +146,24 @@ export function BenefitCard({
               
               {/* 상점명 */}
               {showMerchant && benefit.merchant && (
-                <p className="text-sm md:text-base font-light text-foreground mb-2" data-testid="text-merchant-name">
+                <p className="text-sm md:text-base font-light text-foreground mb-1" data-testid="text-merchant-name">
                   {benefit.merchant.name}
                 </p>
+              )}
+              
+              {/* 영업시간 & 휴무일 */}
+              {showMerchant && (businessHours || closedDays) && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
+                  {businessHours && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {businessHours}
+                    </span>
+                  )}
+                  {closedDays && (
+                    <span>• 휴무: {closedDays}</span>
+                  )}
+                </div>
               )}
               
               {/* 하단 정보 */}
@@ -269,9 +294,24 @@ export function BenefitCard({
         
         {/* 상점명 */}
         {showMerchant && benefit.merchant && (
-          <p className="text-sm md:text-base font-light text-foreground mb-2" data-testid="text-merchant-name">
+          <p className="text-sm md:text-base font-light text-foreground mb-1" data-testid="text-merchant-name">
             {benefit.merchant.name}
           </p>
+        )}
+        
+        {/* 영업시간 & 휴무일 */}
+        {showMerchant && (businessHours || closedDays) && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
+            {businessHours && (
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {businessHours}
+              </span>
+            )}
+            {closedDays && (
+              <span>• 휴무: {closedDays}</span>
+            )}
+          </div>
         )}
         
         {/* 하단 정보 */}

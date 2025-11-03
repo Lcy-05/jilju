@@ -227,7 +227,7 @@ async function importFromSheets() {
         const percentMatch = partnershipContent.match(/(\d+)%/);
         if (percentMatch) {
           benefitType = 'PERCENT';
-          percent = (parseFloat(percentMatch[1]) / 100).toString();
+          percent = percentMatch[1] + '.00';
           amount = null;
           gift = null;
         } else {
