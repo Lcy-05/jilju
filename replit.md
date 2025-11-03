@@ -3,6 +3,31 @@
 ## Overview
 질주 (Jilju) is a Korean location-based platform connecting users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to serve as a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals, ultimately fostering local commerce in Jeju.
 
+## Recent Changes
+**2025-11-03: Complete Merchant Database Replacement (604 Merchants)**
+- **Data Import**: Successfully imported 604 merchants from Excel file (제휴 업체 완료 최종_610개)
+- **Import Script**: `scripts/import-merchants.ts` - automated data migration tool
+  - Reads 605 rows from Excel (604 successfully imported, 1 skipped due to missing data)
+  - Deletes all existing merchant and benefit data before import to ensure clean state
+  - Maps 권역 (regions) to 8 Jeju zone codes (시청권, 노형권, 아라권, etc.)
+  - Intelligent category mapping based on description keywords
+  - Automatic benefit type extraction (PERCENT/AMOUNT/GIFT) from partnership content text
+- **Merchant Data Fields**: Each merchant includes:
+  - Name, description (with business hours appended), category, address, phone
+  - Region classification with proper region_id mapping
+  - Precise location coordinates (latitude 경도, longitude 위도 from Excel)
+  - Website URL, representative image URL stored in images array
+- **Benefits Generated**: 555 benefits automatically created from "제휴 내용" column
+  - Percentage discounts: regex extraction of "XX%" → PERCENT type with decimal value
+  - Fixed amount discounts: regex extraction of "X,XXX원" → AMOUNT type with integer value
+  - Service/gift benefits: remaining text → GIFT type with full description
+  - All benefits valid from 2024-01-01 to 2025-12-31 with 150m geofencing radius
+- **Data Distribution**:
+  - By Region: 시청권 (195), 노형권 (119), 아라권 (68), 서귀포권 (59), 삼화권 (55), 서부권 (41), 공항연안권 (40), 동부권 (27)
+  - By Category: 음식 (253), 카페/바 (152), 스포츠 (61), 문화생활 (61), 뷰티/패션 (41), 기타 (36)
+- **Image Display**: BenefitCard component already supports merchant.images[0] fallback for proper image display
+- **Data Quality**: All merchants have coordinates, addresses, and phone numbers ready for map integration
+
 ## User Preferences
 I prefer clear, concise, and direct instructions. When suggesting code changes, provide the exact code snippets or file modifications needed. For new features, outline the steps required for implementation, from schema definition to API routes and frontend integration. Always prioritize security best practices, especially concerning user data and authentication. When making changes, avoid modifying primary key ID column types in existing tables. Use `npm run db:push --force` only when absolutely necessary.
 
