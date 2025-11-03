@@ -372,7 +372,7 @@ export default function Discover() {
       {/* Results */}
       <section className="px-4 pt-6 pb-4">
         <div className="text-base font-medium text-white mb-4" data-testid="text-results-count">
-          총 1,203개의 혜택
+          총 {totalCount.toLocaleString()}개의 혜택
         </div>
         
         <div className="space-y-3">
@@ -433,7 +433,7 @@ export default function Discover() {
               }}
               data-testid="button-load-more"
             >
-              더보기 (1,183개 남음)
+              더보기 ({benefits.length - displayedCount}개 남음)
             </Button>
           </div>
         )}
