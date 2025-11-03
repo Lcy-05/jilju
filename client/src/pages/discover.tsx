@@ -394,18 +394,6 @@ export default function Discover() {
               </div>
             </SheetContent>
           </Sheet>
-
-          <div className="flex items-center gap-2 text-sm text-white/90">
-            <Checkbox
-              id="now-open-quick"
-              checked={searchOptions.nowOpen}
-              onCheckedChange={(checked) => {
-                setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }));
-                // URL will be updated by useEffect
-              }}
-            />
-            <label htmlFor="now-open-quick" className="text-white/90">지금 사용 가능</label>
-          </div>
         </div>
       </section>
       </div>
