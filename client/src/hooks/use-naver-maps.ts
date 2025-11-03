@@ -21,6 +21,7 @@ interface NaverMapInstance {
 
 declare global {
   interface Window {
+    navermap_authFailure?: () => void;
     naver: {
       maps: {
         Map: new (element: HTMLElement, options: any) => NaverMapInstance;
@@ -86,8 +87,8 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
         // Create script element for NCP Maps API
         const script = document.createElement('script');
         script.type = 'text/javascript';
-        // Use ncpClientId parameter (current standard)
-        script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${import.meta.env.VITE_NAVER_MAPS_CLIENT_ID}`;
+        // Use ncpKeyId parameter (new unified standard)
+        script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_MAPS_CLIENT_ID}`;
         
         script.onload = () => {
           setIsLoaded(true);
@@ -95,6 +96,12 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
         
         script.onerror = () => {
           setError('네이버 지도를 로드할 수 없습니다.');
+        };
+
+        // Add authentication failure handler
+        window.navermap_authFailure = function () {
+          console.error('네이버 지도 API 인증 실패: 클라이언트 ID 및 웹 서비스 URL을 확인하세요.');
+          setError('네이버 지도 API 인증에 실패했습니다. 관리자에게 문의하세요.');
         };
 
         document.head.appendChild(script);
