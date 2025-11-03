@@ -7,17 +7,18 @@ import { eq } from 'drizzle-orm';
 interface ExcelRow {
   '상호명': string;
   '가게 대표 이미지 URL (image_url) *': string;
-  '가게 전화번호 *': string;
+  '가게 전화번호 (phone) *': string;
   '가게 주소 (address) *': string;
   '지역': string;
   '가게 URL (website) *': string;
-  '휴무일(요일)': string;
   '가게 영업 시간 (business_hours) *': string;
-  '가게 카테고리 (category_name) *': string;
-  '가게 설명 (description) *': string;
+  '가게 카테고리 (category_name) *'?: string;
+  '가게 설명 (description) *'?: string;
   '제휴 내용': string;
-  '경도(px)': number;
-  '위도(py)': number;
+  '경도(px)'?: number;
+  '위도(py)'?: number;
+  '경도': number;
+  '위도': number;
 }
 
 // Region mapping
@@ -61,7 +62,7 @@ async function importMerchants() {
   
   // 1. Read Excel file
   console.log('Step 1: Reading Excel file...');
-  const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_1762177518030.xlsx';
+  const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762178396453.xlsx';
   const file = fs.readFileSync(filePath);
   const workbook = xlsx.read(file, { type: 'buffer' });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -115,17 +116,17 @@ async function importMerchants() {
     try {
       const name = row['상호명'];
       const imageUrl = row['가게 대표 이미지 URL (image_url) *'] || '';
-      const phone = row['가게 전화번호 *'] || '';
+      const phone = row['가게 전화번호 (phone) *'] || '';
       const address = row['가게 주소 (address) *'];
       const regionName = (row['지역'] || '').trim();
       const website = row['가게 URL (website) *'] || null;
-      const closedDays = row['휴무일(요일)'] || '';
       const businessHours = row['가게 영업 시간 (business_hours) *'] || '';
       const categoryExcel = row['가게 카테고리 (category_name) *'] || '';
       const subDescription = row['가게 설명 (description) *'] || '';
       const partnershipContent = String(row['제휴 내용'] || '');
-      const latitude = row['경도(px)'];
-      const longitude = row['위도(py)'];
+      // Use new 경도/위도 columns (correct values)
+      const latitude = row['위도'] || row['경도(px)'];
+      const longitude = row['경도'] || row['위도(py)'];
 
       if (!name || !address) {
         console.log(`  ⚠️  Skipping row ${i + 1}: Missing name or address`);
@@ -174,7 +175,7 @@ async function importMerchants() {
         location,
         website,
         images,
-        closedDays: closedDays || null,
+        closedDays: null,
         status: 'ACTIVE',
         createdBy: createdById,
         updatedBy: createdById,
