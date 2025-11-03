@@ -253,7 +253,7 @@ export default function Map() {
         {/* Bottom Sheet with benefits list */}
         <BottomSheet
           benefits={visibleBenefits}
-          totalCount={visibleBenefits.length}
+          totalCount={benefitsData?.total || visibleBenefits.length}
           categories={(categoriesData as any)?.categories || []}
           selectedCategories={selectedCategory ? [selectedCategory] : []}
           onCategoryToggle={(categoryId) => {

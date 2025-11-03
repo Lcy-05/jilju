@@ -117,9 +117,10 @@ async function importFromExcel() {
         }
         
         // Get location
+        // NOTE: Excel columns are swapped - "위도" contains longitude, "경도" contains latitude
         let location;
-        const lat = parseFloat(row['위도']);
-        const lng = parseFloat(row['경도']);
+        const lat = parseFloat(row['경도']);  // 실제 latitude 값
+        const lng = parseFloat(row['위도']);  // 실제 longitude 값
         
         if (!isNaN(lat) && !isNaN(lng) && lat > 0 && lng > 0) {
           location = { lat, lng };

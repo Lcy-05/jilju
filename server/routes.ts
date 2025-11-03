@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         types = [],
         nowOpen = false,
         sort = 'distance',
-        limit = 50,
+        limit = 2000,
         offset = 0,
         q // Search query
       } = req.query;
@@ -179,10 +179,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const [lat1, lng1, lat2, lng2] = bbox.split(',').map(Number);
         const centerLat = (lat1 + lat2) / 2;
         const centerLng = (lng1 + lng2) / 2;
-        const radiusKm = Math.max(
-          Math.abs(lat2 - lat1) * 111, // Rough km per degree latitude
-          Math.abs(lng2 - lng1) * 111
-        ) / 2;
+        
+        // Use diagonal distance to ensure entire bbox is covered
+        const latDiff = lat2 - lat1;
+        const lngDiff = lng2 - lng1;
+        const diagonalDeg = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+        const radiusKm = (diagonalDeg * 111) / 2; // Half diagonal in km
 
         results = await storage.getBenefitsNearby(centerLat, centerLng, radiusKm, {
           categories: catArray,

@@ -4,10 +4,10 @@
 질주 (Jilju) is a Korean location-based platform connecting users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to serve as a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals, ultimately fostering local commerce in Jeju.
 
 ## Recent Changes
-**2025-11-03: Complete Merchant Database Replacement (604 Merchants)**
-- **Data Import**: Successfully imported 604 merchants from Excel file (제휴 업체 완료 최종_610개)
-- **Import Script**: `scripts/import-merchants.ts` - automated data migration tool
-  - Reads 605 rows from Excel (604 successfully imported, 1 skipped due to missing data)
+**2025-11-03: Complete Database Replacement (1,063 Merchants, 1,009 Benefits)**
+- **Data Import**: Successfully imported 1,063 merchants and 1,009 benefits from Excel file (제휴 업체 완료 최종_1104개)
+- **Import Script**: `scripts/import-new-excel.ts` - automated data migration tool
+  - Reads 1,104 rows from Excel (1,063 successfully imported, 46 rows skipped due to missing name/address)
   - Deletes all existing merchant and benefit data before import to ensure clean state
   - Maps 권역 (regions) to 8 Jeju zone codes (시청권, 노형권, 아라권, etc.)
   - Intelligent category mapping based on description keywords
@@ -17,15 +17,15 @@
   - Region classification with proper region_id mapping
   - Precise location coordinates (latitude 경도, longitude 위도 from Excel)
   - Website URL, representative image URL stored in images array
-- **Benefits Generated**: 555 benefits automatically created from "제휴 내용" column
+- **Benefits Generated**: 1,009 benefits automatically created from "제휴 내용" column
   - Percentage discounts: regex extraction of "XX%" → PERCENT type with decimal value
   - Fixed amount discounts: regex extraction of "X,XXX원" → AMOUNT type with integer value
   - Service/gift benefits: remaining text → GIFT type with full description
   - All benefits valid from 2024-01-01 to 2025-12-31 with 150m geofencing radius
-- **Data Distribution**:
-  - By Region: 시청권 (195), 노형권 (119), 아라권 (68), 서귀포권 (59), 삼화권 (55), 서부권 (41), 공항연안권 (40), 동부권 (27)
-  - By Category: 음식 (253), 카페/바 (152), 스포츠 (61), 문화생활 (61), 뷰티/패션 (41), 기타 (36)
-- **Image Display**: BenefitCard component already supports merchant.images[0] fallback for proper image display
+- **Display Limits Removed**: All pages now display up to 2,000 items
+  - Discover page: Initial display count increased from 20 to 2,000
+  - Map page: Total count now shows API-returned total instead of filtered count
+  - Constants: MARKER_LIMIT, MAX_SEARCH_RESULTS, PAGINATION_LIMIT all set to 2,000
 - **Data Quality**: All merchants have coordinates, addresses, and phone numbers ready for map integration
 
 ## User Preferences
