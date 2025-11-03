@@ -28,16 +28,6 @@ export function BenefitCard({
   className,
   showNewBadge = false
 }: BenefitCardProps) {
-  // Extract business hours from merchant description
-  const getBusinessHours = () => {
-    if (!benefit.merchant?.description) return null;
-    const match = benefit.merchant.description.match(/영업시간:\s*(.+?)(?:\||$)/);
-    return match ? match[1].trim() : null;
-  };
-
-  const businessHours = getBusinessHours();
-  const closedDays = benefit.merchant?.closedDays;
-
   const getBenefitBadge = () => {
     switch (benefit.type) {
       case 'PERCENT':
@@ -108,18 +98,30 @@ export function BenefitCard({
                   src={benefit.images[0]} 
                   alt={benefit.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
               ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
                 <img 
                   src={benefit.merchant.images[0]} 
                   alt={benefit.merchant.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                  <span className="text-2xl">🎁</span>
-                </div>
-              )}
+              ) : null}
+              <div className={cn(
+                "w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center",
+                (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? "hidden" : ""
+              )}>
+                <span className="text-2xl">🎁</span>
+              </div>
             </div>
             
             {/* Content - 우측 북마크 영역 예약됨 */}
@@ -146,24 +148,9 @@ export function BenefitCard({
               
               {/* 상점명 */}
               {showMerchant && benefit.merchant && (
-                <p className="text-sm md:text-base font-light text-foreground mb-1" data-testid="text-merchant-name">
+                <p className="text-sm md:text-base font-light text-foreground mb-2" data-testid="text-merchant-name">
                   {benefit.merchant.name}
                 </p>
-              )}
-              
-              {/* 영업시간 & 휴무일 */}
-              {showMerchant && (businessHours || closedDays) && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
-                  {businessHours && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {businessHours}
-                    </span>
-                  )}
-                  {closedDays && (
-                    <span>• 휴무: {closedDays}</span>
-                  )}
-                </div>
               )}
               
               {/* 하단 정보 */}
@@ -232,24 +219,36 @@ export function BenefitCard({
       data-testid={`card-benefit-${benefit.id}`}
     >
       {/* Image - aspect ratio */}
-      <div className="w-full aspect-video bg-muted flex items-center justify-center overflow-hidden">
+      <div className="w-full aspect-video bg-muted flex items-center justify-center overflow-hidden relative">
         {benefit.images && benefit.images.length > 0 ? (
           <img 
             src={benefit.images[0]} 
             alt={benefit.title}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
         ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
           <img 
             src={benefit.merchant.images[0]} 
             alt={benefit.merchant.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-            <span className="text-4xl">🎁</span>
-          </div>
-        )}
+        ) : null}
+        <div className={cn(
+          "absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center",
+          (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? "hidden" : ""
+        )}>
+          <span className="text-4xl">🎁</span>
+        </div>
       </div>
       
       <CardContent className="p-3">
@@ -294,24 +293,9 @@ export function BenefitCard({
         
         {/* 상점명 */}
         {showMerchant && benefit.merchant && (
-          <p className="text-sm md:text-base font-light text-foreground mb-1" data-testid="text-merchant-name">
+          <p className="text-sm md:text-base font-light text-foreground mb-2" data-testid="text-merchant-name">
             {benefit.merchant.name}
           </p>
-        )}
-        
-        {/* 영업시간 & 휴무일 */}
-        {showMerchant && (businessHours || closedDays) && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
-            {businessHours && (
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {businessHours}
-              </span>
-            )}
-            {closedDays && (
-              <span>• 휴무: {closedDays}</span>
-            )}
-          </div>
         )}
         
         {/* 하단 정보 */}

@@ -27,6 +27,7 @@ export default function Discover() {
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
   const [isRegionFilterOpen, setIsRegionFilterOpen] = useState(false);
   const [bookmarkedBenefits, setBookmarkedBenefits] = useState<Set<string>>(new Set());
+  const [displayedCount, setDisplayedCount] = useState(20); // 처음에 20개만 표시
   
   // Search and filter state
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
@@ -64,6 +65,11 @@ export default function Discover() {
       return;
     }
     updateURL();
+  }, [searchOptions, searchQuery]);
+
+  // Reset displayed count when search options change
+  useEffect(() => {
+    setDisplayedCount(20);
   }, [searchOptions, searchQuery]);
 
   // Get categories for filtering
@@ -459,7 +465,7 @@ export default function Discover() {
               </div>
             ))
           ) : benefits.length > 0 ? (
-            benefits.map((benefit: Benefit) => (
+            benefits.slice(0, displayedCount).map((benefit: Benefit) => (
               <BenefitCard
                 key={benefit.id}
                 benefit={benefit}
@@ -492,17 +498,16 @@ export default function Discover() {
         </div>
 
         {/* Load More */}
-        {benefits.length > 0 && searchResults?.hasMore && (
+        {benefits.length > displayedCount && (
           <div className="text-center py-6">
             <Button 
               variant="outline"
               onClick={() => {
-                // Implement pagination
-                console.log('Load more');
+                setDisplayedCount(prev => prev + 20);
               }}
               data-testid="button-load-more"
             >
-              더보기
+              더보기 ({benefits.length - displayedCount}개 남음)
             </Button>
           </div>
         )}
