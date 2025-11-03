@@ -365,7 +365,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(merchants.categoryId, categories.id))
       .where(and(...conditions))
       .orderBy(...orderByClause)
-      .limit(200);
+      .limit(600);
     
     // Flatten the results and add distance info
     let mappedResults = results.map(row => ({
