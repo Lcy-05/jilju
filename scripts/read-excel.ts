@@ -1,7 +1,7 @@
 import XLSX from 'xlsx';
 import * as fs from 'fs';
 
-const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762182256600.xlsx';
+const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762182768572.xlsx';
 
 const file = fs.readFileSync(filePath);
 const workbook = XLSX.read(file, { type: 'buffer' });

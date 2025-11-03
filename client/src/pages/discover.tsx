@@ -27,7 +27,7 @@ export default function Discover() {
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
   const [isRegionFilterOpen, setIsRegionFilterOpen] = useState(false);
   const [bookmarkedBenefits, setBookmarkedBenefits] = useState<Set<string>>(new Set());
-  const [displayedCount, setDisplayedCount] = useState(20); // 처음에 20개만 표시
+  const [displayedCount, setDisplayedCount] = useState(2000); // 모든 혜택 표시
   
   // Search and filter state
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
@@ -69,7 +69,7 @@ export default function Discover() {
 
   // Reset displayed count when search options change
   useEffect(() => {
-    setDisplayedCount(20);
+    setDisplayedCount(2000);
   }, [searchOptions, searchQuery]);
 
   // Get categories for filtering

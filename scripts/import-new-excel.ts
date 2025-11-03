@@ -4,7 +4,7 @@ import { db } from '../server/db';
 import { merchants, benefits, categories, regions } from '../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762182256600.xlsx';
+const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762182768572.xlsx';
 
 // Region mapping - 지역을 region code로 매핑
 const REGION_MAP: Record<string, string> = {
