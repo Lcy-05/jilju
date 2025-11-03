@@ -243,8 +243,10 @@ export function useNaverMaps(containerId: string, options: UseNaverMapsOptions =
 
   // Remove markers
   const clearMarkers = useCallback(() => {
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current.clear();
+    if (markersRef.current) {
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current.clear();
+    }
     setMarkers([]);
     
     if (clusterer) {

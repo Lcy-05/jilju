@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Component, ErrorInfo, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NaverMap } from '@/components/map/naver-map';
 import { BottomSheet, SheetState } from '@/components/map/bottom-sheet';
@@ -15,6 +15,38 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Simple Error Boundary for NaverMap
+class MapErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('NaverMap error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Render fallback UI (gray placeholder)
+      return (
+        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+          지도를 불러올 수 없습니다
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function Map() {
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
@@ -35,13 +67,23 @@ export default function Map() {
     staleTime: 30 * 60 * 1000,
   });
 
-  // Initialize map center to Jeju Island by default
+  // Initialize map center and bounds to Jeju Island by default
   useEffect(() => {
     if (!mapCenter) {
       // Always center on Jeju Island (33.4996, 126.5312)
       setMapCenter({ lat: 33.4996, lng: 126.5312 });
     }
-  }, [mapCenter]);
+    
+    // Set initial bounds to cover all of Jeju Island if no bounds yet
+    if (!currentBounds && mapCenter) {
+      // Create mock bounds object for entire Jeju Island
+      const jejuBounds = {
+        getSW: () => ({ x: 126.1, y: 33.1 }), // Southwest: lng, lat
+        getNE: () => ({ x: 126.9, y: 33.8 })  // Northeast: lng, lat
+      };
+      setCurrentBounds(jejuBounds);
+    }
+  }, [mapCenter, currentBounds]);
 
   // Get benefits in current map bounds (BBOX search)
   const { data: benefitsData, isLoading } = useQuery({
@@ -239,16 +281,18 @@ export default function Map() {
           </div>
         )}
 
-        <NaverMap
-          center={mapCenter}
-          zoom={10}
-          markers={markers}
-          onMarkerClick={handleMarkerClick}
-          onMapClick={handleMapClick}
-          onBoundsChanged={handleBoundsChanged}
-          showControls={sheetState === 'collapsed'}
-          className="w-full h-full"
-        />
+        <MapErrorBoundary>
+          <NaverMap
+            center={mapCenter}
+            zoom={10}
+            markers={markers}
+            onMarkerClick={handleMarkerClick}
+            onMapClick={handleMapClick}
+            onBoundsChanged={handleBoundsChanged}
+            showControls={sheetState === 'collapsed'}
+            className="w-full h-full"
+          />
+        </MapErrorBoundary>
 
         {/* Bottom Sheet with benefits list */}
         <BottomSheet

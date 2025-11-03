@@ -4,7 +4,7 @@ import { db } from '../server/db';
 import { merchants, benefits, categories, regions } from '../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const filePath = 'attached_assets/제휴 업체 완료 (최종_1104개)_2_1762182768572.xlsx';
+const filePath = 'attached_assets/제휴_업체_완료_통합_1110개_3_1762184982146.xlsx';
 
 // Region mapping - 지역을 region code로 매핑
 const REGION_MAP: Record<string, string> = {
@@ -117,10 +117,10 @@ async function importFromExcel() {
         }
         
         // Get location
-        // NOTE: Excel columns are swapped - "위도" contains longitude, "경도" contains latitude
+        // This Excel file has correct column order
         let location;
-        const lat = parseFloat(row['경도']);  // 실제 latitude 값
-        const lng = parseFloat(row['위도']);  // 실제 longitude 값
+        const lat = parseFloat(row['위도']);  // Latitude from 위도 column
+        const lng = parseFloat(row['경도']);  // Longitude from 경도 column
         
         if (!isNaN(lat) && !isNaN(lng) && lat > 0 && lng > 0) {
           location = { lat, lng };
