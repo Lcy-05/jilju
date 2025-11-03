@@ -10,7 +10,6 @@ packages = ["unar", "unzip", "p7zip"]
 deploymentTarget = "gce"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
-ignorePorts = true
 
 [[ports]]
 localPort = 5000
