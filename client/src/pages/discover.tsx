@@ -337,39 +337,6 @@ export default function Discover() {
               </SheetHeader>
               
               <div className="py-4 space-y-6">
-                {/* Benefit Types */}
-                <div>
-                  <h4 className="font-semibold mb-3">혜택 종류</h4>
-                  <div className="space-y-2">
-                    {benefitTypes.map(({ value, label }) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`type-${value}`}
-                          checked={searchOptions.types?.includes(value)}
-                          onCheckedChange={(checked) => handleTypeFilter(value, !!checked)}
-                        />
-                        <label htmlFor={`type-${value}`} className="text-sm">
-                          {label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Now Open */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="now-open"
-                    checked={searchOptions.nowOpen}
-                    onCheckedChange={(checked) => 
-                      setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }))
-                    }
-                  />
-                  <label htmlFor="now-open" className="text-sm">
-                    지금 사용 가능
-                  </label>
-                </div>
-
                 <div className="flex gap-2">
                   <Button 
                     className="flex-1" 
