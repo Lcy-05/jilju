@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { Filter, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/lib/auth';
 import { Benefit, SearchOptions, Category, Region } from '@/types';
@@ -23,7 +23,6 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
   const [isRegionFilterOpen, setIsRegionFilterOpen] = useState(false);
   const [bookmarkedBenefits, setBookmarkedBenefits] = useState<Set<string>>(new Set());
@@ -219,16 +218,6 @@ export default function Discover() {
     });
   };
 
-  const handleTypeFilter = (type: string, checked: boolean) => {
-    setSearchOptions(prev => ({
-      ...prev,
-      types: checked 
-        ? prev.types?.includes(type)
-          ? prev.types  // 이미 있으면 그대로
-          : [...(prev.types || []), type]  // 없으면 추가
-        : (prev.types || []).filter(t => t !== type)
-    }));
-  };
 
   const handleSortChange = (sort: string) => {
     setSearchOptions(prev => ({ ...prev, sort: sort as any }));
@@ -279,13 +268,6 @@ export default function Discover() {
   const selectedRegionName = searchOptions.regionId 
     ? (regions as any)?.regions?.find((r: Region) => r.id === searchOptions.regionId)?.name 
     : '전체';
-    
-  const benefitTypes = [
-    { value: 'PERCENT', label: '할인율' },
-    { value: 'AMOUNT', label: '정액할인' },
-    { value: 'GIFT', label: '증정' },
-    { value: 'MEMBERSHIP', label: '멤버십' }
-  ];
 
   return (
     <div className="min-h-screen pb-20">
@@ -318,78 +300,6 @@ export default function Discover() {
               </Button>
             );
           })}
-          
-          <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <SheetTrigger asChild>
-              <Button 
-                variant="secondary" 
-                size="sm"
-                className="flex-shrink-0 rounded-full"
-                data-testid="button-open-filters"
-              >
-                <Filter className="w-4 h-4 mr-1" />
-                필터
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh]">
-              <SheetHeader>
-                <SheetTitle>상세 필터</SheetTitle>
-              </SheetHeader>
-              
-              <div className="py-4 space-y-6">
-                {/* Benefit Types */}
-                <div>
-                  <h4 className="font-semibold mb-3">혜택 종류</h4>
-                  <div className="space-y-2">
-                    {benefitTypes.map(({ value, label }) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`type-${value}`}
-                          checked={searchOptions.types?.includes(value)}
-                          onCheckedChange={(checked) => handleTypeFilter(value, !!checked)}
-                        />
-                        <label htmlFor={`type-${value}`} className="text-sm">
-                          {label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Now Open */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="now-open"
-                    checked={searchOptions.nowOpen}
-                    onCheckedChange={(checked) => 
-                      setSearchOptions(prev => ({ ...prev, nowOpen: !!checked }))
-                    }
-                  />
-                  <label htmlFor="now-open" className="text-sm">
-                    지금 사용 가능
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    className="flex-1" 
-                    onClick={() => {
-                      setIsFilterOpen(false);
-                      // URL will be updated by useEffect
-                    }}
-                  >
-                    필터 적용
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSearchOptions({ sort: 'distance' })}
-                  >
-                    초기화
-                  </Button>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
         
         <div className="flex items-center gap-2 mt-2">
