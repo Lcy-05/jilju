@@ -264,24 +264,33 @@ export function BottomSheet({
               >
                 <div className="flex gap-3">
                   {/* Thumbnail - Show merchant image */}
-                  <div className="w-20 h-20 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
+                  <div className="w-20 h-20 bg-muted rounded-lg flex-shrink-0 overflow-hidden relative">
                     {benefit.images && benefit.images.length > 0 ? (
                       <img 
                         src={benefit.images[0]} 
                         alt={benefit.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
                       />
                     ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
                       <img 
                         src={benefit.merchant.images[0]} 
                         alt={benefit.merchant.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
                       />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                        <span className="text-2xl">🎁</span>
-                      </div>
-                    )}
+                    ) : null}
+                    <div className="fallback-icon absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center" style={{ display: (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? 'none' : 'flex' }}>
+                      <span className="text-2xl">🎁</span>
+                    </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">

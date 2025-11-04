@@ -1,3 +1,2 @@
 # 프로덕션 환경 변수 설정 후 임포트 실행
 NODE_ENV=production npx tsx scripts/import-new-excel.ts
-NODE_ENV=production npx tsx scripts/import-new-excel.ts
