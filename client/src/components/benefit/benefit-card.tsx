@@ -92,20 +92,36 @@ export function BenefitCard({
           {/* Flex 구조: 이미지 | 컨텐츠 | 북마크 */}
           <div className="flex gap-3 items-start">
             {/* Thumbnail Image */}
-            <div className="w-20 h-20 rounded-lg overflow-hidden bg-black shrink-0">
+            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
               {benefit.images && benefit.images.length > 0 ? (
                 <img 
                   src={benefit.images[0]} 
                   alt={benefit.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
               ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
                 <img 
                   src={benefit.merchant.images[0]} 
                   alt={benefit.merchant.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
               ) : null}
+              <div className={cn(
+                "w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center",
+                (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? "hidden" : ""
+              )}>
+                <span className="text-2xl">🎁</span>
+              </div>
             </div>
             
             {/* Content - 우측 북마크 영역 예약됨 */}
@@ -203,20 +219,36 @@ export function BenefitCard({
       data-testid={`card-benefit-${benefit.id}`}
     >
       {/* Image - aspect ratio */}
-      <div className="w-full aspect-video bg-black flex items-center justify-center overflow-hidden relative">
+      <div className="w-full aspect-video bg-muted flex items-center justify-center overflow-hidden relative">
         {benefit.images && benefit.images.length > 0 ? (
           <img 
             src={benefit.images[0]} 
             alt={benefit.title}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
         ) : benefit.merchant?.images && benefit.merchant.images.length > 0 ? (
           <img 
             src={benefit.merchant.images[0]} 
             alt={benefit.merchant.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
         ) : null}
+        <div className={cn(
+          "absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center",
+          (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? "hidden" : ""
+        )}>
+          <span className="text-4xl">🎁</span>
+        </div>
       </div>
       
       <CardContent className="p-3">
