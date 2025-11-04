@@ -4,7 +4,27 @@
 질주 (Jilju) is a Korean location-based platform connecting users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to serve as a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals, ultimately fostering local commerce in Jeju.
 
 ## Recent Changes
-**2025-11-03: Latest Updates (1,057 Merchants, 1,003 Benefits)**
+**2025-11-04: Latest Updates (1,210 Merchants, 1,156 Benefits)**
+
+### Map Page Image Display Fixed
+- **Bottom Sheet Image Fix**: Added proper error handling for images on map page bottom sheet
+  - Images now show fallback icon (🎁) when URL fails to load
+  - Consistent with discover page behavior using `onError` handler
+  - Prevents broken image placeholders in the UI
+
+### Incremental Data Import System
+- **Total Database**: 1,210 merchants and 1,156 benefits
+- **New Import Script**: `scripts/import-excel-incremental.ts` - safely adds new data without deleting existing records
+  - Duplicate detection using normalized name+address keys
+  - Dry-run mode for safe testing (`--dry-run` flag)
+  - Latest incremental import: Added 148 merchants from "151_193(찐막).xlsx"
+  - Skips duplicates automatically (1 duplicate detected and skipped)
+- **Full Replace Script**: `scripts/import-new-excel.ts` - deletes all data and imports fresh
+  - Base import: 1,062 merchants from "제휴_업체_완료_통합_1110개_3.xlsx"
+  - Correctly handles coordinate mapping: 위도 (latitude), 경도 (longitude)
+  - Maps 권역 (regions) to 8 Jeju zone codes
+  - Intelligent category mapping based on description keywords
+  - Automatic benefit type extraction (PERCENT/AMOUNT/GIFT) from partnership content
 
 ### Naver Maps API Integration Fixed
 - **API Parameter Update**: Changed from deprecated `ncpClientId` to new `ncpKeyId` parameter
@@ -12,21 +32,6 @@
   - Maps now load successfully without authentication errors
   - Compatible with Naver Cloud Platform's upgraded Maps API service
 - **Error Handling**: Added `MapErrorBoundary` component to gracefully handle map loading failures
-  - Shows fallback UI if map fails to load
-  - Bottom sheet continues to function independently
-
-### Database Update & Data Management
-- **Latest Data Import**: Successfully imported 1,057 merchants and 1,003 benefits from Excel file (제휴_업체_완료_통합_1110개_3)
-- **Import Script**: `scripts/import-new-excel.ts` - automated Excel-based data migration tool
-  - Reads 1,096 rows from Excel (1,057 successfully imported, 44 rows skipped due to missing name/address)
-  - Correctly handles coordinate mapping: 위도 (latitude), 경도 (longitude)
-  - Maps 권역 (regions) to 8 Jeju zone codes
-  - Intelligent category mapping based on description keywords
-  - Automatic benefit type extraction (PERCENT/AMOUNT/GIFT) from partnership content
-- **Merchant Data Fields**: All merchants include name, description, category, address, phone, region, precise coordinates, website URL, and images
-- **Benefits**: 1,003 benefits automatically created with geofencing radius of 150m, valid from 2024-01-01 to 2025-12-31
-- **Display Limits**: All pages display up to 2,000 items (Discover, Map pages)
-- **Data Source**: Database-driven (Excel import only), Google Sheets integration removed
 
 ### Google Sheets Integration Removed
 - **Scripts Removed**: Deleted `scripts/import-from-sheets.ts` and `scripts/export-to-sheets.ts`
