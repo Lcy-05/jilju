@@ -117,10 +117,9 @@ export function BenefitCard({
                 />
               ) : null}
               <div className={cn(
-                "w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center",
+                "w-full h-full bg-black",
                 (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? "hidden" : ""
               )}>
-                <span className="text-2xl">🎁</span>
               </div>
             </div>
             
@@ -244,10 +243,9 @@ export function BenefitCard({
           />
         ) : null}
         <div className={cn(
-          "absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center",
+          "absolute inset-0 w-full h-full bg-black",
           (benefit.images && benefit.images.length > 0) || (benefit.merchant?.images && benefit.merchant.images.length > 0) ? "hidden" : ""
         )}>
-          <span className="text-4xl">🎁</span>
         </div>
       </div>
       
