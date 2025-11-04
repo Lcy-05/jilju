@@ -4,7 +4,7 @@ import { db } from '../server/db';
 import { merchants, benefits, categories, regions } from '../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const filePath = 'attached_assets/제휴_업체_완료_통합_1110개_3_1762184982146.xlsx';
+const filePath = 'scripts/data.xlsx';
 
 // Region mapping - 지역을 region code로 매핑
 const REGION_MAP: Record<string, string> = {
@@ -160,8 +160,8 @@ async function importFromExcel() {
         imported++;
         
         // Create benefit from 제휴 내용
-        const benefitContent = row['제휴 내용'];
-        if (benefitContent && benefitContent.trim()) {
+        const benefitContent = row['제휴 내용'] ? String(row['제휴 내용']).trim() : '';
+        if (benefitContent) {
           let benefitType = 'PERCENT';
           let percent: string | null = null;
           let amount: number | null = null;
