@@ -822,11 +822,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchBenefits(query: string, options?: any): Promise<Benefit[]> {
-    // Simple text search with merchant info
+    // Search by merchant name instead of benefit title
     const conditions = [
       eq(benefits.status, 'ACTIVE'),
       eq(merchants.status, 'ACTIVE'),
-      sql`${benefits.title} ILIKE ${`%${query}%`}`
+      sql`${merchants.name} ILIKE ${`%${query}%`}`
     ];
     
     // Add region filter if provided
