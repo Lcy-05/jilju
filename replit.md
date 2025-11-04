@@ -4,19 +4,21 @@
 질주 (Jilju) is a Korean location-based platform connecting users with nearby merchant benefits, coupons, and promotions. It supports multiple user roles (USER, MERCHANT_OWNER, OPERATOR, ADMIN) and features merchant registration, an admin console, and a robust RBAC system. The platform aims to serve as a comprehensive solution for local businesses to attract customers and for users to easily discover valuable deals, ultimately fostering local commerce in Jeju.
 
 ## Recent Changes
-**2025-11-04: Latest Updates (1,206 Unique Merchants, 1,156 Benefits)**
+**2025-11-04: Latest Updates (1,206 Unique Merchants, 1,211 Benefits)**
+
+### Complete Data Import & Cleanup
+- **Total Database**: 1,206 unique merchants and 1,211 benefits (all duplicates removed)
+- **All Partnership Content Imported**: Every merchant now has benefits, including "제휴 협의 중", "제휴 확정", "혜택 협의 중"
+- **Duplicate Removal**: Found and removed 5 duplicate merchants with trailing spaces in names
+  - 동명정류장, 랭귀지피디어학원, 여부초밥 신제주점, 제주돈대패삼겹살, 팔미육
+  - Merged associated benefits to primary merchant records
+  - Zero duplicates remaining in database
 
 ### Map Page Image Display Fixed
 - **Bottom Sheet Image Fix**: Added proper error handling for images on map page bottom sheet
   - Images now show fallback icon (🎁) when URL fails to load
   - Consistent with discover page behavior using `onError` handler
   - Prevents broken image placeholders in the UI
-
-### Data Quality & Deduplication
-- **Total Database**: 1,206 unique merchants and 1,156 benefits (duplicates removed)
-- **Duplicate Removal**: Found and removed 4 duplicate merchants with trailing spaces in names
-  - Merged associated benefits to primary merchant records
-  - Zero duplicates remaining in database
 - **New Import Script**: `scripts/import-excel-incremental.ts` - safely adds new data without deleting existing records
   - Duplicate detection using normalized name+address keys
   - Dry-run mode for safe testing (`--dry-run` flag)
