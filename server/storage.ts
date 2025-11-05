@@ -343,10 +343,12 @@ export class DatabaseStorage implements IStorage {
         merchant: {
           id: merchants.id,
           name: merchants.name,
+          description: merchants.description,
           address: merchants.address,
           phone: merchants.phone,
           location: merchants.location,
           images: merchants.images,
+          closedDays: merchants.closedDays,
           categoryId: merchants.categoryId
         },
         category: categories,

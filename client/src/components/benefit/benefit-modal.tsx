@@ -249,16 +249,12 @@ export function BenefitModal({
                     {(() => {
                       // Extract business hours from merchant description
                       const getBusinessHours = () => {
-                        console.log('[DEBUG] merchant:', merchant);
-                        console.log('[DEBUG] merchant?.description:', merchant?.description);
                         if (!merchant?.description) return null;
                         const match = merchant.description.match(/영업시간:\s*(.+?)(?:\||$)/);
-                        console.log('[DEBUG] match:', match);
                         return match ? match[1].trim() : null;
                       };
                       
                       const businessHours = getBusinessHours();
-                      console.log('[DEBUG] businessHours:', businessHours);
                       const closedDays = merchant?.closedDays;
                       
                       return (
