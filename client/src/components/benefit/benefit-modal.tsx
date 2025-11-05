@@ -266,7 +266,7 @@ export function BenefitModal({
                       
                       return (
                         <>
-                          {businessHours || '매일 09:00 - 22:00'}
+                          {businessHours ? `매일 ${businessHours}` : '영업시간 정보 없음'}
                           {closedDays && (
                             <>
                               <br />
@@ -372,13 +372,34 @@ export function BenefitModal({
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">매일 09:00 - 22:00</p>
-                      <p className="text-xs text-muted-foreground mt-1">월요일 휴무</p>
-                    </div>
-                  </div>
+                  {(() => {
+                    // Extract business hours from merchant description
+                    const getBusinessHours = () => {
+                      if (!merchant?.description) return null;
+                      const match = merchant.description.match(/영업시간:\s*(.+?)(?:\||$)/);
+                      return match ? match[1].trim() : null;
+                    };
+                    
+                    const businessHours = getBusinessHours();
+                    const closedDays = merchant?.closedDays;
+                    
+                    // Only show if we have data
+                    if (!businessHours && !closedDays) return null;
+                    
+                    return (
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        <div className="flex-1">
+                          {businessHours && (
+                            <p className="text-sm font-medium">매일 {businessHours}</p>
+                          )}
+                          {closedDays && (
+                            <p className="text-xs text-muted-foreground mt-1">{closedDays}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex gap-2 mt-4">
