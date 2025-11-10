@@ -72,8 +72,14 @@ async function importFromExcel() {
     
     // 3. Delete existing data
     console.log('\nStep 3: Deleting existing merchants and benefits...');
-    await db.delete(benefits);
+    // Delete in correct order to avoid foreign key violations
+    await db.execute(sql`DELETE FROM event_logs WHERE benefit_id IS NOT NULL`);
+    await db.execute(sql`DELETE FROM user_bookmarks`);
+    await db.execute(sql`DELETE FROM user_activity WHERE resource_type = 'BENEFIT' OR resource_type = 'MERCHANT'`);
+    await db.execute(sql`DELETE FROM benefit_versions`);
+    await db.execute(sql`DELETE FROM daily_merchant_kpis`);
     await db.execute(sql`DELETE FROM user_roles WHERE merchant_id IS NOT NULL`);
+    await db.delete(benefits);
     await db.delete(merchants);
     console.log('All existing data deleted.\n');
     
