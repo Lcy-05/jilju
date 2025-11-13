@@ -135,10 +135,10 @@ async function importIncremental() {
           continue;
         }
         
-        // Get region
+        // Get region from "권역" column (E column)
         let regionId: string | null = null;
-        if (row['지역']) {
-          const regionCode = REGION_MAP[row['지역']];
+        if (row['권역']) {
+          const regionCode = REGION_MAP[row['권역']];
           if (regionCode) {
             regionId = regionMap.get(regionCode) || null;
           }
