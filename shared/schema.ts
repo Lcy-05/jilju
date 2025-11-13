@@ -162,7 +162,7 @@ export const merchants = pgTable("merchants", {
   categoryPath: text("category_path").array(), // Legacy hierarchical path (optional)
   address: text("address").notNull(),
   addressDetail: text("address_detail"),
-  phone: text("phone").notNull(),
+  phone: text("phone"), // Optional - some merchants may not have phone numbers
   regionId: uuid("region_id").references(() => regions.id),
   location: jsonb("location").notNull(), // {lat: number, lng: number}
   website: text("website"),
