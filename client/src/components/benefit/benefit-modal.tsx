@@ -288,7 +288,7 @@ export function BenefitModal({
                 <div>
                   <span className="font-medium">유효기간</span>
                   <p className="text-muted-foreground">
-                    {new Date(benefit.validTo).toLocaleDateString('ko-KR')}까지
+                    {new Date(benefit.validTo).toISOString().split('T')[0].replace(/-/g, '. ')}. 까지
                   </p>
                 </div>
               </div>
