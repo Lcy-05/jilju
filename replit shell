@@ -8,3 +8,10 @@ git remote add origin https://github.com/Lcy-05/jilju.git
 git add .
 git commit -m "Initial commit"
 git push -u origin main
+
+# 1. Git에서 attached_assets 폴더 제거 (실제 파일은 유지)
+git rm -r --cached attached_assets/
+# 2. 변경사항 커밋
+git commit -m "Remove attached_assets from Git tracking"
+# 3. GitHub에 푸시
+git push origin main
